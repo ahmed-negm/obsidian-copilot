@@ -11,7 +11,6 @@ import {
   AutonomousAgentChainRunner,
   ChainRunner,
   CopilotPlusChainRunner,
-  LLMChainRunner,
   ProjectChainRunner,
   VaultQAChainRunner,
 } from "@/LLMProviders/chainRunner/index";
@@ -29,6 +28,7 @@ import { App, Notice } from "obsidian";
 import ChatModelManager from "./chatModelManager";
 import MemoryManager from "./memoryManager";
 import PromptManager from "./promptManager";
+import { CustomChainRunnerManager } from "./chainRunner/custom/CustomChainRunnerManager";
 
 export default class ChainManager {
   // TODO: These chains are deprecated since we now use direct chat model calls in chain runners
@@ -275,13 +275,13 @@ export default class ChainManager {
     }
   }
 
-  private getChainRunner(): ChainRunner {
+  private getChainRunner(originalMessage: string): ChainRunner {
     const chainType = getChainType();
     const settings = getSettings();
 
     switch (chainType) {
       case ChainType.LLM_CHAIN:
-        return new LLMChainRunner(this);
+        return CustomChainRunnerManager.getRunner(this, originalMessage);
       case ChainType.VAULT_QA_CHAIN:
         return new VaultQAChainRunner(this);
       case ChainType.COPILOT_PLUS_CHAIN:
@@ -352,7 +352,7 @@ export default class ChainManager {
       });*/
     }
 
-    const chainRunner = this.getChainRunner();
+    const chainRunner = this.getChainRunner(userMessage.originalMessage || "");
     return await chainRunner.run(
       userMessage,
       abortController,
