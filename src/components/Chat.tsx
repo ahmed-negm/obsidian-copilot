@@ -604,7 +604,7 @@ const Chat: React.FC<ChatProps> = ({
 
   const renderChatComponents = () => (
     <>
-      <div className="tw-flex tw-size-full tw-flex-col tw-overflow-hidden">
+      <div dir="rtl" className="tw-flex tw-size-full tw-flex-col tw-overflow-hidden">
         <NewVersionBanner currentVersion={plugin.manifest.version} />
         <ChatMessages
           chatHistory={chatHistory}

@@ -554,10 +554,7 @@ const ChatInput = forwardRef<{ focus: () => void }, ChatInputProps>(
           <textarea
             ref={textAreaRef}
             className="tw-max-h-40 tw-min-h-[60px] tw-w-full tw-resize-none tw-overflow-y-auto tw-rounded-md tw-border-none tw-bg-transparent tw-px-2 tw-text-sm tw-text-normal placeholder:tw-text-sm placeholder:tw-text-muted/60 focus-visible:tw-ring-0"
-            placeholder={
-              "Ask anything. [[ for notes. / for custom prompts. " +
-              (isCopilotPlus ? "@ for tools." : "")
-            }
+            placeholder={"" + (isCopilotPlus ? "@ for tools." : "")}
             value={inputMessage}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}

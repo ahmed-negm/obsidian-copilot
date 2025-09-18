@@ -22,8 +22,7 @@ export class ExplainChainRunner extends BaseSimpleChainRunner {
     messages[messages.length - 1] = {
       ...userMessage,
       content:
-        "Explain the following word/sentence: " +
-        userMessage?.content?.replace("@Explain", "").trim(),
+        "Explain the following word/sentence: " + userMessage?.content?.replace("@أشرح", "").trim(),
     };
     return messages;
   }

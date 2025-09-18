@@ -5,7 +5,7 @@ import { BaseSimpleChainRunner } from "./BaseSimpleChainRunner";
 
 export class CustomChainRunnerManager {
   static getRunner(chainManager: ChainManager, originalMessage: string): ChainRunner {
-    if (originalMessage.startsWith("@Explain")) {
+    if (originalMessage.startsWith("@أشرح")) {
       return new ExplainChainRunner(chainManager);
     }
 

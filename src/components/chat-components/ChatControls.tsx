@@ -195,7 +195,7 @@ export function ChatControls({
     <div className="tw-flex tw-w-full tw-items-center tw-justify-between tw-p-1">
       <div className="tw-flex-1">
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger asChild className="tw-hidden">
             <Button variant="ghost2" size="fit" className="tw-ml-1 tw-text-sm tw-text-muted">
               {selectedChain === ChainType.LLM_CHAIN && "chat (free)"}
               {selectedChain === ChainType.VAULT_QA_CHAIN && "vault QA (free)"}
