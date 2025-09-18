@@ -1,6 +1,8 @@
 import { BaseSimpleChainRunner, SystemMessage } from "./BaseSimpleChainRunner";
 
 export class ExplainChainRunner extends BaseSimpleChainRunner {
+  static trigger = "أشرح";
+
   getSystemPrompt(): string {
     return (
       super.getSystemPrompt() +
@@ -17,12 +19,13 @@ export class ExplainChainRunner extends BaseSimpleChainRunner {
     );
   }
 
-  formatInput(messages: SystemMessage[]): SystemMessage[] {
+  async formatInput(messages: SystemMessage[]): Promise<SystemMessage[]> {
     const userMessage = messages.last()!;
     messages[messages.length - 1] = {
       ...userMessage,
       content:
-        "Explain the following word/sentence: " + userMessage?.content?.replace("@أشرح", "").trim(),
+        "Explain the following word/sentence: " +
+        userMessage?.content?.replace(ExplainChainRunner.trigger, "").trim(),
     };
     return messages;
   }

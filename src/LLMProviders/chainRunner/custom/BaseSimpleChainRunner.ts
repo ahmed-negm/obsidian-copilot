@@ -81,7 +81,7 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
       });
 
       logInfo("Final Request to AI:\n", messages);
-      this.formatInput(messages);
+      await this.formatInput(messages);
 
       // Stream with abort signal
       const chatStream = await withSuppressedTokenWarnings(() =>
@@ -129,7 +129,7 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
     return SYSTEM_PROMPT;
   }
 
-  formatInput(messages: SystemMessage[]): SystemMessage[] {
+  async formatInput(messages: SystemMessage[]): Promise<SystemMessage[]> {
     return messages;
   }
 
