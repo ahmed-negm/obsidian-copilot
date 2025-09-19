@@ -56,6 +56,10 @@ ${bulletList}
     return response;
   }
 
+  includeChatHistory(): boolean {
+    return false;
+  }
+
   nextStep(): ChainRunner | null {
     return new TraceHadithChainRunner02(this.chainManager, this.narrators);
   }

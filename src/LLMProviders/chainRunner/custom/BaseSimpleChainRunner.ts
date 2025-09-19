@@ -5,35 +5,6 @@ import { extractChatHistory, getMessageRole, withSuppressedTokenWarnings } from 
 import { ThinkBlockStreamer } from "../utils/ThinkBlockStreamer";
 import { BaseChainRunner, ChainRunner } from "../BaseChainRunner";
 
-const SYSTEM_PROMPT = `
-- You are to act as an academic Islamic scholar specialized in both:
-  1. **ʿUlūm al-Ḥadīth (Hadith Sciences)**, including:
-     - Muṣṭalaḥ al-Ḥadīth (Hadith Terminology)
-     - ʿIlm al-Rijāl (Biographical Evaluation)
-     - al-Jarḥ wa al-Taʿdīl (Narrator Criticism & Authentication)
-     - ʿIlal al-Ḥadīth (Analysis of Hidden Defects)
-     - Mukhtalif al-Ḥadīth (Reconciling Contradictions)
-     - Nāsikh wa Mansūkh (Abrogation in Hadith)
-     - Gharīb al-Ḥadīth (Obscure/Linguistic Words in Hadith)
-     - Takhrīj al-Ḥadīth (Tracing Hadith Sources)
-     - Musṭalaḥāt al-Ruwāt (Narrator Terminology)
-
-  2. **ʿUlūm al-Lugha al-ʿArabiyya (Arabic Linguistic Sciences)**, including:
-     - al-Naḥw (Syntax/Grammar)
-     - al-Ṣarf (Morphology)
-     - al-Balāgha (Rhetoric: bayān, maʿānī, badīʿ)
-     - al-ʿArūḍ (Prosody) and al-Qāfiya (Rhyme)
-     - al-Ishtiqāq (Derivation/Etymology)
-     - al-Muʿjamiyya (Lexicography)
-     - Fiqh al-Lugha (Philology)
-     - ʿIlm al-Aṣwāt (Phonetics/Phonology)
-
-- ALWAYS respond in **formal Arabic**.
-- The answer must be structured in **Markdown format**.
-- Try to include **testimony from Qur'an, Hadith, or classical Arabic poetry whenever possible**.
-- When including testimony from sources, **cite the source name and reference** in double square brackets immediately after the quote (e.g., [[البخاري-٥]], [[البفرة-55]]) .
-`;
-
 export type SystemMessage = { role: string; content: string };
 
 export class BaseSimpleChainRunner extends BaseChainRunner {
@@ -51,11 +22,6 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
     const streamer = new ThinkBlockStreamer(() => {});
 
     try {
-      // Get chat history from memory
-      const memory = this.chainManager.memoryManager.getMemory();
-      const memoryVariables = await memory.loadMemoryVariables({});
-      const chatHistory = extractChatHistory(memoryVariables);
-
       // Create messages array starting with system message
       const messages: SystemMessage[] = [];
 
@@ -70,9 +36,16 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
         });
       }
 
-      // Add chat history
-      for (const entry of chatHistory) {
-        messages.push({ role: entry.role, content: entry.content });
+      if (this.includeChatHistory() === true) {
+        // Get chat history from memory
+        const memory = this.chainManager.memoryManager.getMemory();
+        const memoryVariables = await memory.loadMemoryVariables({});
+        const chatHistory = extractChatHistory(memoryVariables);
+
+        // Add chat history
+        for (const entry of chatHistory) {
+          messages.push({ role: entry.role, content: entry.content });
+        }
       }
 
       messages.push({
@@ -80,12 +53,12 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
         content: userMessage.message,
       });
 
-      logInfo("Final Request to AI:\n", messages);
-      await this.formatInput(messages);
+      const formattedMessages = await this.formatInput(messages);
+      logInfo("Final Request to AI:\n", formattedMessages);
 
       // Stream with abort signal
       const chatStream = await withSuppressedTokenWarnings(() =>
-        this.chainManager.chatModelManager.getChatModel().stream(messages, {
+        this.chainManager.chatModelManager.getChatModel().stream(formattedMessages, {
           signal: abortController.signal,
         })
       );
@@ -116,7 +89,13 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
       return "";
     }
 
-    this.handleResponse(response, userMessage, abortController, addMessage, updateCurrentAiMessage);
+    await this.handleResponse(
+      response,
+      userMessage,
+      abortController,
+      addMessage,
+      updateCurrentAiMessage
+    );
 
     const nextStep = this.nextStep();
     if (nextStep) {
@@ -133,7 +112,7 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
   }
 
   getSystemPrompt(): string {
-    return SYSTEM_PROMPT;
+    return getSystemPromptText();
   }
 
   async formatInput(messages: SystemMessage[]): Promise<SystemMessage[]> {
@@ -147,4 +126,37 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
   nextStep(): ChainRunner | null {
     return null;
   }
+
+  includeChatHistory(): boolean {
+    return true;
+  }
 }
+
+const getSystemPromptText = () => `
+- You are to act as an academic Islamic scholar specialized in both:
+  1. **ʿUlūm al-Ḥadīth (Hadith Sciences)**, including:
+     - Muṣṭalaḥ al-Ḥadīth (Hadith Terminology)
+     - ʿIlm al-Rijāl (Biographical Evaluation)
+     - al-Jarḥ wa al-Taʿdīl (Narrator Criticism & Authentication)
+     - ʿIlal al-Ḥadīth (Analysis of Hidden Defects)
+     - Mukhtalif al-Ḥadīth (Reconciling Contradictions)
+     - Nāsikh wa Mansūkh (Abrogation in Hadith)
+     - Gharīb al-Ḥadīth (Obscure/Linguistic Words in Hadith)
+     - Takhrīj al-Ḥadīth (Tracing Hadith Sources)
+     - Musṭalaḥāt al-Ruwāt (Narrator Terminology)
+
+  2. **ʿUlūm al-Lugha al-ʿArabiyya (Arabic Linguistic Sciences)**, including:
+     - al-Naḥw (Syntax/Grammar)
+     - al-Ṣarf (Morphology)
+     - al-Balāgha (Rhetoric: bayān, maʿānī, badīʿ)
+     - al-ʿArūḍ (Prosody) and al-Qāfiya (Rhyme)
+     - al-Ishtiqāq (Derivation/Etymology)
+     - al-Muʿjamiyya (Lexicography)
+     - Fiqh al-Lugha (Philology)
+     - ʿIlm al-Aṣwāt (Phonetics/Phonology)
+
+- ALWAYS respond in **formal Arabic**.
+- The answer must be structured in **Markdown format**.
+- Try to include **testimony from Qur'an, Hadith, or classical Arabic poetry whenever possible**.
+- When including testimony from sources, **cite the source name and reference** in double square brackets immediately after the quote (e.g., [[البخاري-٥]], [[البفرة-55]]) .
+`;

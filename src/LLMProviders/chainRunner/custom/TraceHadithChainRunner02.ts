@@ -1,6 +1,8 @@
 import ChainManager from "@/LLMProviders/chainManager";
 import { BaseSimpleChainRunner, SystemMessage } from "./BaseSimpleChainRunner";
 import { Narrator } from "./TraceHadithChainRunner01";
+import { ChainRunner } from "../BaseChainRunner";
+import { TraceHadithChainRunner03 } from "./TraceHadithChainRunner03";
 
 export class TraceHadithChainRunner02 extends BaseSimpleChainRunner {
   constructor(
@@ -19,5 +21,13 @@ export class TraceHadithChainRunner02 extends BaseSimpleChainRunner {
 يبدو أن **${this.narrators[0].name}** هو **${this.narrators[0].potentialFullNames[0]}**.
 جاري البحث عنه في تهذيب الكمال ...
 `;
+  }
+
+  includeChatHistory(): boolean {
+    return false;
+  }
+
+  nextStep(): ChainRunner | null {
+    return new TraceHadithChainRunner03(this.chainManager, this.narrators, 0);
   }
 }
