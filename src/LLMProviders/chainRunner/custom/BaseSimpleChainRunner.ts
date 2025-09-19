@@ -3,7 +3,7 @@ import { logInfo } from "@/logger";
 import { ChatMessage } from "@/types/message";
 import { extractChatHistory, getMessageRole, withSuppressedTokenWarnings } from "@/utils";
 import { ThinkBlockStreamer } from "../utils/ThinkBlockStreamer";
-import { BaseChainRunner } from "../BaseChainRunner";
+import { BaseChainRunner, ChainRunner } from "../BaseChainRunner";
 
 const SYSTEM_PROMPT = `
 - You are to act as an academic Islamic scholar specialized in both:
@@ -116,13 +116,20 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
       return "";
     }
 
-    return this.handleResponse(
-      response,
-      userMessage,
-      abortController,
-      addMessage,
-      updateCurrentAiMessage
-    );
+    this.handleResponse(response, userMessage, abortController, addMessage, updateCurrentAiMessage);
+
+    const nextStep = this.nextStep();
+    if (nextStep) {
+      return nextStep.run(
+        userMessage,
+        abortController,
+        updateCurrentAiMessage,
+        addMessage,
+        options
+      );
+    }
+
+    return response;
   }
 
   getSystemPrompt(): string {
@@ -135,5 +142,9 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
 
   formatOutput(response: string): string {
     return response;
+  }
+
+  nextStep(): ChainRunner | null {
+    return null;
   }
 }

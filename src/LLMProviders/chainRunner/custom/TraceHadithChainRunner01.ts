@@ -1,8 +1,16 @@
+import { ChainRunner } from "../BaseChainRunner";
 import { BaseSimpleChainRunner, SystemMessage } from "./BaseSimpleChainRunner";
+import { TraceHadithChainRunner02 } from "./TraceHadithChainRunner02";
 import { stripObsidianProperties } from "./utils";
 
-export class TraceHadithChainRunner extends BaseSimpleChainRunner {
+export type Narrator = {
+  name: string;
+  potentialFullNames: string[];
+};
+
+export class TraceHadithChainRunner01 extends BaseSimpleChainRunner {
   static trigger = "تتبع الرواة";
+  private narrators: Narrator[] = [];
 
   async formatInput(messages: SystemMessage[]): Promise<SystemMessage[]> {
     const activeFile = app.workspace.getActiveFile();
@@ -24,14 +32,11 @@ export class TraceHadithChainRunner extends BaseSimpleChainRunner {
     const codeBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
     if (codeBlockMatch) {
       try {
-        const json = JSON.parse(codeBlockMatch[1]) as {
-          name: string;
-          potentialFullNames: string[];
-        }[];
+        this.narrators = JSON.parse(codeBlockMatch[1]) as Narrator[];
 
-        const bulletList = json
+        const bulletList = this.narrators
           .reverse()
-          .map((narrator: any) => {
+          .map((narrator: Narrator) => {
             return `- **${narrator.name}**`;
           })
           .join("\n");
@@ -42,7 +47,6 @@ export class TraceHadithChainRunner extends BaseSimpleChainRunner {
 ${bulletList}
 
 سنبدأ الآن في التحقق من الرواة واحداً يلو الآخر ...
-يبدو أن **${json[0].name}** هو **${json[0].potentialFullNames[0]}**. جاري البحث عنه في تهذيب الكمال ...
 `;
       } catch (error) {
         console.error("Failed to parse JSON:", error);
@@ -50,6 +54,10 @@ ${bulletList}
     }
 
     return response;
+  }
+
+  nextStep(): ChainRunner | null {
+    return new TraceHadithChainRunner02(this.chainManager, this.narrators);
   }
 }
 
