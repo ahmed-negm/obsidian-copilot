@@ -1,4 +1,5 @@
 import { BaseSimpleChainRunner, SystemMessage } from "./BaseSimpleChainRunner";
+import { getActiveNote, getSelectedText, stripObsidianProperties } from "./utils";
 
 export class ExplainChainRunner extends BaseSimpleChainRunner {
   static trigger = "أشرح";
@@ -21,11 +22,21 @@ export class ExplainChainRunner extends BaseSimpleChainRunner {
 
   async formatInput(messages: SystemMessage[]): Promise<SystemMessage[]> {
     const userMessage = messages.last()!;
+
+    let toExplain = userMessage?.content?.replace(ExplainChainRunner.trigger, "").trim();
+    if (!toExplain) {
+      const selectedText = getSelectedText();
+      if (selectedText) {
+        toExplain = selectedText;
+      } else {
+        const activeNote = await getActiveNote();
+        toExplain = stripObsidianProperties(activeNote);
+      }
+    }
+
     messages[messages.length - 1] = {
       ...userMessage,
-      content:
-        "Explain the following word/sentence: " +
-        userMessage?.content?.replace(ExplainChainRunner.trigger, "").trim(),
+      content: "Explain the following text: " + toExplain,
     };
     return messages;
   }

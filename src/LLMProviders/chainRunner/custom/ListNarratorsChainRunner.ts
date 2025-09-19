@@ -1,21 +1,17 @@
 import { BaseSimpleChainRunner, SystemMessage } from "./BaseSimpleChainRunner";
-import { stripObsidianProperties } from "./utils";
+import { getActiveNote, stripObsidianProperties } from "./utils";
 
 export class ListNarratorsChainRunner extends BaseSimpleChainRunner {
   static trigger = "استخرج الرواة";
 
   async formatInput(messages: SystemMessage[]): Promise<SystemMessage[]> {
-    const activeFile = app.workspace.getActiveFile();
-    let fileContent = "";
-    if (activeFile) {
-      fileContent = await app.vault.read(activeFile);
-    }
+    const activeNote = await getActiveNote();
 
     const userMessage = messages.last()!;
     messages[messages.length - 1] = {
       ...userMessage,
       content:
-        getPrompt() + "Here is the Hadith text:\n\n '" + stripObsidianProperties(fileContent) + "'",
+        getPrompt() + "Here is the Hadith text:\n\n '" + stripObsidianProperties(activeNote) + "'",
     };
     return messages;
   }

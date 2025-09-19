@@ -19,6 +19,38 @@ export class TraceHadithChainRunner extends BaseSimpleChainRunner {
     };
     return messages;
   }
+
+  formatOutput(response: string): string {
+    const codeBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
+    if (codeBlockMatch) {
+      try {
+        const json = JSON.parse(codeBlockMatch[1]) as {
+          name: string;
+          potentialFullNames: string[];
+        }[];
+
+        const bulletList = json
+          .reverse()
+          .map((narrator: any) => {
+            return `- **${narrator.name}**`;
+          })
+          .join("\n");
+
+        return `
+سند الحديث من الآعلى
+
+${bulletList}
+
+سنبدأ الآن في التحقق من الرواة واحداً يلو الآخر ...
+يبدو أن **${json[0].name}** هو **${json[0].potentialFullNames[0]}**. جاري البحث عنه في تهذيب الكمال ...
+`;
+      } catch (error) {
+        console.error("Failed to parse JSON:", error);
+      }
+    }
+
+    return response;
+  }
 }
 
 const getPrompt = () => `
@@ -45,7 +77,7 @@ Return a single JSON array like this (this is the only permitted extraneous exam
 [
   {
     "name": "مُحَمَّدُ بْنُ إِسْحَاقَ",
-    "potentialFullNames": ["محمد بن إسحاق بن بشار (وَصال) "],
+    "potentialFullNames": ["محمد بن إسحاق بن بشار بن خزيمة الأنصاري"],
   }
 ]
 '''
