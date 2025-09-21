@@ -1,5 +1,6 @@
 // src/getSelection.ts
 
+import { logError } from "@/logger";
 import { MarkdownView } from "obsidian";
 
 export async function getActiveNote() {
@@ -45,4 +46,20 @@ export function getSelectedText(): string {
 
 export function stripObsidianProperties(content: string): string {
   return content.replace(/^---\n[\s\S]*?\n---\n?/, "");
+}
+
+export async function readVaultFile(filePath: string): Promise<string> {
+  try {
+    const normalizedPath = filePath.replace(/\\/g, "/");
+    const content = await app.vault.adapter.read(normalizedPath);
+    return content;
+  } catch (error) {
+    logError("Failed to read vault file", { filePath, error });
+    throw error;
+  }
+}
+
+export function toArabicDigits(str: string | number): string {
+  const arabic = "٠١٢٣٤٥٦٧٨٩";
+  return String(str).replace(/[0-9]/g, (d) => arabic[parseInt(d)]);
 }
