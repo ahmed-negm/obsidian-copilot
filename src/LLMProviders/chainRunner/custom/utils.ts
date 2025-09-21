@@ -77,3 +77,7 @@ export function toArabicDigits(str: string | number): string {
   const arabic = "٠١٢٣٤٥٦٧٨٩";
   return String(str).replace(/[0-9]/g, (d) => arabic[parseInt(d)]);
 }
+
+export async function getPromptTemplate(name: string) {
+  return readVaultFile(`_extras/Prompt/${name}.md`);
+}

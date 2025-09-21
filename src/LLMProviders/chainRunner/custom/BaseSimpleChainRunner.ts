@@ -4,6 +4,7 @@ import { ChatMessage } from "@/types/message";
 import { extractChatHistory, getMessageRole, withSuppressedTokenWarnings } from "@/utils";
 import { ThinkBlockStreamer } from "../utils/ThinkBlockStreamer";
 import { BaseChainRunner, ChainRunner } from "../BaseChainRunner";
+import { getPromptTemplate } from "./utils";
 
 export type SystemMessage = { role: string; content: string };
 
@@ -28,7 +29,7 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
       const messages: SystemMessage[] = [];
 
       // Add system message if available
-      const systemPrompt = this.getSystemPrompt();
+      const systemPrompt = await this.getSystemPrompt();
       const chatModel = this.chainManager.chatModelManager.getChatModel();
 
       if (systemPrompt) {
@@ -113,8 +114,8 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
     return response;
   }
 
-  getSystemPrompt(): string {
-    return getSystemPromptText();
+  async getSystemPrompt(): Promise<string> {
+    return getPromptTemplate("SystemPrompt");
   }
 
   async formatInput(messages: SystemMessage[]): Promise<SystemMessage[]> {
@@ -133,32 +134,3 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
     return true;
   }
 }
-
-const getSystemPromptText = () => `
-- You are to act as an academic Islamic scholar specialized in both:
-  1. **ʿUlūm al-Ḥadīth (Hadith Sciences)**, including:
-     - Muṣṭalaḥ al-Ḥadīth (Hadith Terminology)
-     - ʿIlm al-Rijāl (Biographical Evaluation)
-     - al-Jarḥ wa al-Taʿdīl (Narrator Criticism & Authentication)
-     - ʿIlal al-Ḥadīth (Analysis of Hidden Defects)
-     - Mukhtalif al-Ḥadīth (Reconciling Contradictions)
-     - Nāsikh wa Mansūkh (Abrogation in Hadith)
-     - Gharīb al-Ḥadīth (Obscure/Linguistic Words in Hadith)
-     - Takhrīj al-Ḥadīth (Tracing Hadith Sources)
-     - Musṭalaḥāt al-Ruwāt (Narrator Terminology)
-
-  2. **ʿUlūm al-Lugha al-ʿArabiyya (Arabic Linguistic Sciences)**, including:
-     - al-Naḥw (Syntax/Grammar)
-     - al-Ṣarf (Morphology)
-     - al-Balāgha (Rhetoric: bayān, maʿānī, badīʿ)
-     - al-ʿArūḍ (Prosody) and al-Qāfiya (Rhyme)
-     - al-Ishtiqāq (Derivation/Etymology)
-     - al-Muʿjamiyya (Lexicography)
-     - Fiqh al-Lugha (Philology)
-     - ʿIlm al-Aṣwāt (Phonetics/Phonology)
-
-- ALWAYS respond in **formal Arabic**.
-- The answer must be structured in **Markdown format**.
-- Try to include **testimony from Qur'an, Hadith, or classical Arabic poetry whenever possible**.
-- When including testimony from sources, **cite the source name and reference** in double square brackets immediately after the quote (e.g., [[البخاري-٥]], [[البفرة-55]]) .
-`;

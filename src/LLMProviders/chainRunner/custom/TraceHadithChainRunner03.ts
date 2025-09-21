@@ -1,6 +1,6 @@
 import ChainManager from "@/LLMProviders/chainManager";
 import { BaseSimpleChainRunner, SystemMessage } from "./BaseSimpleChainRunner";
-import { readVaultFile, toArabicDigits } from "./utils";
+import { getPromptTemplate, toArabicDigits } from "./utils";
 import { TraceHadithChainRunner04 } from "./TraceHadithChainRunner04";
 import { TraceHadithChainRunner02Input } from "./TraceHadithChainRunner02";
 
@@ -30,7 +30,8 @@ export class TraceHadithChainRunner03 extends BaseSimpleChainRunner {
         name: n.name ?? "",
       }));
 
-    const prompt = (await readVaultFile("_extras/Prompt/TraceHadithChainRunner03.md"))
+    const promptTemplate = await getPromptTemplate("TraceHadithChainRunner03");
+    const prompt = promptTemplate
       .replaceAll("{{name_to_search}}", narratorToFind)
       .replaceAll("{{JSON}}", JSON.stringify(matchingNarrators, null, 2));
 
