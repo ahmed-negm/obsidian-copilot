@@ -3,6 +3,20 @@
 import { logError } from "@/logger";
 import { MarkdownView } from "obsidian";
 
+export type HadithNarrator = {
+  name: string;
+  potentialFullNames: string[];
+};
+
+export type NarratorInfo = {
+  id: number | null;
+  name: string;
+  part: number;
+  page: number;
+  islamWebIndex: number;
+  shamelaIndex: number;
+};
+
 export async function getActiveNote() {
   const activeFile = app.workspace.getActiveFile();
   let fileContent = "";

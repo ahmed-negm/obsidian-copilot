@@ -1,18 +1,13 @@
-import { ChainRunner } from "../BaseChainRunner";
 import { BaseSimpleChainRunner, SystemMessage } from "./BaseSimpleChainRunner";
 import { TraceHadithChainRunner02 } from "./TraceHadithChainRunner02";
-import { stripObsidianProperties } from "./utils";
-
-export type Narrator = {
-  name: string;
-  potentialFullNames: string[];
-};
+import { HadithNarrator, NarratorInfo, readVaultFile, stripObsidianProperties } from "./utils";
 
 export class TraceHadithChainRunner01 extends BaseSimpleChainRunner {
   static trigger = "تتبع الرواة";
-  private narrators: Narrator[] = [];
+  private hadithNarrators: HadithNarrator[] = [];
+  private allNarrators: NarratorInfo[] = [];
 
-  async formatInput(messages: SystemMessage[]): Promise<SystemMessage[]> {
+  async formatInput(messages: SystemMessage[]) {
     const activeFile = app.workspace.getActiveFile();
     let fileContent = "";
     if (activeFile) {
@@ -28,40 +23,44 @@ export class TraceHadithChainRunner01 extends BaseSimpleChainRunner {
     return messages;
   }
 
-  formatOutput(response: string): string {
+  async formatOutput(response: string) {
     const codeBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
     if (codeBlockMatch) {
-      try {
-        this.narrators = JSON.parse(codeBlockMatch[1]) as Narrator[];
+      this.hadithNarrators = JSON.parse(codeBlockMatch[1]) as HadithNarrator[];
 
-        const bulletList = this.narrators
-          .reverse()
-          .map((narrator: Narrator) => {
-            return `- **${narrator.name}**`;
-          })
-          .join("\n");
+      const jsonString = await readVaultFile("_extras/Data/Tahdhib.json");
+      this.allNarrators = JSON.parse(jsonString);
 
-        return `
+      const bulletList = this.hadithNarrators
+        .reverse()
+        .map((narrator: HadithNarrator) => {
+          return `- **${narrator.name}**`;
+        })
+        .join("\n");
+
+      this.succeeded = true;
+
+      return `
 سند الحديث من الآعلى
 
 ${bulletList}
 
 سنبدأ الآن في التحقق من الرواة واحداً يلو الآخر ...
 `;
-      } catch (error) {
-        console.error("Failed to parse JSON:", error);
-      }
     }
 
     return response;
   }
 
-  includeChatHistory(): boolean {
+  includeChatHistory() {
     return false;
   }
 
-  nextStep(): ChainRunner | null {
-    return new TraceHadithChainRunner02(this.chainManager, this.narrators);
+  nextStep() {
+    return new TraceHadithChainRunner02(this.chainManager, {
+      allNarrators: this.allNarrators,
+      hadithNarrators: this.hadithNarrators,
+    });
   }
 }
 

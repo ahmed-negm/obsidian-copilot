@@ -8,6 +8,8 @@ import { BaseChainRunner, ChainRunner } from "../BaseChainRunner";
 export type SystemMessage = { role: string; content: string };
 
 export class BaseSimpleChainRunner extends BaseChainRunner {
+  protected succeeded: boolean = false;
+
   async run(
     userMessage: ChatMessage,
     abortController: AbortController,
@@ -81,7 +83,7 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
     }
 
     // Always return the response, even if partial
-    const response = this.formatOutput(streamer.close());
+    const response = await this.formatOutput(streamer.close());
 
     // Only skip saving if it's a new chat (clearing everything)
     if (abortController.signal.aborted && abortController.signal.reason === ABORT_REASON.NEW_CHAT) {
@@ -98,7 +100,7 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
     );
 
     const nextStep = this.nextStep();
-    if (nextStep) {
+    if (this.succeeded && nextStep) {
       return nextStep.run(
         userMessage,
         abortController,
@@ -119,7 +121,7 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
     return messages;
   }
 
-  formatOutput(response: string): string {
+  async formatOutput(response: string): Promise<string> {
     return response;
   }
 
