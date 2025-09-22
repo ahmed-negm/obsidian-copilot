@@ -2,6 +2,7 @@ import ChainManager from "@/LLMProviders/chainManager";
 import { BaseSimpleChainRunner, SystemMessage } from "./BaseSimpleChainRunner";
 import { TahdibNarrator, TraceHadithChainRunner04Input } from "./TraceHadithChainRunner04";
 import { getPromptTemplate } from "./utils";
+import { TraceHadithChainRunner03 } from "./TraceHadithChainRunner03";
 
 export interface TraceHadithChainRunner05Input extends TraceHadithChainRunner04Input {
   tahdibNarrators: TahdibNarrator[];
@@ -58,13 +59,13 @@ export class TraceHadithChainRunner05 extends BaseSimpleChainRunner {
 
           this.input.hadithNarratorIndex += 1;
 
-          this.succeeded = this.input.hadithNarratorIndex < this.input.hadithNarrators.length - 1;
+          this.succeeded = this.input.hadithNarratorIndex < this.input.hadithNarrators.length;
 
           return (
             updatedResponse +
             (this.succeeded
-              ? `\n\nجاري تتبع الراوي التالي في السند`
-              : "\n\n🎉 تم الانتهاء من تتبع جميع الرواة!")
+              ? `\n\nجاري تتبع الراوي التالي في السند ...`
+              : "\n\n\n\n🎉 تم الانتهاء من تتبع جميع الرواة!")
           );
         }
       }
@@ -75,6 +76,14 @@ export class TraceHadithChainRunner05 extends BaseSimpleChainRunner {
 
   includeChatHistory() {
     return false;
+  }
+
+  nextStep() {
+    return new TraceHadithChainRunner03(this.chainManager, {
+      allNarrators: this.input.allNarrators,
+      hadithNarrators: this.input.hadithNarrators,
+      hadithNarratorIndex: this.input.hadithNarratorIndex,
+    });
   }
 
   getTahdibBooks(symbols: string[]) {
@@ -92,7 +101,9 @@ export class TraceHadithChainRunner05 extends BaseSimpleChainRunner {
       }
     }
 
-    return txt + (unknownSymbols.length ? ` (رموز غير معروفة: ${unknownSymbols.join(", ")})` : "");
+    return (
+      txt + (unknownSymbols.length ? `\n\n⚠️ رموز غير معروفة: ${unknownSymbols.join(", ")}` : "")
+    );
   }
 }
 

@@ -54,11 +54,12 @@ export class TraceHadithChainRunner03 extends BaseSimpleChainRunner {
           );
           if (this.allNarratorIndex !== -1) {
             const foundNarrator = this.input.allNarrators[this.allNarratorIndex];
-            this.succeeded = true;
-            return `
+            this.succeeded = this.input.hadithNarratorIndex < this.input.hadithNarrators.length - 1;
+            return (
+              `
 تم العثور على **${this.input.hadithNarrators[this.input.hadithNarratorIndex].potentialPeople[0].knownName}** في تهذيب الكمال [المجلد ${toArabicDigits(foundNarrator.part)} - الصفحة ${toArabicDigits(foundNarrator.page)}](https://shamela.ws/book/3722/${foundNarrator.shamelaIndex})
-جاري البحث عن من رووا عنه ...
-`;
+` + (this.succeeded ? "جاري البحث عن من رووا عنه ..." : "\n\n🎉 تم الانتهاء من تتبع جميع الرواة!")
+            );
           }
           return response;
         }
