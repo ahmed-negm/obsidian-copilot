@@ -3,12 +3,20 @@ import { BaseSimpleChainRunner, SystemMessage } from "./BaseSimpleChainRunner";
 import { TraceHadithChainRunner03Input } from "./TraceHadithChainRunner03";
 import { getShamelaContent } from "./shamelaHelper";
 import { getPromptTemplate, toArabicDigits } from "./utils";
+import { TraceHadithChainRunner05 } from "./TraceHadithChainRunner05";
 
 export interface TraceHadithChainRunner04Input extends TraceHadithChainRunner03Input {
   allNarratorIndex: number;
 }
 
+export interface TahdibNarrator {
+  name: string;
+  symbols: string;
+}
+
 export class TraceHadithChainRunner04 extends BaseSimpleChainRunner {
+  private tahdibNarrators: TahdibNarrator[];
+
   constructor(
     chainManager: ChainManager,
     private input: TraceHadithChainRunner04Input
@@ -38,11 +46,11 @@ export class TraceHadithChainRunner04 extends BaseSimpleChainRunner {
   async formatOutput(response: string) {
     const codeBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
     if (codeBlockMatch) {
-      const result = JSON.parse(codeBlockMatch[1]) as { name: string; symbols: string }[];
-      if (result.length > 0) {
+      this.tahdibNarrators = JSON.parse(codeBlockMatch[1]);
+      if (this.tahdibNarrators.length > 0) {
         this.succeeded = true;
         return `
-عدد من رووا عن **${this.input.hadithNarrators[this.input.hadithNarratorIndex].potentialPeople[0].knownName}** في صحيح البخاري هو **${toArabicDigits(result.length)}**
+عدد من رووا عن **${this.input.hadithNarrators[this.input.hadithNarratorIndex].potentialPeople[0].knownName}** في صحيح البخاري هو **${toArabicDigits(this.tahdibNarrators.length)}**
 جاري البحث عن **${this.input.hadithNarrators[this.input.hadithNarratorIndex + 1].potentialPeople[0].knownName}** بينهم ...
 `;
       }
@@ -52,5 +60,12 @@ export class TraceHadithChainRunner04 extends BaseSimpleChainRunner {
 
   includeChatHistory() {
     return false;
+  }
+
+  nextStep() {
+    return new TraceHadithChainRunner05(this.chainManager, {
+      ...this.input,
+      tahdibNarrators: this.tahdibNarrators,
+    });
   }
 }
