@@ -5,7 +5,7 @@ import { MarkdownView } from "obsidian";
 
 export type HadithNarrator = {
   name: string;
-  potentialFullNames: string[];
+  potentialPeople: { fullName: string; knownName: string }[];
 };
 
 export type NarratorInfo = {

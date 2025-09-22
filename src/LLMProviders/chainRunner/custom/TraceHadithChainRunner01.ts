@@ -37,7 +37,7 @@ export class TraceHadithChainRunner01 extends BaseSimpleChainRunner {
       const bulletList = this.hadithNarrators
         .reverse()
         .map((narrator: HadithNarrator) => {
-          return `- **${narrator.name}**`;
+          return `- **${narrator.name}**: (${narrator.potentialPeople.first()?.knownName})`;
         })
         .join("\n");
 

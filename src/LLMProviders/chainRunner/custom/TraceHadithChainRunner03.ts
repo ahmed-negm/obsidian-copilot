@@ -20,7 +20,7 @@ export class TraceHadithChainRunner03 extends BaseSimpleChainRunner {
 
   async formatInput(messages: SystemMessage[]) {
     const narratorToFind =
-      this.input.hadithNarrators[this.input.hadithNarratorIndex].potentialFullNames[0];
+      this.input.hadithNarrators[this.input.hadithNarratorIndex].potentialPeople[0].fullName;
 
     // Find all narrator info that matches the first 3 letters of the name
     const matchingNarrators = this.input.allNarrators
@@ -56,7 +56,7 @@ export class TraceHadithChainRunner03 extends BaseSimpleChainRunner {
             const foundNarrator = this.input.allNarrators[this.allNarratorIndex];
             this.succeeded = true;
             return `
-تم العثور على **${foundNarrator.name}** في تهذيب الكمال [المجلد ${toArabicDigits(foundNarrator.part)} - الصفحة ${toArabicDigits(foundNarrator.page)}](https://shamela.ws/book/3722/${foundNarrator.shamelaIndex})
+تم العثور على **${this.input.hadithNarrators[this.input.hadithNarratorIndex].potentialPeople[0].knownName}** في تهذيب الكمال [المجلد ${toArabicDigits(foundNarrator.part)} - الصفحة ${toArabicDigits(foundNarrator.page)}](https://shamela.ws/book/3722/${foundNarrator.shamelaIndex})
 جاري البحث عن من رووا عنه ...
 `;
           }

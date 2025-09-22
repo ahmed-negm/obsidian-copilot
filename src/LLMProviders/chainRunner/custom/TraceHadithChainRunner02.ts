@@ -1,7 +1,7 @@
 import ChainManager from "@/LLMProviders/chainManager";
 import { BaseSimpleChainRunner, SystemMessage } from "./BaseSimpleChainRunner";
 import { TraceHadithChainRunner03 } from "./TraceHadithChainRunner03";
-import { HadithNarrator, NarratorInfo, readVaultFile } from "./utils";
+import { HadithNarrator, NarratorInfo } from "./utils";
 
 export interface TraceHadithChainRunner02Input {
   allNarrators: NarratorInfo[];
@@ -17,15 +17,13 @@ export class TraceHadithChainRunner02 extends BaseSimpleChainRunner {
   }
 
   async formatInput(_messages: SystemMessage[]) {
-    const jsonString = await readVaultFile("_extras/Data/Tahdhib.json");
-    this.input.allNarrators = JSON.parse(jsonString);
     return [{ role: "user", content: "Hello" }];
   }
 
   async formatOutput(_response: string) {
     this.succeeded = true;
     return `
-يبدو أن **${this.input.hadithNarrators[0].name}** هو **${this.input.hadithNarrators[0].potentialFullNames[0]}**.
+يبدو أن **${this.input.hadithNarrators[0].name}** هو **${this.input.hadithNarrators[0].potentialPeople[0].fullName}**.
 جاري البحث عنه في تهذيب الكمال ...
 `;
   }
