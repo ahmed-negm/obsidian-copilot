@@ -30,23 +30,31 @@ export class TraceHadithChainRunner06 extends BaseSimpleChainRunner {
     for (const hadithNarrator of this.input.hadithNarrators) {
       if (hadithNarrator.indexInAllNarrators !== undefined) {
         const narrator = this.input.allNarrators[hadithNarrator.indexInAllNarrators];
-        const fileName = `test-figures/${narrator.name.replace(/[/\\?%*:|"<>]/g, "-")}.md`;
-        const noteExists = app.vault.getAbstractFileByPath(fileName);
-        if (noteExists) {
-          continue; // Skip if note already exists
+        const fileName = narrator.name.replace(/[/\\?%*:|"<>]/g, "-");
+        const filePath = `Figures/${fileName}.md`;
+        const noteExists = app.vault.getAbstractFileByPath(filePath);
+        if (!noteExists) {
+          const noteContent = (await getTemplate("Mohadith"))
+            .replaceAll("{{NAME}}", narrator.name)
+            .replaceAll("{{KNOWN_NAME}}", hadithNarrator.potentialPeople[0].knownName)
+            .replaceAll("{{PART}}", toArabicDigits(narrator.part))
+            .replaceAll("{{PAGE}}", toArabicDigits(narrator.page))
+            .replaceAll("{{SHAMELA_INDEX}}", narrator.shamelaIndex.toString())
+            .replaceAll("{{TAHDHIB_ID}}", narrator.id?.toString() ?? "")
+            .replaceAll("{{DATE}}", new Date().toISOString().slice(0, 10));
+
+          await app.vault.create(filePath, noteContent).catch((err) => {
+            console.error("Error creating note:", err);
+          });
         }
 
-        const noteContent = (await getTemplate("Mohadith"))
-          .replaceAll("{{NAME}}", narrator.name)
-          .replaceAll("{{KNOWN_NAME}}", hadithNarrator.potentialPeople[0].knownName)
-          .replaceAll("{{PART}}", toArabicDigits(narrator.part))
-          .replaceAll("{{PAGE}}", toArabicDigits(narrator.page))
-          .replaceAll("{{SHAMELA_INDEX}}", narrator.shamelaIndex.toString())
-          .replaceAll("{{DATE}}", new Date().toISOString().slice(0, 10));
-
-        await app.vault.create(fileName, noteContent).catch((err) => {
-          console.error("Error creating note:", err);
-        });
+        const activeFile = app.workspace.getActiveFile();
+        if (activeFile) {
+          const fileContent = await app.vault.read(activeFile);
+          const linkToNote = `[[${fileName}|${hadithNarrator.name}]]`;
+          const updatedContent = fileContent.replace(hadithNarrator.name, linkToNote);
+          await app.vault.modify(activeFile, updatedContent);
+        }
       }
     }
   }
