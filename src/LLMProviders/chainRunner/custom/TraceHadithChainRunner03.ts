@@ -1,15 +1,18 @@
 import ChainManager from "@/LLMProviders/chainManager";
 import { BaseSimpleChainRunner, SystemMessage } from "./BaseSimpleChainRunner";
-import { getPromptTemplate, toArabicDigits } from "./utils";
+import { getPromptTemplate, HadithNarrator, NarratorInfo, toArabicDigits } from "./utils";
 import { TraceHadithChainRunner04 } from "./TraceHadithChainRunner04";
-import { TraceHadithChainRunner02Input } from "./TraceHadithChainRunner02";
+import { TraceHadithChainRunner06 } from "./TraceHadithChainRunner06";
 
-export interface TraceHadithChainRunner03Input extends TraceHadithChainRunner02Input {
+export interface TraceHadithChainRunner03Input {
+  allNarrators: NarratorInfo[];
+  hadithNarrators: HadithNarrator[];
   hadithNarratorIndex: number;
 }
 
 export class TraceHadithChainRunner03 extends BaseSimpleChainRunner {
   private allNarratorIndex: number = -1;
+  private finished: boolean = false;
 
   constructor(
     chainManager: ChainManager,
@@ -47,18 +50,21 @@ export class TraceHadithChainRunner03 extends BaseSimpleChainRunner {
         confidence: string;
       }[];
       if (result.length > 0) {
-        const first = result.find((r) => r.confidence === "High");
+        const first = result.find((r) => r.confidence === "High") ?? result[0];
         if (first) {
           this.allNarratorIndex = this.input.allNarrators.findIndex(
             (n) => n.islamWebIndex === first.id
           );
           if (this.allNarratorIndex !== -1) {
             const foundNarrator = this.input.allNarrators[this.allNarratorIndex];
-            this.succeeded = this.input.hadithNarratorIndex < this.input.hadithNarrators.length - 1;
+            this.finished = this.input.hadithNarratorIndex >= this.input.hadithNarrators.length - 1;
+            this.input.hadithNarrators[this.input.hadithNarratorIndex].indexInAllNarrators =
+              this.allNarratorIndex;
+            this.succeeded = true;
             return (
               `
-تم العثور على **${this.input.hadithNarrators[this.input.hadithNarratorIndex].potentialPeople[0].knownName}** في تهذيب الكمال [المجلد ${toArabicDigits(foundNarrator.part)} - الصفحة ${toArabicDigits(foundNarrator.page)}](https://shamela.ws/book/3722/${foundNarrator.shamelaIndex})
-` + (this.succeeded ? "جاري البحث عن من رووا عنه ..." : "\n\n🎉 تم الانتهاء من تتبع جميع الرواة!")
+تم العثور على **${foundNarrator.name}** في تهذيب الكمال [المجلد ${toArabicDigits(foundNarrator.part)} - الصفحة ${toArabicDigits(foundNarrator.page)}](https://shamela.ws/book/3722/${foundNarrator.shamelaIndex})
+` + (!this.finished ? "جاري البحث عن من رووا عنه ..." : "\n\nجاري إنشاء الملفات ...")
             );
           }
           return response;
@@ -74,9 +80,11 @@ export class TraceHadithChainRunner03 extends BaseSimpleChainRunner {
   }
 
   nextStep() {
-    return new TraceHadithChainRunner04(this.chainManager, {
-      ...this.input,
-      allNarratorIndex: this.allNarratorIndex,
-    });
+    return this.finished
+      ? new TraceHadithChainRunner06(this.chainManager, this.input)
+      : new TraceHadithChainRunner04(this.chainManager, {
+          ...this.input,
+          allNarratorIndex: this.allNarratorIndex,
+        });
   }
 }

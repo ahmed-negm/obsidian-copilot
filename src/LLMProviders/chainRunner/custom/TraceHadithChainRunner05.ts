@@ -89,7 +89,7 @@ export class TraceHadithChainRunner05 extends BaseSimpleChainRunner {
   getTahdibBooks(symbols: string[]) {
     const unknownSymbols: string[] = [];
     if (!symbols.length) {
-      return "فقط ";
+      return " فقط ";
     }
     let txt = "";
     for (const symbol of symbols) {

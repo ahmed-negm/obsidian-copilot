@@ -6,6 +6,7 @@ import { MarkdownView } from "obsidian";
 export type HadithNarrator = {
   name: string;
   potentialPeople: { fullName: string; knownName: string }[];
+  indexInAllNarrators?: number;
 };
 
 export type NarratorInfo = {
@@ -80,4 +81,8 @@ export function toArabicDigits(str: string | number): string {
 
 export async function getPromptTemplate(name: string) {
   return readVaultFile(`_extras/Prompt/${name}.md`);
+}
+
+export async function getTemplate(name: string) {
+  return readVaultFile(`_extras/Templates/${name}.md`);
 }

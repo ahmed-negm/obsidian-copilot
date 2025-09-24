@@ -1,5 +1,5 @@
 import { BaseSimpleChainRunner, SystemMessage } from "./BaseSimpleChainRunner";
-import { TraceHadithChainRunner02 } from "./TraceHadithChainRunner02";
+import { TraceHadithChainRunner03 } from "./TraceHadithChainRunner03";
 import {
   getActiveNote,
   getPromptTemplate,
@@ -60,9 +60,10 @@ ${bulletList}
   }
 
   nextStep() {
-    return new TraceHadithChainRunner02(this.chainManager, {
+    return new TraceHadithChainRunner03(this.chainManager, {
       allNarrators: this.allNarrators,
       hadithNarrators: this.hadithNarrators,
+      hadithNarratorIndex: 0,
     });
   }
 }
