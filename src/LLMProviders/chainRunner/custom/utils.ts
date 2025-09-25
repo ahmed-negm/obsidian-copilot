@@ -1,11 +1,8 @@
-// src/getSelection.ts
-
-import { logError } from "@/logger";
 import { MarkdownView } from "obsidian";
 
 export type HadithNarrator = {
   name: string;
-  potentialPeople: { fullName: string; knownName: string }[];
+  potentialPeople: { fullName: string; knownName: string; quizNames: string[] }[];
   indexInAllNarrators?: number;
 };
 
@@ -64,14 +61,14 @@ export function stripObsidianProperties(content: string): string {
 }
 
 export async function readVaultFile(filePath: string): Promise<string> {
-  try {
-    const normalizedPath = filePath.replace(/\\/g, "/");
-    const content = await app.vault.adapter.read(normalizedPath);
-    return content;
-  } catch (error) {
-    logError("Failed to read vault file", { filePath, error });
-    throw error;
-  }
+  const normalizedPath = filePath.replace(/\\/g, "/");
+  const content = await app.vault.adapter.read(normalizedPath);
+  return content;
+}
+
+export async function updateVaultFile(filePath: string, content: string): Promise<void> {
+  const normalizedPath = filePath.replace(/\\/g, "/");
+  await app.vault.adapter.write(normalizedPath, content);
 }
 
 export function toArabicDigits(str: string | number): string {
