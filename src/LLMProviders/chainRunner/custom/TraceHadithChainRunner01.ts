@@ -10,11 +10,13 @@ import {
   setScore,
 } from "./utils";
 import { ChoiceSuggestModal } from "./ChoiceSuggestModal";
+import { ListNarratorsChainRunner } from "./ListNarratorsChainRunner";
 
 export class TraceHadithChainRunner01 extends BaseSimpleChainRunner {
   static trigger = "تتبع الرواة";
   private hadithNarrators: HadithNarrator[] = [];
   private allNarrators: NarratorInfo[] = [];
+  private hadithLink: string = "";
 
   constructor(
     chainManager: any,
@@ -25,13 +27,20 @@ export class TraceHadithChainRunner01 extends BaseSimpleChainRunner {
   }
 
   async formatInput(messages: SystemMessage[]) {
-    const activeNote = await getActiveNote();
+    const userMessage = messages.last()!;
+    const hadithNumber = userMessage?.content?.replace(ListNarratorsChainRunner.trigger, "").trim();
+
+    const hadithText = hadithNumber
+      ? await readVaultFile(`Sunnah/صحيح البخاري/البخاري-${hadithNumber}.md`)
+      : await getActiveNote();
+    this.hadithLink = hadithNumber
+      ? `[[البخاري-${hadithNumber}]]`
+      : `[[${app.workspace.getActiveFile()?.name || ""}]]`;
     const prompt = await getPromptTemplate("TraceHadithChainRunner01");
 
-    const userMessage = messages.last()!;
     messages[messages.length - 1] = {
       ...userMessage,
-      content: `${prompt}\n\nHere is the Hadith text:\n\n '${stripObsidianProperties(activeNote)}'`,
+      content: `${prompt}\n\nHere is the Hadith text:\n\n '${stripObsidianProperties(hadithText)}'`,
     };
     return messages;
   }
@@ -75,7 +84,7 @@ export class TraceHadithChainRunner01 extends BaseSimpleChainRunner {
       this.succeeded = true;
 
       let result = `
-سند الحديث هو:
+سند الحديث ${this.hadithLink} هو:
 
 ${bulletList}
 `;
