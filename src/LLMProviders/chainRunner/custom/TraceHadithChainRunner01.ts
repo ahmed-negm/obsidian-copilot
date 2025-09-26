@@ -7,11 +7,9 @@ import {
   NarratorInfo,
   readVaultFile,
   stripObsidianProperties,
-  toArabicDigits,
-  updateVaultFile,
+  setScore,
 } from "./utils";
 import { ChoiceSuggestModal } from "./ChoiceSuggestModal";
-import { Notice } from "obsidian";
 
 export class TraceHadithChainRunner01 extends BaseSimpleChainRunner {
   static trigger = "تتبع الرواة";
@@ -54,13 +52,7 @@ export class TraceHadithChainRunner01 extends BaseSimpleChainRunner {
           choices
         ).openAndWait();
 
-        const isCorrect = choice === potentialPerson.knownName;
-        const score = await this.updateScore(isCorrect);
-        new Notice(
-          (isCorrect ? "إجابة صحيحة ✅٠" : "إجابة خاطئة ❌٠") +
-            "\n\n" +
-            `الدقة : ${toArabicDigits(score.toFixed(0))}% إجماليًا`
-        );
+        await setScore(choice === potentialPerson.knownName);
       }
 
       const jsonString = await readVaultFile("_extras/Data/Tahdhib.json");
@@ -85,25 +77,6 @@ ${bulletList}
     }
 
     return response;
-  }
-
-  private async updateScore(isCorrect: boolean) {
-    const scoreFile = "_extras/Data/Score.json";
-    const jsonString = await readVaultFile(scoreFile);
-    const { correct, total } = JSON.parse(jsonString) as { correct: number; total: number };
-    await updateVaultFile(
-      scoreFile,
-      JSON.stringify(
-        {
-          correct: isCorrect ? correct + 1 : correct,
-          total: total + 1,
-        },
-        null,
-        2
-      )
-    );
-
-    return ((isCorrect ? correct + 1 : correct) / (total + 1)) * 100;
   }
 
   includeChatHistory() {

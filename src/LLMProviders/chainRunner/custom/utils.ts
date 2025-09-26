@@ -1,4 +1,4 @@
-import { MarkdownView } from "obsidian";
+import { MarkdownView, Notice } from "obsidian";
 
 export type HadithNarrator = {
   name: string;
@@ -82,4 +82,30 @@ export async function getPromptTemplate(name: string) {
 
 export async function getTemplate(name: string) {
   return readVaultFile(`_extras/Templates/${name}.md`);
+}
+
+export async function setScore(isCorrect: boolean) {
+  const scoreFile = "_extras/Data/Score.json";
+  const jsonString = await readVaultFile(scoreFile);
+  const { correct, total } = JSON.parse(jsonString) as { correct: number; total: number };
+  await updateVaultFile(
+    scoreFile,
+    JSON.stringify(
+      {
+        correct: isCorrect ? correct + 1 : correct,
+        total: total + 1,
+      },
+      null,
+      2
+    )
+  );
+
+  const score = ((isCorrect ? correct + 1 : correct) / (total + 1)) * 100;
+  new Notice(
+    (isCorrect ? "إجابة صحيحة ✅٠" : "إجابة خاطئة ❌٠") +
+      "\n\n" +
+      `الدقة : ${toArabicDigits(score.toFixed(0))}% إجماليًا`
+  );
+
+  return score;
 }
