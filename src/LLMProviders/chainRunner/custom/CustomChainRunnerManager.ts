@@ -12,7 +12,7 @@ export class CustomChainRunnerManager {
     }
 
     if (originalMessage.startsWith(ListNarratorsChainRunner.trigger)) {
-      return new ListNarratorsChainRunner(chainManager);
+      return new TraceHadithChainRunner01(chainManager, false, false);
     }
 
     if (originalMessage.startsWith(TraceHadithChainRunner01.trigger)) {

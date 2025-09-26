@@ -16,6 +16,14 @@ export class TraceHadithChainRunner01 extends BaseSimpleChainRunner {
   private hadithNarrators: HadithNarrator[] = [];
   private allNarrators: NarratorInfo[] = [];
 
+  constructor(
+    chainManager: any,
+    private executeNextStep: boolean = true,
+    private reverseHadithNarrators: boolean = true
+  ) {
+    super(chainManager);
+  }
+
   async formatInput(messages: SystemMessage[]) {
     const activeNote = await getActiveNote();
     const prompt = await getPromptTemplate("TraceHadithChainRunner01");
@@ -33,47 +41,50 @@ export class TraceHadithChainRunner01 extends BaseSimpleChainRunner {
     if (codeBlockMatch) {
       this.hadithNarrators = JSON.parse(codeBlockMatch[1]) as HadithNarrator[];
 
-      for (const narrator of this.hadithNarrators) {
-        if (narrator.name.split(" ").length > 2) {
-          continue;
+      if (this.executeNextStep) {
+        for (const narrator of this.hadithNarrators) {
+          if (narrator.name.split(" ").length > 2) {
+            continue;
+          }
+
+          const potentialPerson = narrator.potentialPeople[0];
+          const choices = [
+            potentialPerson.knownName,
+            potentialPerson.quizNames[0],
+            potentialPerson.quizNames[1],
+          ].sort(() => Math.random() - 0.5);
+
+          const choice = await new ChoiceSuggestModal(
+            app,
+            `من هو ${narrator.name}؟`,
+            choices
+          ).openAndWait();
+
+          await setScore(choice === potentialPerson.knownName);
         }
-
-        const potentialPerson = narrator.potentialPeople[0];
-        // Create and shuffle the choices array
-        const choices = [
-          potentialPerson.knownName,
-          potentialPerson.quizNames[0],
-          potentialPerson.quizNames[1],
-        ].sort(() => Math.random() - 0.5); // Simple shuffle using sort with random comparator
-
-        const choice = await new ChoiceSuggestModal(
-          app,
-          `من هو ${narrator.name}؟`,
-          choices
-        ).openAndWait();
-
-        await setScore(choice === potentialPerson.knownName);
       }
 
-      const jsonString = await readVaultFile("_extras/Data/Tahdhib.json");
-      this.allNarrators = JSON.parse(jsonString);
+      let narratorList = this.hadithNarrators.map((narrator: HadithNarrator) => {
+        return `- **${narrator.name}**: ${narrator.potentialPeople.map((p) => p.knownName).join(" أو ")}`;
+      });
 
-      const bulletList = this.hadithNarrators
-        .reverse()
-        .map((narrator: HadithNarrator) => {
-          return `- **${narrator.name}**: (${narrator.potentialPeople.first()?.knownName})`;
-        })
-        .join("\n");
+      narratorList = this.reverseHadithNarrators ? narratorList.reverse() : narratorList;
+
+      const bulletList = narratorList.join("\n");
 
       this.succeeded = true;
 
-      return `
-سند الحديث من الآعلى
+      let result = `
+سند الحديث هو:
 
 ${bulletList}
-
-سنبدأ الآن في التحقق من الرواة واحداً يلو الآخر ...
 `;
+
+      if (this.executeNextStep) {
+        result += `\n\nسنبدأ الآن في التحقق من الرواة واحداً يلو الآخر ...`;
+      }
+
+      return result;
     }
 
     return response;
@@ -83,11 +94,16 @@ ${bulletList}
     return false;
   }
 
-  nextStep() {
-    return new TraceHadithChainRunner03(this.chainManager, {
-      allNarrators: this.allNarrators,
-      hadithNarrators: this.hadithNarrators,
-      hadithNarratorIndex: 0,
-    });
+  async nextStep() {
+    if (this.executeNextStep) {
+      const jsonString = await readVaultFile("_extras/Data/Tahdhib.json");
+      this.allNarrators = JSON.parse(jsonString);
+      return new TraceHadithChainRunner03(this.chainManager, {
+        allNarrators: this.allNarrators,
+        hadithNarrators: this.hadithNarrators,
+        hadithNarratorIndex: 0,
+      });
+    }
+    return null;
   }
 }

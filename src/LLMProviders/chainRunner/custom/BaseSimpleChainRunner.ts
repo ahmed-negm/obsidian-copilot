@@ -100,7 +100,7 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
       updateCurrentAiMessage
     );
 
-    const nextStep = this.nextStep();
+    const nextStep = await this.nextStep();
     if (this.succeeded && nextStep) {
       return nextStep.run(
         userMessage,
@@ -126,7 +126,7 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
     return response;
   }
 
-  nextStep(): ChainRunner | null {
+  async nextStep(): Promise<ChainRunner | null> {
     return null;
   }
 

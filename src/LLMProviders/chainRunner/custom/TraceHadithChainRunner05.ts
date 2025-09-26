@@ -78,7 +78,7 @@ export class TraceHadithChainRunner05 extends BaseSimpleChainRunner {
     return false;
   }
 
-  nextStep() {
+  async nextStep() {
     return new TraceHadithChainRunner03(this.chainManager, {
       allNarrators: this.input.allNarrators,
       hadithNarrators: this.input.hadithNarrators,

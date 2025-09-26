@@ -79,7 +79,7 @@ export class TraceHadithChainRunner03 extends BaseSimpleChainRunner {
     return false;
   }
 
-  nextStep() {
+  async nextStep() {
     return this.finished
       ? new TraceHadithChainRunner06(this.chainManager, this.input)
       : new TraceHadithChainRunner04(this.chainManager, {
