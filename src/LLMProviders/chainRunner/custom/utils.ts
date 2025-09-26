@@ -1,4 +1,4 @@
-import { MarkdownView, Notice } from "obsidian";
+import { MarkdownView, Notice, requestUrl } from "obsidian";
 
 export type HadithNarrator = {
   name: string;
@@ -108,4 +108,30 @@ export async function setScore(isCorrect: boolean) {
   );
 
   return score;
+}
+
+export async function getHtmlContent(url: string): Promise<string> {
+  console.log(`Starting to fetch URL: '${url}' ...`);
+  let lastError;
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    try {
+      const response = await requestUrl({
+        url,
+        method: "GET",
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Obsidian plugin)",
+        },
+      });
+      console.log(`Finished fetching URL: '${url}'`);
+
+      return response.text;
+    } catch (err) {
+      lastError = err;
+      if (attempt < 5) {
+        console.warn(`Attempt ${attempt} failed for URL: '${url}'. Retrying...`);
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+    }
+  }
+  throw lastError;
 }

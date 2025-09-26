@@ -1,5 +1,5 @@
-import { requestUrl } from "obsidian";
 import * as cheerio from "cheerio";
+import { getHtmlContent } from "./utils";
 
 export async function getShamelaContent(startIndex: number, endIndex: number): Promise<string> {
   let markdown = "";
@@ -55,26 +55,4 @@ function extractMarkdownFromHtml(html: string): string {
   });
 
   return markdown.trim();
-}
-
-async function getHtmlContent(url: string): Promise<string> {
-  let lastError;
-  for (let attempt = 1; attempt <= 5; attempt++) {
-    try {
-      const response = await requestUrl({
-        url,
-        method: "GET",
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Obsidian plugin)",
-        },
-      });
-      return response.text;
-    } catch (err) {
-      lastError = err;
-      if (attempt < 5) {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-      }
-    }
-  }
-  throw lastError;
 }
