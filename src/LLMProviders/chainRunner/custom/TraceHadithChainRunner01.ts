@@ -1,5 +1,4 @@
 import { BaseSimpleChainRunner, SystemMessage } from "./BaseSimpleChainRunner";
-import { TraceHadithChainRunner03 } from "./TraceHadithChainRunner03";
 import {
   getActiveNote,
   getPromptTemplate,
@@ -9,8 +8,7 @@ import {
   stripObsidianProperties,
   setScore,
 } from "./utils";
-import { ChoiceSuggestModal } from "./ChoiceSuggestModal";
-import { ListNarratorsChainRunner } from "./ListNarratorsChainRunner";
+import { ChoiceSuggestModal } from "./ui/ChoiceSuggestModal";
 
 export class TraceHadithChainRunner01 extends BaseSimpleChainRunner {
   static trigger = "تتبع الرواة";
@@ -28,7 +26,7 @@ export class TraceHadithChainRunner01 extends BaseSimpleChainRunner {
 
   async formatInput(messages: SystemMessage[]) {
     const userMessage = messages.last()!;
-    const hadithNumber = userMessage?.content?.replace(ListNarratorsChainRunner.trigger, "").trim();
+    const hadithNumber = userMessage?.content?.replace(TraceHadithChainRunner01.trigger, "").trim();
 
     const hadithText = hadithNumber
       ? await readVaultFile(`Sunnah/صحيح البخاري/البخاري-${hadithNumber}.md`)
@@ -107,11 +105,11 @@ ${bulletList}
     if (this.executeNextStep) {
       const jsonString = await readVaultFile("_extras/Data/Tahdhib.json");
       this.allNarrators = JSON.parse(jsonString);
-      return new TraceHadithChainRunner03(this.chainManager, {
-        allNarrators: this.allNarrators,
-        hadithNarrators: this.hadithNarrators,
-        hadithNarratorIndex: 0,
-      });
+      // return new TraceHadithChainRunner03(this.chainManager, {
+      //   allNarrators: this.allNarrators,
+      //   hadithNarrators: this.hadithNarrators,
+      //   hadithNarratorIndex: 0,
+      // });
     }
     return null;
   }
