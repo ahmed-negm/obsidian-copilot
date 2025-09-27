@@ -1,6 +1,6 @@
 import { Notice } from "obsidian";
 import { StepRunner } from "../base/StepRunner";
-import { TraceNarratorsWorkflowState } from "../models/State";
+import { TraceNarratorsWorkflowState } from "../models/state";
 import { getTemplate, toArabicDigits, setScore } from "../utils";
 import { ChoiceSuggestModal } from "../ui/ChoiceSuggestModal";
 

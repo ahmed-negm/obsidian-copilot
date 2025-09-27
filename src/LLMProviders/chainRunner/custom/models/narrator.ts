@@ -15,3 +15,8 @@ export interface NarratorInfo {
   rating?: string;
   [key: string]: any;
 }
+
+export interface TahdibNarrator {
+  name: string;
+  symbols: string;
+}

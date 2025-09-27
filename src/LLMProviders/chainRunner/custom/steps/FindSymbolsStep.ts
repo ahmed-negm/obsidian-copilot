@@ -1,15 +1,15 @@
 import { StepRunner } from "../base/StepRunner";
-import { TraceNarratorsWorkflowState } from "../models/State";
+import { TraceNarratorsWorkflowState } from "../models/state";
 import { getPromptTemplate } from "../utils";
 
 export class FindSymbolsStep extends StepRunner<TraceNarratorsWorkflowState> {
-  async getUserPrompt() {
-    // Get current narrator index
-    const narratorIndex = this.state.hadithNarratorIndex || 0;
+  getContextIntroMessage() {
+    return `جاري البحث عن **${this.state.hadithNarrators[this.state.hadithNarratorIndex + 1].potentialPeople[0].knownName}** بينهم ...`;
+  }
 
-    // Get the next narrator to find
+  async getUserPrompt() {
     const narratorToFind =
-      this.state.hadithNarrators[narratorIndex + 1].potentialPeople[0].fullName;
+      this.state.hadithNarrators[this.state.hadithNarratorIndex + 1].potentialPeople[0].fullName;
 
     // Prepare narrators to search in
     const narratorsToSearch =
@@ -27,9 +27,6 @@ export class FindSymbolsStep extends StepRunner<TraceNarratorsWorkflowState> {
   }
 
   async processResponse(response: string) {
-    // Get current narrator index
-    const narratorIndex = this.state.hadithNarratorIndex || 0;
-
     const codeBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
     if (codeBlockMatch) {
       const result = JSON.parse(codeBlockMatch[1]) as {
@@ -43,7 +40,7 @@ export class FindSymbolsStep extends StepRunner<TraceNarratorsWorkflowState> {
         if (first && this.state.tahdibNarrators) {
           const foundNarrator = this.state.tahdibNarrators[first.id];
 
-          // Extract symbols, excluding خ which is for Bukhari
+          // Extract symbols, excluding `خ` which is for Bukhari
           const symbols = foundNarrator.symbols
             .replace(/^\(|\)$/g, "")
             .split(" ")
@@ -53,25 +50,12 @@ export class FindSymbolsStep extends StepRunner<TraceNarratorsWorkflowState> {
 
           // Format the output message
           const output =
-            `✅ تم العثور على **${foundNarrator.name}** فيمن رووا عن **${this.state.hadithNarrators[narratorIndex].potentialPeople[0].knownName}** في  ` +
+            `✅ تم العثور على **${foundNarrator.name}** فيمن رووا عن **${this.state.hadithNarrators[this.state.hadithNarratorIndex].potentialPeople[0].knownName}** في  ` +
             "صحيح البخاري" +
             tahdibBooks;
 
-          // Update narrator index
-          const newNarratorIndex = narratorIndex + 1;
-
-          // Check if we've processed all narrators
-          const isSuccessful = newNarratorIndex >= this.state.hadithNarrators.length;
-
-          // Create updated state
-          this.state.hadithNarratorIndex = newNarratorIndex;
-
           return {
-            response:
-              output +
-              (isSuccessful
-                ? "\n\n\n\n🎉 تم الانتهاء من تتبع جميع الرواة!"
-                : "\n\nجاري تتبع الراوي التالي في السند ..."),
+            response: output,
             isSuccessful: true,
           };
         }
@@ -80,7 +64,7 @@ export class FindSymbolsStep extends StepRunner<TraceNarratorsWorkflowState> {
 
     return {
       response,
-      isSuccessful: true,
+      isSuccessful: false,
     };
   }
 

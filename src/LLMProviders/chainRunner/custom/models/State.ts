@@ -1,4 +1,4 @@
-import { HadithNarrator, NarratorInfo } from "./HadithNarrator";
+import { HadithNarrator, NarratorInfo, TahdibNarrator } from "./narrator";
 
 export interface BaseState {
   args: string;
@@ -7,5 +7,6 @@ export interface BaseState {
 export interface TraceNarratorsWorkflowState extends BaseState {
   hadithNarrators: HadithNarrator[];
   allNarrators: NarratorInfo[];
-  hadithNarratorIndex?: number;
+  tahdibNarrators: TahdibNarrator[];
+  hadithNarratorIndex: number;
 }

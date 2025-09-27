@@ -1,12 +1,18 @@
 import { WorkflowRunner } from "./../base/WorkflowRunner";
 import ChainManager from "@/LLMProviders/chainManager";
-import { TraceNarratorsWorkflowState } from "../models/State";
+import { TraceNarratorsWorkflowState } from "../models/state";
 import { ExtractNarratorsStep } from "../steps/ExtractNarratorsStep";
 import { toArabicDigits, toEnglishDigits } from "../utils";
 
 export class ExtractNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsWorkflowState> {
   constructor(chainManager: ChainManager, args: string) {
-    super(chainManager, { args, hadithNarrators: [], allNarrators: [] });
+    super(chainManager, {
+      args,
+      hadithNarrators: [],
+      allNarrators: [],
+      tahdibNarrators: [],
+      hadithNarratorIndex: 0,
+    });
   }
 
   protected registerSteps() {

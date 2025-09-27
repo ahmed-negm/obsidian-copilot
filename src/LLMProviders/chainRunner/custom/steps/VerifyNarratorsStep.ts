@@ -1,15 +1,15 @@
 import { StepRunner } from "../base/StepRunner";
-import { TraceNarratorsWorkflowState } from "../models/State";
+import { TraceNarratorsWorkflowState } from "../models/state";
 import { getPromptTemplate, toArabicDigits } from "../utils";
 
 export class VerifyNarratorsStep extends StepRunner<TraceNarratorsWorkflowState> {
   getContextIntroMessage() {
-    return "سنبدأ الآن في التحقق من الرواة واحداً يلو الآخر ...";
+    return "سنبدأ الآن في تتبع الرواة من الأعلى واحداً يلو الآخر ...";
   }
 
   async getUserPrompt() {
-    const narratorIndex = this.state.hadithNarratorIndex || 0;
-    const narratorToFind = this.state.hadithNarrators[narratorIndex].potentialPeople[0].fullName;
+    const narratorToFind =
+      this.state.hadithNarrators[this.state.hadithNarratorIndex].potentialPeople[0].fullName;
 
     // Find all narrator info that matches the first 3 letters of the name
     const matchingNarrators = this.state.allNarrators
@@ -48,8 +48,8 @@ export class VerifyNarratorsStep extends StepRunner<TraceNarratorsWorkflowState>
             const foundNarrator = this.state.allNarrators[allNarratorIndex];
 
             // Update state
-            const narratorIndex = this.state.hadithNarratorIndex || 0;
-            this.state.hadithNarrators[narratorIndex].indexInAllNarrators = allNarratorIndex;
+            this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators =
+              allNarratorIndex;
 
             const output = `
 تم العثور على **${foundNarrator.name}** في تهذيب الكمال [المجلد ${toArabicDigits(foundNarrator.part)} - الصفحة ${toArabicDigits(foundNarrator.page)}](https://shamela.ws/book/3722/${foundNarrator.shamelaIndex})`;

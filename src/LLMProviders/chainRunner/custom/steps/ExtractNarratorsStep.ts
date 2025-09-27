@@ -1,6 +1,6 @@
 import { StepRunner } from "../base/StepRunner";
-import { HadithNarrator } from "../models/HadithNarrator";
-import { TraceNarratorsWorkflowState } from "../models/State";
+import { HadithNarrator } from "../models/narrator";
+import { TraceNarratorsWorkflowState } from "../models/state";
 import { readVaultFile, getActiveNote, getPromptTemplate } from "../utils";
 
 export class ExtractNarratorsStep extends StepRunner<TraceNarratorsWorkflowState> {

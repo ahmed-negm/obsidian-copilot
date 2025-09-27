@@ -1,5 +1,5 @@
 import { StepRunner } from "../base/StepRunner";
-import { BaseState } from "../models/State";
+import { BaseState } from "../models/state";
 import { getActiveNote, getPromptTemplate } from "../utils";
 
 export class ExplainStep extends StepRunner<BaseState> {

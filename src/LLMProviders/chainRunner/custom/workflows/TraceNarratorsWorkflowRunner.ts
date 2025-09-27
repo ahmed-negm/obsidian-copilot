@@ -1,14 +1,22 @@
 import { WorkflowRunner } from "./../base/WorkflowRunner";
 import ChainManager from "@/LLMProviders/chainManager";
 import { ExtractNarratorsStep } from "../steps/ExtractNarratorsStep";
-import { TraceNarratorsWorkflowState } from "../models/State";
+import { TraceNarratorsWorkflowState } from "../models/state";
 import { readVaultFile, setScore } from "../utils";
 import { ChoiceSuggestModal } from "../ui/ChoiceSuggestModal";
 import { VerifyNarratorsStep } from "../steps/VerifyNarratorsStep";
+import { LoadTahdibStep } from "../steps/LoadTahdibStep";
+import { FindSymbolsStep } from "../steps/FindSymbolsStep";
 
 export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsWorkflowState> {
   constructor(chainManager: ChainManager) {
-    super(chainManager, { args: "", hadithNarrators: [], allNarrators: [] });
+    super(chainManager, {
+      args: "",
+      hadithNarrators: [],
+      allNarrators: [],
+      tahdibNarrators: [],
+      hadithNarratorIndex: 0,
+    });
     this.loadNarratorsData();
   }
 
@@ -18,7 +26,12 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
     });
 
     const step2 = new VerifyNarratorsStep(this.state);
-    return [step1, step2];
+
+    const step3 = new LoadTahdibStep(this.state);
+
+    const step4 = new FindSymbolsStep(this.state);
+
+    return [step1, step2, step3, step4];
   }
 
   private async loadNarratorsData(): Promise<void> {
