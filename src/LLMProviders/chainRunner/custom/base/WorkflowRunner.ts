@@ -28,7 +28,7 @@ export abstract class WorkflowRunner<T> extends BaseSimpleChainRunner {
 
   async processResponse(response: string): Promise<string> {
     const currentStep = this.steps[this.currentStepIndex];
-    const result = await currentStep.processResponse(response);
+    const result = await currentStep.run(response);
 
     this.isRunnerSuccessful = result.isSuccessful;
 

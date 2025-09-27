@@ -1,4 +1,6 @@
+import { Notice } from "obsidian";
 import { readVaultFile, updateVaultFile } from "./fileUtils";
+import { toArabicDigits } from "./formatUtils";
 
 /**
  * Update the score based on whether an answer was correct
@@ -19,5 +21,12 @@ export async function setScore(isCorrect: boolean): Promise<void> {
       null,
       2
     )
+  );
+
+  const score = ((isCorrect ? correct + 1 : correct) / (total + 1)) * 100;
+  new Notice(
+    (isCorrect ? "إجابة صحيحة ✅٠" : "إجابة خاطئة ❌٠") +
+      "\n\n" +
+      `الدقة : ${toArabicDigits(score.toFixed(0))}% إجماليًا`
   );
 }
