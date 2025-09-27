@@ -4,6 +4,7 @@ import { ExtractNarratorsStep } from "../steps/ExtractNarratorsStep";
 import { TraceNarratorsWorkflowState } from "../models/State";
 import { readVaultFile, setScore } from "../utils";
 import { ChoiceSuggestModal } from "../ui/ChoiceSuggestModal";
+import { VerifyNarratorsStep } from "../steps/VerifyNarratorsStep";
 
 export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsWorkflowState> {
   constructor(chainManager: ChainManager) {
@@ -15,7 +16,9 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
     const step1 = new ExtractNarratorsStep(this.state, {
       preRender: this.showQuiz.bind(this),
     });
-    return [step1];
+
+    const step2 = new VerifyNarratorsStep(this.state);
+    return [step1, step2];
   }
 
   private async loadNarratorsData(): Promise<void> {
@@ -24,7 +27,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
   }
 
   private async showQuiz() {
-    for (const narrator of this.state.hadithNarrators) {
+    for (const narrator of this.state.hadithNarrators.slice().reverse()) {
       if (narrator.name.split(" ").length > 2) {
         continue;
       }

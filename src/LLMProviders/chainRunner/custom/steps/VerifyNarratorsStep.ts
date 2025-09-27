@@ -2,12 +2,12 @@ import { StepRunner } from "../base/StepRunner";
 import { TraceNarratorsWorkflowState } from "../models/State";
 import { getPromptTemplate, toArabicDigits } from "../utils";
 
-/**
- * Step to verify narrators and find matches in the database
- */
 export class VerifyNarratorsStep extends StepRunner<TraceNarratorsWorkflowState> {
+  getContextIntroMessage() {
+    return "سنبدأ الآن في التحقق من الرواة واحداً يلو الآخر ...";
+  }
+
   async getUserPrompt() {
-    // Use current narrator index from state
     const narratorIndex = this.state.hadithNarratorIndex || 0;
     const narratorToFind = this.state.hadithNarrators[narratorIndex].potentialPeople[0].fullName;
 
@@ -28,9 +28,6 @@ export class VerifyNarratorsStep extends StepRunner<TraceNarratorsWorkflowState>
   }
 
   async processResponse(response: string) {
-    // Get current narrator index
-    const narratorIndex = this.state.hadithNarratorIndex || 0;
-
     const codeBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
     if (codeBlockMatch) {
       const result = JSON.parse(codeBlockMatch[1]) as {
@@ -42,35 +39,20 @@ export class VerifyNarratorsStep extends StepRunner<TraceNarratorsWorkflowState>
       if (result.length > 0) {
         // Get the first high-confidence match or the first match
         const first = result.find((r) => r.confidence === "High") ?? result[0];
-
         if (first) {
-          // Find the narrator in allNarrators
           const allNarratorIndex = this.state.allNarrators.findIndex(
             (n) => n.islamWebIndex === first.id
           );
 
           if (allNarratorIndex !== -1) {
-            // Narrator found
             const foundNarrator = this.state.allNarrators[allNarratorIndex];
 
-            // Check if this is the last narrator
-            const isLastNarrator = narratorIndex >= this.state.hadithNarrators.length - 1;
-
             // Update state
-            const hadithNarrators = [...this.state.hadithNarrators];
-            hadithNarrators[narratorIndex] = {
-              ...hadithNarrators[narratorIndex],
-              indexInAllNarrators: allNarratorIndex,
-            };
+            const narratorIndex = this.state.hadithNarratorIndex || 0;
+            this.state.hadithNarrators[narratorIndex].indexInAllNarrators = allNarratorIndex;
 
-            this.state.hadithNarrators = hadithNarrators;
-            this.state.allNarratorIndex = allNarratorIndex;
-
-            const output =
-              `
-تم العثور على **${foundNarrator.name}** في تهذيب الكمال [المجلد ${toArabicDigits(foundNarrator.part)} - الصفحة ${toArabicDigits(foundNarrator.page)}](https://shamela.ws/book/3722/${foundNarrator.shamelaIndex})
-` + (!isLastNarrator ? "جاري البحث عن من رووا عنه ..." : "\n\nجاري إنشاء الملفات ...");
-
+            const output = `
+تم العثور على **${foundNarrator.name}** في تهذيب الكمال [المجلد ${toArabicDigits(foundNarrator.part)} - الصفحة ${toArabicDigits(foundNarrator.page)}](https://shamela.ws/book/3722/${foundNarrator.shamelaIndex})`;
             return {
               response: output,
               isSuccessful: true,
@@ -80,10 +62,9 @@ export class VerifyNarratorsStep extends StepRunner<TraceNarratorsWorkflowState>
       }
     }
 
-    // If no match was found or parsing failed
     return {
       response,
-      isSuccessful: true, // Still move to next step even if matching failed
+      isSuccessful: false,
     };
   }
 }

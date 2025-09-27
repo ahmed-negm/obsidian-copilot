@@ -16,26 +16,36 @@ export abstract class WorkflowRunner<T> extends BaseSimpleChainRunner {
 
   protected abstract registerSteps(state: T): StepRunner<T>[];
 
-  async getSystemPrompt() {
-    const currentStep = this.steps[this.currentStepIndex];
-    return currentStep.getSystemPrompt();
+  get currentStep(): StepRunner<T> {
+    return this.steps[this.currentStepIndex];
   }
 
-  async getUserPrompt(_userMessage: string) {
-    const currentStep = this.steps[this.currentStepIndex];
-    return currentStep.getUserPrompt();
+  get nextStep(): StepRunner<T> | null {
+    if (this.currentStepIndex + 1 >= this.steps.length) {
+      return null;
+    }
+    return this.steps[this.currentStepIndex + 1];
+  }
+
+  async getSystemPrompt(): Promise<string> {
+    return this.currentStep.getSystemPrompt();
+  }
+
+  async getUserPrompt(_userMessage: string): Promise<string> {
+    return this.currentStep.getUserPrompt();
   }
 
   async processResponse(response: string): Promise<string> {
-    const currentStep = this.steps[this.currentStepIndex];
-    const result = await currentStep.run(response);
+    const result = await this.currentStep.run(response);
 
     this.isRunnerSuccessful = result.isSuccessful;
 
-    return result.response;
+    const nextStepIntroMessage = this.nextStep?.getContextIntroMessage();
+
+    return result.response + (nextStepIntroMessage ? `\n\n${nextStepIntroMessage}` : "");
   }
 
-  nextRunner() {
+  nextRunner(): WorkflowRunner<T> | null {
     this.currentStepIndex++;
     if (this.currentStepIndex >= this.steps.length) {
       return null;

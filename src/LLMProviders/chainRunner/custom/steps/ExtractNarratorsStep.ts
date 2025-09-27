@@ -30,11 +30,13 @@ export class ExtractNarratorsStep extends StepRunner<TraceNarratorsWorkflowState
       };
     }
 
-    this.state.hadithNarrators = JSON.parse(codeBlockMatch[1]) as HadithNarrator[];
+    const hadithNarrators = JSON.parse(codeBlockMatch[1]) as HadithNarrator[];
 
-    const narratorList = this.state.hadithNarrators.map((narrator: HadithNarrator) => {
+    const narratorList = hadithNarrators.map((narrator: HadithNarrator) => {
       return `- **${narrator.name}**: ${narrator.potentialPeople.map((p) => p.knownName).join(" أو ")}`;
     });
+
+    this.state.hadithNarrators = hadithNarrators.reverse();
 
     const bulletList = narratorList.join("\n");
 

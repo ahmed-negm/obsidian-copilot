@@ -27,6 +27,10 @@ export abstract class StepRunner<T> {
     return result;
   }
 
+  getContextIntroMessage() {
+    return "";
+  }
+
   abstract getUserPrompt(): Promise<string>;
 
   protected abstract processResponse(response: string): Promise<ProcessResponseResult>;
