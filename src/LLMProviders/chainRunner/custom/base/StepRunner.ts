@@ -1,7 +1,7 @@
 import { getPromptTemplate } from "../utils";
 
 export interface StepRunnerOptions {
-  preRender?: () => Promise<void>;
+  onComplete?: () => Promise<void>;
 }
 
 export type ProcessResponseResult = {
@@ -21,8 +21,8 @@ export abstract class StepRunner<T> {
 
   async run(response: string): Promise<ProcessResponseResult> {
     const result = await this.processResponse(response);
-    if (this.options?.preRender) {
-      await this.options.preRender();
+    if (this.options?.onComplete) {
+      await this.options.onComplete();
     }
     return result;
   }

@@ -4,7 +4,9 @@ import { getPromptTemplate, toArabicDigits } from "../utils";
 
 export class VerifyNarratorsStep extends StepRunner<TraceNarratorsWorkflowState> {
   getContextIntroMessage() {
-    return "سنبدأ الآن في تتبع الرواة من الأعلى واحداً يلو الآخر ...";
+    return this.state.hadithNarratorIndex === 0
+      ? "سنبدأ الآن في تتبع الرواة من الأعلى واحداً يلو الآخر ..."
+      : "لننتقل إلى الراوي التالي في السلسلة...";
   }
 
   async getUserPrompt() {
