@@ -1,6 +1,6 @@
 import { StepRunner } from "../base/StepRunner";
 import { BaseState } from "../models/State";
-import { getActiveNote, getPromptTemplate, stripObsidianProperties } from "../utils";
+import { getActiveNote, getPromptTemplate } from "../utils";
 
 export class ExplainStep extends StepRunner<BaseState> {
   async getSystemPrompt() {
@@ -10,8 +10,23 @@ export class ExplainStep extends StepRunner<BaseState> {
   }
 
   async getUserPrompt() {
-    const toExplain = this.state.args || stripObsidianProperties(await getActiveNote());
-    return "Explain the following text: " + toExplain;
+    const noteContent = await getActiveNote();
+    let toExplain = "";
+    let reference = "";
+    if (this.state.args) {
+      toExplain = this.state.args;
+      if (noteContent.includes(this.state.args)) {
+        reference = noteContent;
+      }
+    } else {
+      toExplain = noteContent;
+    }
+
+    return (
+      "Explain the following text: " +
+      toExplain +
+      (reference ? `\n\nHere is the full context for reference:\n\n${reference}` : "")
+    );
   }
 
   async processResponse(response: string) {

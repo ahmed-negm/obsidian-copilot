@@ -4,13 +4,13 @@ import { MarkdownView } from "obsidian";
  * Get the content of the active note in Obsidian
  * @returns Promise resolving to the content of the active note
  */
-export async function getActiveNote(): Promise<string> {
+export async function getActiveNote(stripProperties: boolean = true): Promise<string> {
   const activeFile = app.workspace.getActiveFile();
   let fileContent = "";
   if (activeFile) {
     fileContent = await app.vault.read(activeFile);
   }
-  return fileContent;
+  return stripProperties ? stripObsidianProperties(fileContent) : fileContent;
 }
 
 /**
@@ -54,7 +54,7 @@ export function getSelectedText(): string {
  * @param content The content to process
  * @returns The content without front matter
  */
-export function stripObsidianProperties(content: string): string {
+function stripObsidianProperties(content: string): string {
   return content.replace(/^---\n[\s\S]*?\n---\n?/, "");
 }
 

@@ -1,7 +1,7 @@
 import { StepRunner } from "../base/StepRunner";
 import { HadithNarrator } from "../models/HadithNarrator";
 import { ExtractNarratorsState } from "../models/State";
-import { readVaultFile, getActiveNote, getPromptTemplate, stripObsidianProperties } from "../utils";
+import { readVaultFile, getActiveNote, getPromptTemplate } from "../utils";
 
 export class ExtractNarratorsStep extends StepRunner<ExtractNarratorsState> {
   private hadithLink: string;
@@ -18,7 +18,7 @@ export class ExtractNarratorsStep extends StepRunner<ExtractNarratorsState> {
 
     const prompt = await getPromptTemplate("TraceHadithChainRunner01");
 
-    return `${prompt}\n\nHere is the Hadith text:\n\n '${stripObsidianProperties(hadithText)}'`;
+    return `${prompt}\n\nHere is the Hadith text:\n\n '${hadithText}'`;
   }
 
   async processResponse(response: string) {
