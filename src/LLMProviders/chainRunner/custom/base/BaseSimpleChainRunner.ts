@@ -2,14 +2,12 @@ import { ABORT_REASON } from "@/constants";
 import { logInfo } from "@/logger";
 import { ChatMessage } from "@/types/message";
 import { extractChatHistory, getMessageRole, withSuppressedTokenWarnings } from "@/utils";
-import { ThinkBlockStreamer } from "../utils/ThinkBlockStreamer";
-import { BaseChainRunner, ChainRunner } from "../BaseChainRunner";
-import { getPromptTemplate } from "./utils";
-
-export type SystemMessage = { role: string; content: string };
+import { BaseChainRunner, ChainRunner } from "../../BaseChainRunner";
+import { ThinkBlockStreamer } from "../../utils/ThinkBlockStreamer";
+import { getPromptTemplate } from "../utils";
 
 export class BaseSimpleChainRunner extends BaseChainRunner {
-  protected succeeded: boolean = false;
+  protected isRunnerSuccessful: boolean = false;
 
   async run(
     userMessage: ChatMessage,
@@ -25,10 +23,8 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
     const streamer = new ThinkBlockStreamer(() => {});
 
     try {
-      // Create messages array starting with system message
-      const messages: SystemMessage[] = [];
+      const messages: { role: string; content: string }[] = [];
 
-      // Add system message if available
       const systemPrompt = await this.getSystemPrompt();
       const chatModel = this.chainManager.chatModelManager.getChatModel();
 
@@ -40,28 +36,25 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
       }
 
       if (this.includeChatHistory() === true) {
-        // Get chat history from memory
         const memory = this.chainManager.memoryManager.getMemory();
         const memoryVariables = await memory.loadMemoryVariables({});
         const chatHistory = extractChatHistory(memoryVariables);
 
-        // Add chat history
         for (const entry of chatHistory) {
           messages.push({ role: entry.role, content: entry.content });
         }
       }
 
+      const userPrompt = await this.getUserPrompt(userMessage.message);
       messages.push({
         role: "user",
-        content: userMessage.message,
+        content: userPrompt,
       });
 
-      const formattedMessages = await this.formatInput(messages);
-      logInfo("Final Request to AI:\n", formattedMessages);
+      logInfo("Final Request to AI:\n", messages);
 
-      // Stream with abort signal
       const chatStream = await withSuppressedTokenWarnings(() =>
-        this.chainManager.chatModelManager.getChatModel().stream(formattedMessages, {
+        this.chainManager.chatModelManager.getChatModel().stream(messages, {
           signal: abortController.signal,
         })
       );
@@ -74,17 +67,14 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
         streamer.processChunk(chunk);
       }
     } catch (error: any) {
-      // Check if the error is due to abort signal
       if (error.name === "AbortError" || abortController.signal.aborted) {
         logInfo("Stream aborted by user", { reason: abortController.signal.reason });
-        // Don't show error message for user-initiated aborts
       } else {
         await this.handleError(error, addMessage, updateCurrentAiMessage);
       }
     }
 
-    // Always return the response, even if partial
-    const response = await this.formatOutput(streamer.close());
+    const response = await this.processResponse(streamer.close());
 
     // Only skip saving if it's a new chat (clearing everything)
     if (abortController.signal.aborted && abortController.signal.reason === ABORT_REASON.NEW_CHAT) {
@@ -100,9 +90,9 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
       updateCurrentAiMessage
     );
 
-    const nextStep = await this.nextStep();
-    if (this.succeeded && nextStep) {
-      return nextStep.run(
+    const nextRunner = this.nextRunner();
+    if (this.isRunnerSuccessful && nextRunner) {
+      return nextRunner.run(
         userMessage,
         abortController,
         updateCurrentAiMessage,
@@ -118,15 +108,15 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
     return getPromptTemplate("SystemPrompt");
   }
 
-  async formatInput(messages: SystemMessage[]): Promise<SystemMessage[]> {
-    return messages;
+  async getUserPrompt(userMessage: string): Promise<string> {
+    return userMessage;
   }
 
-  async formatOutput(response: string): Promise<string> {
+  async processResponse(response: string): Promise<string> {
     return response;
   }
 
-  async nextStep(): Promise<ChainRunner | null> {
+  nextRunner(): ChainRunner | null {
     return null;
   }
 

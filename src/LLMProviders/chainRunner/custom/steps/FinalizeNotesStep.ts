@@ -1,67 +1,29 @@
-import { SystemMessage } from "../../BaseSimpleChainRunner";
-import { StepRunner } from "../../base/StepRunner";
-import { HadithWorkflowState } from "../models/WorkflowState";
-import { getTemplate } from "../../utils/promptUtils";
-import { toArabicDigits } from "../../utils/formatUtils";
-import { setScore } from "../../utils/scoreUtils";
-import { ChoiceSuggestModal } from "../../ui/ChoiceSuggestModal";
 import { Notice } from "obsidian";
+import { StepRunner } from "../base/StepRunner";
+import { TraceNarratorsWorkflowState } from "../models/State";
+import { getTemplate, toArabicDigits, setScore } from "../utils";
+import { ChoiceSuggestModal } from "../ui/ChoiceSuggestModal";
 
-/**
- * Final step to create notes and run quiz
- */
-export class FinalizeNotesStep implements StepRunner<HadithWorkflowState> {
-  /**
-   * Format the input for the LLM
-   * @param messages The messages to format
-   * @param state The current workflow state
-   * @returns The formatted messages
-   */
-  async formatInput(
-    messages: SystemMessage[],
-    state: HadithWorkflowState
-  ): Promise<SystemMessage[]> {
-    // Create notes for narrators
-    await this.createNewNotes(state);
-
-    // We don't need to send any message to the LLM for this step
-    return [{ role: "user", content: "Hello" }];
+export class FinalizeNotesStep extends StepRunner<TraceNarratorsWorkflowState> {
+  async getUserPrompt() {
+    await this.createNewNotes(this.state);
+    return "Hello";
   }
 
-  /**
-   * Process the LLM response
-   * @param response The LLM response
-   * @param state The current workflow state
-   * @returns The result of the step
-   */
-  async run(
-    response: string,
-    state: HadithWorkflowState
-  ): Promise<{
-    output: string;
-    nextState: HadithWorkflowState;
-    isComplete: boolean;
-  }> {
+  async processResponse(_response: string) {
     const message = "تم الانتهاء من تتبع جميع الرواة! 🎉";
 
-    // Show notification
     new Notice(message);
 
-    // Run quiz
-    await this.setupQuiz(state);
+    await this.setupQuiz(this.state);
 
     return {
-      output: message,
-      nextState: state,
-      isComplete: true,
+      response: message,
+      isSuccessful: true,
     };
   }
 
-  /**
-   * Create new notes for narrators
-   * @param state The current workflow state
-   */
-  private async createNewNotes(state: HadithWorkflowState): Promise<void> {
+  private async createNewNotes(state: TraceNarratorsWorkflowState): Promise<void> {
     for (const hadithNarrator of state.hadithNarrators) {
       if (hadithNarrator.indexInAllNarrators !== undefined) {
         const narrator = state.allNarrators[hadithNarrator.indexInAllNarrators];
@@ -96,11 +58,7 @@ export class FinalizeNotesStep implements StepRunner<HadithWorkflowState> {
     }
   }
 
-  /**
-   * Set up quiz for narrators
-   * @param state The current workflow state
-   */
-  private async setupQuiz(state: HadithWorkflowState): Promise<void> {
+  private async setupQuiz(state: TraceNarratorsWorkflowState): Promise<void> {
     for (let i = 0; i < state.hadithNarrators.length - 1; i++) {
       const hadithNarrator = state.hadithNarrators[i].potentialPeople[0].knownName;
       const nextHadithNarrator = state.hadithNarrators[i + 1].potentialPeople[0].knownName;

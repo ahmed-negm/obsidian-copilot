@@ -1,23 +1,15 @@
 import ChainManager from "@/LLMProviders/chainManager";
 import { ChainRunner } from "../BaseChainRunner";
-import { BaseSimpleChainRunner } from "./BaseSimpleChainRunner";
-import { HadithWorkflowRunner } from "./hadith/HadithWorkflowRunner";
+import { BaseSimpleChainRunner } from "./base/BaseSimpleChainRunner";
+import { commands } from "./commands";
 
-/**
- * Manager for creating and configuring chain runners
- */
 export class CustomChainRunnerManager {
-  /**
-   * Get the appropriate chain runner based on the original message
-   * @param chainManager The chain manager instance
-   * @param originalMessage The original user message
-   * @returns The appropriate chain runner
-   */
   static getRunner(chainManager: ChainManager, originalMessage: string): ChainRunner {
-    // Handle new workflow architecture first
-    if (originalMessage.startsWith(HadithWorkflowRunner.trigger)) {
-      // Use the new workflow-based architecture for hadith tracing
-      return new HadithWorkflowRunner(chainManager);
+    for (const command of commands) {
+      if (originalMessage.startsWith(command.command)) {
+        const args = originalMessage.slice(command.command.length).trim();
+        return new command.workflow(chainManager, args);
+      }
     }
 
     return new BaseSimpleChainRunner(chainManager);

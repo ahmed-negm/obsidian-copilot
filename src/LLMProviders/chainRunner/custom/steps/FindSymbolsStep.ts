@@ -1,36 +1,23 @@
-import { SystemMessage } from "../../BaseSimpleChainRunner";
-import { StepRunner } from "../../base/StepRunner";
-import { HadithWorkflowState } from "../models/WorkflowState";
-import { getPromptTemplate } from "../../utils/promptUtils";
+import { StepRunner } from "../base/StepRunner";
+import { TraceNarratorsWorkflowState } from "../models/State";
+import { getPromptTemplate } from "../utils";
 
-/**
- * Step to find symbols and match narrators in the chain
- */
-export class FindSymbolsStep implements StepRunner<HadithWorkflowState> {
-  /**
-   * Format the input for the LLM
-   * @param messages The messages to format
-   * @param state The current workflow state
-   * @returns The formatted messages
-   */
-  async formatInput(
-    messages: SystemMessage[],
-    state: HadithWorkflowState
-  ): Promise<SystemMessage[]> {
-    // Skip this step if we're skipping to the final step
-    if (state.skipToFinalStep) {
-      return messages;
+export class FindSymbolsStep extends StepRunner<TraceNarratorsWorkflowState> {
+  async getUserPrompt() {
+    if (this.state.skipToFinalStep) {
+      return "";
     }
 
     // Get current narrator index
-    const narratorIndex = state.hadithNarratorIndex || 0;
+    const narratorIndex = this.state.hadithNarratorIndex || 0;
 
     // Get the next narrator to find
-    const narratorToFind = state.hadithNarrators[narratorIndex + 1].potentialPeople[0].fullName;
+    const narratorToFind =
+      this.state.hadithNarrators[narratorIndex + 1].potentialPeople[0].fullName;
 
     // Prepare narrators to search in
     const narratorsToSearch =
-      state.tahdibNarrators?.map((narrator, index) => ({
+      this.state.tahdibNarrators?.map((narrator, index) => ({
         id: index,
         name: narrator.name,
       })) || [];
@@ -40,34 +27,19 @@ export class FindSymbolsStep implements StepRunner<HadithWorkflowState> {
       .replaceAll("{{name_to_search}}", narratorToFind)
       .replaceAll("{{JSON}}", JSON.stringify(narratorsToSearch, null, 2));
 
-    return [{ role: "user", content: prompt }];
+    return prompt;
   }
 
-  /**
-   * Process the LLM response
-   * @param response The LLM response
-   * @param state The current workflow state
-   * @returns The result of the step
-   */
-  async run(
-    response: string,
-    state: HadithWorkflowState
-  ): Promise<{
-    output: string;
-    nextState: HadithWorkflowState;
-    isComplete: boolean;
-  }> {
-    // Skip this step if we're skipping to the final step
-    if (state.skipToFinalStep) {
+  async processResponse(response: string) {
+    if (this.state.skipToFinalStep) {
       return {
-        output: response,
-        nextState: state,
-        isComplete: true,
+        response,
+        isSuccessful: true,
       };
     }
 
     // Get current narrator index
-    const narratorIndex = state.hadithNarratorIndex || 0;
+    const narratorIndex = this.state.hadithNarratorIndex || 0;
 
     const codeBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
     if (codeBlockMatch) {
@@ -79,8 +51,8 @@ export class FindSymbolsStep implements StepRunner<HadithWorkflowState> {
 
       if (result.length > 0) {
         const first = result[0];
-        if (first && state.tahdibNarrators) {
-          const foundNarrator = state.tahdibNarrators[first.id];
+        if (first && this.state.tahdibNarrators) {
+          const foundNarrator = this.state.tahdibNarrators[first.id];
 
           // Extract symbols, excluding خ which is for Bukhari
           const symbols = foundNarrator.symbols
@@ -92,7 +64,7 @@ export class FindSymbolsStep implements StepRunner<HadithWorkflowState> {
 
           // Format the output message
           const output =
-            `✅ تم العثور على **${foundNarrator.name}** فيمن رووا عن **${state.hadithNarrators[narratorIndex].potentialPeople[0].knownName}** في  ` +
+            `✅ تم العثور على **${foundNarrator.name}** فيمن رووا عن **${this.state.hadithNarrators[narratorIndex].potentialPeople[0].knownName}** في  ` +
             "صحيح البخاري" +
             tahdibBooks;
 
@@ -100,32 +72,26 @@ export class FindSymbolsStep implements StepRunner<HadithWorkflowState> {
           const newNarratorIndex = narratorIndex + 1;
 
           // Check if we've processed all narrators
-          const isComplete = newNarratorIndex >= state.hadithNarrators.length;
+          const isSuccessful = newNarratorIndex >= this.state.hadithNarrators.length;
 
           // Create updated state
-          const newState: HadithWorkflowState = {
-            ...state,
-            hadithNarratorIndex: newNarratorIndex,
-          };
+          this.state.hadithNarratorIndex = newNarratorIndex;
 
           return {
-            output:
+            response:
               output +
-              (isComplete
+              (isSuccessful
                 ? "\n\n\n\n🎉 تم الانتهاء من تتبع جميع الرواة!"
                 : "\n\nجاري تتبع الراوي التالي في السند ..."),
-            nextState: newState,
-            isComplete: true,
+            isSuccessful: true,
           };
         }
       }
     }
 
-    // If no match was found or parsing failed
     return {
-      output: response,
-      nextState: state,
-      isComplete: true,
+      response,
+      isSuccessful: true,
     };
   }
 

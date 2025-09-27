@@ -1,33 +1,19 @@
 import * as cheerio from "cheerio";
-import { SystemMessage } from "../../BaseSimpleChainRunner";
-import { StepRunner } from "../../base/StepRunner";
-import { HadithWorkflowState } from "../models/WorkflowState";
 import { TahdibNarrator } from "../models/TahdibNarrator";
-import { getPromptTemplate } from "../../utils/promptUtils";
-import { toArabicDigits } from "../../utils/formatUtils";
+import { StepRunner } from "../base/StepRunner";
+import { TraceNarratorsWorkflowState } from "../models/State";
+import { getPromptTemplate, toArabicDigits } from "../utils";
 
-/**
- * Step to load and process Tahdhib al-Kamal content
- */
-export class LoadTahdibStep implements StepRunner<HadithWorkflowState> {
-  /**
-   * Format the input for the LLM
-   * @param messages The messages to format
-   * @param state The current workflow state
-   * @returns The formatted messages
-   */
-  async formatInput(
-    messages: SystemMessage[],
-    state: HadithWorkflowState
-  ): Promise<SystemMessage[]> {
+export class LoadTahdibStep extends StepRunner<TraceNarratorsWorkflowState> {
+  async getUserPrompt() {
     // Skip this step if we're skipping to the final step
-    if (state.skipToFinalStep) {
-      return messages;
+    if (this.state.skipToFinalStep) {
+      return "";
     }
 
     // Get the Shamela content for the current narrator
-    const currentNarrator = state.allNarrators[state.allNarratorIndex!];
-    const nextNarrator = state.allNarrators[state.allNarratorIndex! + 1];
+    const currentNarrator = this.state.allNarrators[this.state.allNarratorIndex!];
+    const nextNarrator = this.state.allNarrators[this.state.allNarratorIndex! + 1];
 
     const shamelaContent = await this.getShamelaContent(
       currentNarrator.shamelaIndex,
@@ -39,80 +25,48 @@ export class LoadTahdibStep implements StepRunner<HadithWorkflowState> {
       .replaceAll("{{narrator_name}}", currentNarrator.name)
       .replaceAll("{{bio}}", shamelaContent);
 
-    return [
-      messages[0],
-      {
-        role: "user",
-        content: prompt,
-      },
-    ];
+    return prompt;
   }
 
-  /**
-   * Process the LLM response
-   * @param response The LLM response
-   * @param state The current workflow state
-   * @returns The result of the step
-   */
-  async run(
-    response: string,
-    state: HadithWorkflowState
-  ): Promise<{
-    output: string;
-    nextState: HadithWorkflowState;
-    isComplete: boolean;
-  }> {
+  async processResponse(response: string) {
     // Skip this step if we're skipping to the final step
-    if (state.skipToFinalStep) {
+    if (this.state.skipToFinalStep) {
       return {
-        output: response,
-        nextState: state,
-        isComplete: true,
+        response,
+        isSuccessful: true,
       };
     }
 
     // Get current narrator index and make sure it's used
-    const narratorIndex = state.hadithNarratorIndex || 0;
+    const narratorIndex = this.state.hadithNarratorIndex || 0;
 
     const codeBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
     if (codeBlockMatch) {
       const tahdibNarrators = JSON.parse(codeBlockMatch[1]) as TahdibNarrator[];
 
       if (tahdibNarrators.length > 0) {
-        // Create new state with tahdibNarrators
-        const newState: HadithWorkflowState = {
-          ...state,
-          tahdibNarrators,
-        };
+        this.state.tahdibNarrators = tahdibNarrators;
 
         // Format the output message
         const output = `
-عدد من رووا عن **${state.hadithNarrators[narratorIndex].potentialPeople[0].knownName}** في صحيح البخاري هو **${toArabicDigits(tahdibNarrators.length)}**
-جاري البحث عن **${state.hadithNarrators[narratorIndex + 1].potentialPeople[0].knownName}** بينهم ...
+عدد من رووا عن **${this.state.hadithNarrators[narratorIndex].potentialPeople[0].knownName}** في صحيح البخاري هو **${toArabicDigits(tahdibNarrators.length)}**
+جاري البحث عن **${this.state.hadithNarrators[narratorIndex + 1].potentialPeople[0].knownName}** بينهم ...
 `;
 
         return {
-          output,
-          nextState: newState,
-          isComplete: true,
+          response: output,
+          isSuccessful: true,
         };
       }
     }
 
     // If no narrators were found or parsing failed
     return {
-      output: response,
-      nextState: state,
-      isComplete: true, // Still move to next step even if parsing failed
+      response,
+      isSuccessful: true, // Still move to next step even if parsing failed
     };
   }
 
-  /**
-   * Get Shamela content from web
-   * @param startIndex Start index in Shamela
-   * @param endIndex End index in Shamela
-   * @returns Promise with the content as markdown
-   */
   private async getShamelaContent(startIndex: number, endIndex: number): Promise<string> {
     let markdown = "";
 
@@ -125,21 +79,11 @@ export class LoadTahdibStep implements StepRunner<HadithWorkflowState> {
     return markdown;
   }
 
-  /**
-   * Fetch HTML content from a URL
-   * @param url The URL to fetch
-   * @returns Promise with the HTML content
-   */
   private async getHtmlContent(url: string): Promise<string> {
     const response = await fetch(url);
     return await response.text();
   }
 
-  /**
-   * Extract markdown from Shamela HTML
-   * @param html The HTML content
-   * @returns The extracted markdown
-   */
   private extractMarkdownFromHtml(html: string): string {
     const data = cheerio.load(html);
 
