@@ -65,7 +65,6 @@ export class VerifyNarratorsStep extends StepRunner<TraceNarratorsWorkflowState>
 
             this.state.hadithNarrators = hadithNarrators;
             this.state.allNarratorIndex = allNarratorIndex;
-            this.state.skipToFinalStep = isLastNarrator;
 
             const output =
               `

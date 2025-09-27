@@ -6,11 +6,6 @@ import { getPromptTemplate, toArabicDigits } from "../utils";
 
 export class LoadTahdibStep extends StepRunner<TraceNarratorsWorkflowState> {
   async getUserPrompt() {
-    // Skip this step if we're skipping to the final step
-    if (this.state.skipToFinalStep) {
-      return "";
-    }
-
     // Get the Shamela content for the current narrator
     const currentNarrator = this.state.allNarrators[this.state.allNarratorIndex!];
     const nextNarrator = this.state.allNarrators[this.state.allNarratorIndex! + 1];
@@ -29,14 +24,6 @@ export class LoadTahdibStep extends StepRunner<TraceNarratorsWorkflowState> {
   }
 
   async processResponse(response: string) {
-    // Skip this step if we're skipping to the final step
-    if (this.state.skipToFinalStep) {
-      return {
-        response,
-        isSuccessful: true,
-      };
-    }
-
     // Get current narrator index and make sure it's used
     const narratorIndex = this.state.hadithNarratorIndex || 0;
 

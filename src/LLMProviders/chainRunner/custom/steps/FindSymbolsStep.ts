@@ -4,10 +4,6 @@ import { getPromptTemplate } from "../utils";
 
 export class FindSymbolsStep extends StepRunner<TraceNarratorsWorkflowState> {
   async getUserPrompt() {
-    if (this.state.skipToFinalStep) {
-      return "";
-    }
-
     // Get current narrator index
     const narratorIndex = this.state.hadithNarratorIndex || 0;
 
@@ -31,13 +27,6 @@ export class FindSymbolsStep extends StepRunner<TraceNarratorsWorkflowState> {
   }
 
   async processResponse(response: string) {
-    if (this.state.skipToFinalStep) {
-      return {
-        response,
-        isSuccessful: true,
-      };
-    }
-
     // Get current narrator index
     const narratorIndex = this.state.hadithNarratorIndex || 0;
 

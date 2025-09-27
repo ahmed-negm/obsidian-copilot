@@ -1,9 +1,9 @@
 import { StepRunner } from "../base/StepRunner";
 import { HadithNarrator } from "../models/HadithNarrator";
-import { ExtractNarratorsState } from "../models/State";
+import { TraceNarratorsWorkflowState } from "../models/State";
 import { readVaultFile, getActiveNote, getPromptTemplate } from "../utils";
 
-export class ExtractNarratorsStep extends StepRunner<ExtractNarratorsState> {
+export class ExtractNarratorsStep extends StepRunner<TraceNarratorsWorkflowState> {
   private hadithLink: string;
 
   async getUserPrompt() {
@@ -30,9 +30,9 @@ export class ExtractNarratorsStep extends StepRunner<ExtractNarratorsState> {
       };
     }
 
-    const hadithNarrators = JSON.parse(codeBlockMatch[1]) as HadithNarrator[];
+    this.state.hadithNarrators = JSON.parse(codeBlockMatch[1]) as HadithNarrator[];
 
-    const narratorList = hadithNarrators.map((narrator: HadithNarrator) => {
+    const narratorList = this.state.hadithNarrators.map((narrator: HadithNarrator) => {
       return `- **${narrator.name}**: ${narrator.potentialPeople.map((p) => p.knownName).join(" أو ")}`;
     });
 
