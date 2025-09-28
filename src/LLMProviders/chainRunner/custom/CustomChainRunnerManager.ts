@@ -1,22 +1,15 @@
 import ChainManager from "@/LLMProviders/chainManager";
 import { ChainRunner } from "../BaseChainRunner";
-import { ExplainChainRunner } from "./ExplainChainRunner";
-import { BaseSimpleChainRunner } from "./BaseSimpleChainRunner";
-import { ListNarratorsChainRunner } from "./ListNarratorsChainRunner";
-import { TraceHadithChainRunner01 } from "./TraceHadithChainRunner01";
+import { BaseSimpleChainRunner } from "./base/BaseSimpleChainRunner";
+import { commands } from "./commands";
 
 export class CustomChainRunnerManager {
   static getRunner(chainManager: ChainManager, originalMessage: string): ChainRunner {
-    if (originalMessage.startsWith(ExplainChainRunner.trigger)) {
-      return new ExplainChainRunner(chainManager);
-    }
-
-    if (originalMessage.startsWith(ListNarratorsChainRunner.trigger)) {
-      return new ListNarratorsChainRunner(chainManager);
-    }
-
-    if (originalMessage.startsWith(TraceHadithChainRunner01.trigger)) {
-      return new TraceHadithChainRunner01(chainManager);
+    for (const command of commands) {
+      if (originalMessage.startsWith(command.command)) {
+        const args = originalMessage.slice(command.command.length).trim();
+        return new command.workflow(chainManager, args);
+      }
     }
 
     return new BaseSimpleChainRunner(chainManager);

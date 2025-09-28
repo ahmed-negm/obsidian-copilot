@@ -1,13 +1,16 @@
 import { App, SuggestModal } from "obsidian";
 
 export class ChoiceSuggestModal extends SuggestModal<string> {
-  private resolve!: (choice: string) => void;
+  private resolve!: () => void;
   private messageEl?: HTMLElement;
+  choice: string = "";
 
-  constructor(
+  private constructor(
     app: App,
     message: string,
-    private choices: string[]
+    private choices: string[],
+    private location: "top" | "bottom",
+    private blurBack: boolean = false
   ) {
     super(app);
     this.setPlaceholder(message);
@@ -35,10 +38,24 @@ export class ChoiceSuggestModal extends SuggestModal<string> {
     }, 0);
   }
 
+  static async open(
+    app: App,
+    message: string,
+    choices: string[],
+    location: "top" | "bottom",
+    blurBack: boolean = false
+  ) {
+    const modal = new ChoiceSuggestModal(app, message, choices, location, blurBack);
+
+    await modal.openAndWait();
+
+    return modal.choice;
+  }
+
   /**
    * Show the modal and return a Promise that resolves with the user's choice.
    */
-  openAndWait(): Promise<string> {
+  openAndWait(): Promise<void> {
     return new Promise((resolve) => {
       this.resolve = resolve;
       this.open();
@@ -60,13 +77,11 @@ export class ChoiceSuggestModal extends SuggestModal<string> {
     });
   }
 
-  onChooseSuggestion(choice: string) {
-    this.resolve(choice);
-    this.close();
-  }
-
   onOpen() {
     super.onOpen();
+    if (this.blurBack) {
+      this.addBlurToAppContainer();
+    }
 
     // Add CSS animation styles
     const styleEl = document.createElement("style");
@@ -92,38 +107,69 @@ export class ChoiceSuggestModal extends SuggestModal<string> {
 
     // Position the modal at the bottom of the screen
     if (this.modalEl) {
+      // Ensure modal is above the blur overlay
+      this.modalEl.style.zIndex = "10000";
       // Set position to absolute and position at the bottom
       this.modalEl.style.direction = "rtl";
       this.modalEl.style.position = "absolute";
-      this.modalEl.style.bottom = "20px";
-      this.modalEl.style.top = "unset"; // Clear the top position
+      this.modalEl.style.bottom = this.location === "bottom" ? "50px" : "unset";
+      this.modalEl.style.top = this.location === "top" ? "50px" : "unset";
       this.modalEl.style.maxHeight = "50vh"; // Limit height to 50% of viewport height
-      this.modalEl.style.width = "80%"; // Make it wider
-      this.modalEl.style.maxWidth = "600px"; // But not too wide
+      this.modalEl.style.width = "50%"; // Set width to 50% of the screen
+      this.modalEl.style.left = "50%"; // Center horizontally
+      this.modalEl.style.transform = "translateX(-50%)"; // Center align
+      this.modalEl.style.animation = "slide-up 0.3s ease-out forwards";
+      this.modalEl.style.borderRadius = "12px"; // Rounded corners
+    }
 
-      // Center horizontally
-      this.modalEl.style.left = "50%";
-      this.modalEl.style.transform = "translateX(-50%)";
+    // Add a message element above the input
+    this.messageEl = this.contentEl.createDiv({
+      cls: "modal-message",
+      attr: {
+        style:
+          "text-align: center; margin-bottom: 15px; font-weight: bold; color: rgb(203, 77, 73); direction: rtl;",
+      },
+    });
 
-      // Add some animation
-      this.modalEl.style.animation = "slide-up 0.3s ease";
-
-      // Add a drop shadow for better visibility
-      this.modalEl.style.boxShadow = "0 -5px 20px rgba(0, 0, 0, 0.1)";
-
-      // Ensure the suggestion container is properly styled too
-      const suggestionContainer = this.modalEl.querySelector(".suggestion-container");
-      if (suggestionContainer) {
-        (suggestionContainer as HTMLElement).style.maxHeight = "40vh";
-        (suggestionContainer as HTMLElement).style.overflowY = "auto";
-      }
+    if (this.messageEl) {
+      this.messageEl.textContent = this.inputEl.placeholder;
     }
   }
 
+  onChooseSuggestion(choice: string) {
+    this.choice = choice;
+    this.close();
+  }
+
   onClose() {
-    if (this.messageEl) {
-      this.messageEl.remove();
+    if (this.blurBack) {
+      this.removeBlurFromAppContainer();
     }
     super.onClose();
+
+    this.resolve();
+  }
+
+  /**
+   * Adds a blur effect to the main app container (background only).
+   */
+  private addBlurToAppContainer() {
+    // Inject CSS if not already present
+    if (!document.getElementById("copilot-blur-bg-style")) {
+      const style = document.createElement("style");
+      style.id = "copilot-blur-bg-style";
+      style.textContent = `.copilot-blur-bg { filter: blur(8px) !important; transition: filter 0.2s; }`;
+      document.head.appendChild(style);
+    }
+    const appContainer = document.querySelector(".app-container");
+    if (appContainer) appContainer.classList.add("copilot-blur-bg");
+  }
+
+  /**
+   * Removes the blur effect from the main app container.
+   */
+  private removeBlurFromAppContainer() {
+    const appContainer = document.querySelector(".app-container");
+    if (appContainer) appContainer.classList.remove("copilot-blur-bg");
   }
 }
