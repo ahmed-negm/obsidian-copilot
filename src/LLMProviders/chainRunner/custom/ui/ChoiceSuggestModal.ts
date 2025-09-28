@@ -1,10 +1,11 @@
 import { App, SuggestModal } from "obsidian";
 
 export class ChoiceSuggestModal extends SuggestModal<string> {
-  private resolve!: (choice: string) => void;
+  private resolve!: () => void;
   private messageEl?: HTMLElement;
+  choice: string = "";
 
-  constructor(
+  private constructor(
     app: App,
     message: string,
     private choices: string[],
@@ -37,10 +38,24 @@ export class ChoiceSuggestModal extends SuggestModal<string> {
     }, 0);
   }
 
+  static async open(
+    app: App,
+    message: string,
+    choices: string[],
+    location: "top" | "bottom",
+    blurBack: boolean = false
+  ) {
+    const modal = new ChoiceSuggestModal(app, message, choices, location, blurBack);
+
+    await modal.openAndWait();
+
+    return modal.choice;
+  }
+
   /**
    * Show the modal and return a Promise that resolves with the user's choice.
    */
-  openAndWait(): Promise<string> {
+  openAndWait(): Promise<void> {
     return new Promise((resolve) => {
       this.resolve = resolve;
       this.open();
@@ -60,11 +75,6 @@ export class ChoiceSuggestModal extends SuggestModal<string> {
         style: "direction: rtl; padding: 8px 0; font-size: 18px;",
       },
     });
-  }
-
-  onChooseSuggestion(choice: string) {
-    this.resolve(choice);
-    this.close();
   }
 
   onOpen() {
@@ -126,12 +136,18 @@ export class ChoiceSuggestModal extends SuggestModal<string> {
     }
   }
 
+  onChooseSuggestion(choice: string) {
+    this.choice = choice;
+    this.close();
+  }
+
   onClose() {
     if (this.blurBack) {
       this.removeBlurFromAppContainer();
     }
     super.onClose();
-    this.resolve("");
+
+    this.resolve();
   }
 
   /**

@@ -69,13 +69,13 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
         potentialPerson.quizNames[1],
       ].sort(() => Math.random() - 0.5);
 
-      const choice = await new ChoiceSuggestModal(
+      const choice = await ChoiceSuggestModal.open(
         app,
         `من هو ${narrator.name}؟`,
         choices,
         "bottom",
         false
-      ).openAndWait();
+      );
 
       const isCorrect = choice === potentialPerson.knownName;
 
@@ -136,13 +136,13 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
       ].sort(() => Math.random() - 0.5);
 
       // Show quiz modal
-      const choice = await new ChoiceSuggestModal(
+      const choice = await ChoiceSuggestModal.open(
         app,
         `روى ${hadithNarrator} هذا الحديث عن:`,
         choices,
         "bottom",
         true
-      ).openAndWait();
+      );
 
       // Update score
       await setScore(choice === nextHadithNarrator);
