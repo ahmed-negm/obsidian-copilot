@@ -16,7 +16,7 @@ export class ExtractNarratorsStep extends StepRunner<TraceNarratorsWorkflowState
       ? `[[البخاري-${hadithNumber}]]`
       : `[[${app.workspace.getActiveFile()?.name || ""}]]`;
 
-    const prompt = await getPromptTemplate("TraceHadithChainRunner01");
+    const prompt = await getPromptTemplate("ExtractNarratorsStep");
 
     return `${prompt}\n\nHere is the Hadith text:\n\n '${hadithText}'`;
   }

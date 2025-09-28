@@ -20,7 +20,7 @@ export class LoadTahdibStep extends StepRunner<TraceNarratorsWorkflowState> {
       nextNarrator.shamelaIndex
     );
 
-    const promptTemplate = await getPromptTemplate("TraceHadithChainRunner04");
+    const promptTemplate = await getPromptTemplate("LoadTahdibStep");
     const prompt = promptTemplate
       .replaceAll("{{narrator_name}}", currentNarrator.name)
       .replaceAll("{{bio}}", shamelaContent);

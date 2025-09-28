@@ -18,7 +18,7 @@ export class FindSymbolsStep extends StepRunner<TraceNarratorsWorkflowState> {
         name: narrator.name,
       })) || [];
 
-    const promptTemplate = await getPromptTemplate("TraceHadithChainRunner03");
+    const promptTemplate = await getPromptTemplate("FindSymbolsStep");
     const prompt = promptTemplate
       .replaceAll("{{name_to_search}}", narratorToFind)
       .replaceAll("{{JSON}}", JSON.stringify(narratorsToSearch, null, 2));
