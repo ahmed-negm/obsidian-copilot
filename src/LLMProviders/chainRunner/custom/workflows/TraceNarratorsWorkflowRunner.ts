@@ -73,7 +73,8 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
         app,
         `من هو ${narrator.name}؟`,
         choices,
-        "bottom"
+        "bottom",
+        false
       ).openAndWait();
 
       const isCorrect = choice === potentialPerson.knownName;
@@ -139,7 +140,8 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
         app,
         `روى ${hadithNarrator} هذا الحديث عن:`,
         choices,
-        "top"
+        "bottom",
+        true
       ).openAndWait();
 
       // Update score

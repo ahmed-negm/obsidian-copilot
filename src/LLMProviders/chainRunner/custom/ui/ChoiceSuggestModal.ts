@@ -1,8 +1,5 @@
 import { App, SuggestModal } from "obsidian";
 
-/**
- * Modal dialog for presenting choices to the user
- */
 export class ChoiceSuggestModal extends SuggestModal<string> {
   private resolve!: (choice: string) => void;
   private messageEl?: HTMLElement;
@@ -11,7 +8,8 @@ export class ChoiceSuggestModal extends SuggestModal<string> {
     app: App,
     message: string,
     private choices: string[],
-    private location: "top" | "bottom"
+    private location: "top" | "bottom",
+    private blurBack: boolean = false
   ) {
     super(app);
     this.setPlaceholder(message);
@@ -71,6 +69,9 @@ export class ChoiceSuggestModal extends SuggestModal<string> {
 
   onOpen() {
     super.onOpen();
+    if (this.blurBack) {
+      this.addBlurToAppContainer();
+    }
 
     // Add CSS animation styles
     const styleEl = document.createElement("style");
@@ -96,6 +97,8 @@ export class ChoiceSuggestModal extends SuggestModal<string> {
 
     // Position the modal at the bottom of the screen
     if (this.modalEl) {
+      // Ensure modal is above the blur overlay
+      this.modalEl.style.zIndex = "10000";
       // Set position to absolute and position at the bottom
       this.modalEl.style.direction = "rtl";
       this.modalEl.style.position = "absolute";
@@ -121,5 +124,36 @@ export class ChoiceSuggestModal extends SuggestModal<string> {
     if (this.messageEl) {
       this.messageEl.textContent = this.inputEl.placeholder;
     }
+  }
+
+  onClose() {
+    if (this.blurBack) {
+      this.removeBlurFromAppContainer();
+    }
+    super.onClose();
+    this.resolve("");
+  }
+
+  /**
+   * Adds a blur effect to the main app container (background only).
+   */
+  private addBlurToAppContainer() {
+    // Inject CSS if not already present
+    if (!document.getElementById("copilot-blur-bg-style")) {
+      const style = document.createElement("style");
+      style.id = "copilot-blur-bg-style";
+      style.textContent = `.copilot-blur-bg { filter: blur(8px) !important; transition: filter 0.2s; }`;
+      document.head.appendChild(style);
+    }
+    const appContainer = document.querySelector(".app-container");
+    if (appContainer) appContainer.classList.add("copilot-blur-bg");
+  }
+
+  /**
+   * Removes the blur effect from the main app container.
+   */
+  private removeBlurFromAppContainer() {
+    const appContainer = document.querySelector(".app-container");
+    if (appContainer) appContainer.classList.remove("copilot-blur-bg");
   }
 }
