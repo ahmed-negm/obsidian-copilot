@@ -72,7 +72,8 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
       const choice = await new ChoiceSuggestModal(
         app,
         `من هو ${narrator.name}؟`,
-        choices
+        choices,
+        "bottom"
       ).openAndWait();
 
       const isCorrect = choice === potentialPerson.knownName;
@@ -137,7 +138,8 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
       const choice = await new ChoiceSuggestModal(
         app,
         `روى ${hadithNarrator} هذا الحديث عن:`,
-        choices
+        choices,
+        "top"
       ).openAndWait();
 
       // Update score

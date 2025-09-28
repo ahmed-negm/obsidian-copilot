@@ -7,16 +7,11 @@ export class ChoiceSuggestModal extends SuggestModal<string> {
   private resolve!: (choice: string) => void;
   private messageEl?: HTMLElement;
 
-  /**
-   * Create a new ChoiceSuggestModal
-   * @param app The Obsidian App instance
-   * @param message The message/prompt to display
-   * @param choices Array of choices to present to the user
-   */
   constructor(
     app: App,
     message: string,
-    private choices: string[]
+    private choices: string[],
+    private location: "top" | "bottom"
   ) {
     super(app);
     this.setPlaceholder(message);
@@ -104,8 +99,8 @@ export class ChoiceSuggestModal extends SuggestModal<string> {
       // Set position to absolute and position at the bottom
       this.modalEl.style.direction = "rtl";
       this.modalEl.style.position = "absolute";
-      this.modalEl.style.bottom = "20px";
-      this.modalEl.style.top = "unset"; // Clear the top position
+      this.modalEl.style.bottom = this.location === "bottom" ? "50px" : "unset";
+      this.modalEl.style.top = this.location === "top" ? "50px" : "unset";
       this.modalEl.style.maxHeight = "50vh"; // Limit height to 50% of viewport height
       this.modalEl.style.width = "50%"; // Set width to 50% of the screen
       this.modalEl.style.left = "50%"; // Center horizontally
