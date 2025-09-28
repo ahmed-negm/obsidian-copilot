@@ -7,7 +7,7 @@ import { toArabicDigits } from "./formatUtils";
  * @param isCorrect Whether the answer was correct
  * @returns Promise resolving when the score is updated
  */
-export async function setScore(isCorrect: boolean): Promise<void> {
+export async function setScore(isCorrect: boolean, correctAnswer: string): Promise<void> {
   const scoreFile = "_extras/Data/Score.json";
   const jsonString = await readVaultFile(scoreFile);
   const { correct, total } = JSON.parse(jsonString) as { correct: number; total: number };
@@ -27,6 +27,7 @@ export async function setScore(isCorrect: boolean): Promise<void> {
   new Notice(
     (isCorrect ? "إجابة صحيحة ✅٠" : "إجابة خاطئة ❌٠") +
       "\n\n" +
+      (!isCorrect ? `الإجابة الصحيحة : ${correctAnswer}` + "\n\n" : "") +
       `الدقة : ${toArabicDigits(score.toFixed(0))}% إجماليًا`
   );
 }

@@ -79,7 +79,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
 
       const isCorrect = choice === potentialPerson.knownName;
 
-      await setScore(isCorrect);
+      await setScore(isCorrect, potentialPerson.knownName);
     }
   }
 
@@ -145,7 +145,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
       );
 
       // Update score
-      await setScore(choice === nextHadithNarrator);
+      await setScore(choice === nextHadithNarrator, nextHadithNarrator);
     }
   }
 }
