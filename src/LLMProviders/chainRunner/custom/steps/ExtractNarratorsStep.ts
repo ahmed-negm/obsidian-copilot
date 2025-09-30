@@ -1,16 +1,17 @@
 import { StepRunner } from "../base/StepRunner";
 import { HadithNarrator } from "../models/narrator";
 import { TraceNarratorsWorkflowState } from "../models/state";
-import { readVaultFile, getActiveNote, getPromptTemplate } from "../utils";
+import { readVaultFile, getPromptTemplate, toArabicDigits } from "../utils";
 
 export class ExtractNarratorsStep extends StepRunner<TraceNarratorsWorkflowState> {
   private hadithLink: string;
 
   async getUserPrompt() {
     const hadithNumber = this.state.args;
-    const hadithText = hadithNumber
-      ? await readVaultFile(`Sunnah/صحيح البخاري/البخاري-${hadithNumber}.md`)
-      : await getActiveNote();
+    this.state.filePath = this.state.args
+      ? `Sunnah/صحيح البخاري/البخاري-${toArabicDigits(hadithNumber)}.md`
+      : app.workspace.getActiveFile()?.path || "";
+    const hadithText = await readVaultFile(this.state.filePath);
 
     this.hadithLink = hadithNumber
       ? `[[البخاري-${hadithNumber}]]`

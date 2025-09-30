@@ -12,6 +12,7 @@ export class ExtractNarratorsWorkflowRunner extends WorkflowRunner<TraceNarrator
       allNarrators: [],
       tahdibNarrators: [],
       hadithNarratorIndex: 0,
+      filePath: "",
     });
   }
 

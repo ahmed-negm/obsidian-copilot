@@ -5,6 +5,7 @@ export interface BaseState {
 }
 
 export interface TraceNarratorsWorkflowState extends BaseState {
+  filePath: string;
   hadithNarrators: HadithNarrator[];
   allNarrators: NarratorInfo[];
   tahdibNarrators: TahdibNarrator[];

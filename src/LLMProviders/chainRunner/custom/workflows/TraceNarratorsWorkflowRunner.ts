@@ -2,20 +2,21 @@ import { WorkflowRunner } from "./../base/WorkflowRunner";
 import ChainManager from "@/LLMProviders/chainManager";
 import { ExtractNarratorsStep } from "../steps/ExtractNarratorsStep";
 import { TraceNarratorsWorkflowState } from "../models/state";
-import { getTemplate, readVaultFile, setScore, toArabicDigits } from "../utils";
+import { getTemplate, readVaultFile, setScore, toArabicDigits, updateVaultFile } from "../utils";
 import { ChoiceSuggestModal } from "../ui/ChoiceSuggestModal";
 import { VerifyNarratorsStep } from "../steps/VerifyNarratorsStep";
 import { LoadTahdibStep } from "../steps/LoadTahdibStep";
 import { FindSymbolsStep } from "../steps/FindSymbolsStep";
 
 export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsWorkflowState> {
-  constructor(chainManager: ChainManager) {
+  constructor(chainManager: ChainManager, args: string) {
     super(chainManager, {
-      args: "",
+      args,
       hadithNarrators: [],
       allNarrators: [],
       tahdibNarrators: [],
       hadithNarratorIndex: 0,
+      filePath: "",
     });
     this.loadNarratorsData();
   }
@@ -105,13 +106,10 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
           });
         }
 
-        const activeFile = app.workspace.getActiveFile();
-        if (activeFile) {
-          const fileContent = await app.vault.read(activeFile);
-          const linkToNote = `[[${fileName}|${hadithNarrator.name}]]`;
-          const updatedContent = fileContent.replace(hadithNarrator.name, linkToNote);
-          await app.vault.modify(activeFile, updatedContent);
-        }
+        const fileContent = await readVaultFile(this.state.filePath);
+        const linkToNote = `[[${fileName}|${hadithNarrator.name}]]`;
+        const updatedContent = fileContent.replace(hadithNarrator.name, linkToNote);
+        await updateVaultFile(this.state.filePath, updatedContent);
       }
     }
   }
