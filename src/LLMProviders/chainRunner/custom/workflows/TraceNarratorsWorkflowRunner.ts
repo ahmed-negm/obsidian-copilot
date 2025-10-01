@@ -7,6 +7,7 @@ import { ChoiceSuggestModal } from "../ui/ChoiceSuggestModal";
 import { VerifyNarratorsStep } from "../steps/VerifyNarratorsStep";
 import { LoadTahdibStep } from "../steps/LoadTahdibStep";
 import { FindSymbolsStep } from "../steps/FindSymbolsStep";
+import { Notice } from "obsidian";
 
 export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsWorkflowState> {
   constructor(chainManager: ChainManager, args: string) {
@@ -23,7 +24,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
 
   protected registerSteps() {
     const step1 = new ExtractNarratorsStep(this.state, {
-      onComplete: this.showInitialQuiz.bind(this),
+      onComplete: this.showQuiz.bind(this),
     });
 
     const step2 = new VerifyNarratorsStep(this.state, {
@@ -31,7 +32,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
         if (this.state.hadithNarratorIndex === this.state.hadithNarrators.length - 1) {
           this.currentStepIndex = 4;
           await this.createNewNotes();
-          await this.showFinishQuiz();
+          new Notice("✅ اكتمل التحقق من جميع الرواة.", 0);
         }
         return Promise.resolve();
       },
@@ -57,7 +58,12 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
     this.state.allNarrators = JSON.parse(jsonString);
   }
 
-  private async showInitialQuiz() {
+  private async showQuiz(): Promise<void> {
+    await this.showNarratorQuiz();
+    this.showChainQuiz();
+  }
+
+  private async showNarratorQuiz() {
     for (const narrator of this.state.hadithNarrators.slice().reverse()) {
       if (narrator.name.split(" ").length > 2) {
         continue;
@@ -81,6 +87,46 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
       const isCorrect = choice === potentialPerson.knownName;
 
       await setScore(isCorrect, potentialPerson.knownName);
+    }
+  }
+
+  private async showChainQuiz(): Promise<void> {
+    await ChoiceSuggestModal.open(
+      app,
+      "الآن، سنختبر معرفتك بسلسلة الرواة. اختر الشخص الذي يلي كل راوٍ في السلسلة.",
+      ["ابدأ الاختبار"],
+      "bottom",
+      false
+    );
+    const hadithNarrators = this.state.hadithNarrators.slice().reverse();
+    for (let i = 0; i < hadithNarrators.length - 1; i++) {
+      const hadithNarrator = hadithNarrators[i].potentialPeople[0].knownName;
+      const nextHadithNarrator = hadithNarrators[i + 1].potentialPeople[0].knownName;
+
+      // Generate choices
+      const choices = [
+        ...hadithNarrators
+          .filter(
+            (n) =>
+              n.potentialPeople[0].knownName !== hadithNarrator &&
+              n.potentialPeople[0].knownName !== nextHadithNarrator
+          )
+          .slice(0, 2)
+          .map((n) => n.potentialPeople[0].knownName),
+        nextHadithNarrator,
+      ].sort(() => Math.random() - 0.5);
+
+      // Show quiz modal
+      const choice = await ChoiceSuggestModal.open(
+        app,
+        `روى ${hadithNarrator} هذا الحديث عن:`,
+        choices,
+        "bottom",
+        true
+      );
+
+      // Update score
+      await setScore(choice === nextHadithNarrator, nextHadithNarrator);
     }
   }
 
@@ -111,39 +157,6 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
         const updatedContent = fileContent.replace(hadithNarrator.name, linkToNote);
         await updateVaultFile(this.state.filePath, updatedContent);
       }
-    }
-  }
-
-  private async showFinishQuiz(): Promise<void> {
-    const hadithNarrators = this.state.hadithNarrators.slice().reverse();
-    for (let i = 0; i < hadithNarrators.length - 1; i++) {
-      const hadithNarrator = hadithNarrators[i].potentialPeople[0].knownName;
-      const nextHadithNarrator = hadithNarrators[i + 1].potentialPeople[0].knownName;
-
-      // Generate choices
-      const choices = [
-        ...hadithNarrators
-          .filter(
-            (n) =>
-              n.potentialPeople[0].knownName !== hadithNarrator &&
-              n.potentialPeople[0].knownName !== nextHadithNarrator
-          )
-          .slice(0, 2)
-          .map((n) => n.potentialPeople[0].knownName),
-        nextHadithNarrator,
-      ].sort(() => Math.random() - 0.5);
-
-      // Show quiz modal
-      const choice = await ChoiceSuggestModal.open(
-        app,
-        `روى ${hadithNarrator} هذا الحديث عن:`,
-        choices,
-        "bottom",
-        true
-      );
-
-      // Update score
-      await setScore(choice === nextHadithNarrator, nextHadithNarrator);
     }
   }
 }

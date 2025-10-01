@@ -5,6 +5,7 @@ import { extractChatHistory, getMessageRole, withSuppressedTokenWarnings } from 
 import { BaseChainRunner, ChainRunner } from "../../BaseChainRunner";
 import { ThinkBlockStreamer } from "../../utils/ThinkBlockStreamer";
 import { getPromptTemplate } from "../utils";
+import { Notice } from "obsidian";
 
 export class BaseSimpleChainRunner extends BaseChainRunner {
   protected isRunnerSuccessful: boolean = false;
@@ -91,14 +92,18 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
     );
 
     const nextRunner = this.nextRunner();
-    if (this.isRunnerSuccessful && nextRunner) {
-      return nextRunner.run(
-        userMessage,
-        abortController,
-        updateCurrentAiMessage,
-        addMessage,
-        options
-      );
+    if (nextRunner) {
+      if (this.isRunnerSuccessful) {
+        return nextRunner.run(
+          userMessage,
+          abortController,
+          updateCurrentAiMessage,
+          addMessage,
+          options
+        );
+      } else {
+        new Notice("❌ تم إيقاف السلسلة بسبب فشل في خطوة ما.", 0);
+      }
     }
 
     return response;
