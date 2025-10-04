@@ -33,11 +33,10 @@ export abstract class TraceNarratorsWorkflowRunnerBase extends WorkflowRunner<Tr
         continue;
       }
 
-      const potentialPerson = narrator.potentialPeople[0];
       const choices = [
-        potentialPerson.knownName,
-        potentialPerson.quizNames[0],
-        potentialPerson.quizNames[1],
+        narrator.expectedKnownName,
+        narrator.quizChoices[0],
+        narrator.quizChoices[1],
       ].sort(() => Math.random() - 0.5);
 
       const choice = await ChoiceSuggestModal.open(
@@ -48,9 +47,9 @@ export abstract class TraceNarratorsWorkflowRunnerBase extends WorkflowRunner<Tr
         false
       );
 
-      const isCorrect = choice === potentialPerson.knownName;
+      const isCorrect = choice === narrator.expectedKnownName;
 
-      await setScore(isCorrect, potentialPerson.knownName);
+      await setScore(isCorrect, narrator.expectedKnownName);
     }
   }
 
@@ -64,19 +63,19 @@ export abstract class TraceNarratorsWorkflowRunnerBase extends WorkflowRunner<Tr
     );
     const hadithNarrators = this.state.hadithNarrators.slice().reverse();
     for (let i = 0; i < hadithNarrators.length - 1; i++) {
-      const hadithNarrator = hadithNarrators[i].potentialPeople[0].knownName;
-      const nextHadithNarrator = hadithNarrators[i + 1].potentialPeople[0].knownName;
+      const hadithNarrator = hadithNarrators[i].expectedKnownName;
+      const nextHadithNarrator = hadithNarrators[i + 1].expectedKnownName;
 
       // Generate choices
       const choices = [
         ...hadithNarrators
           .filter(
-            (n) =>
-              n.potentialPeople[0].knownName !== hadithNarrator &&
-              n.potentialPeople[0].knownName !== nextHadithNarrator
+            (narrator) =>
+              narrator.expectedKnownName !== hadithNarrator &&
+              narrator.expectedKnownName !== nextHadithNarrator
           )
           .slice(0, 2)
-          .map((n) => n.potentialPeople[0].knownName),
+          .map((narrator) => narrator.expectedKnownName),
         nextHadithNarrator,
       ].sort(() => Math.random() - 0.5);
 
@@ -104,7 +103,7 @@ export abstract class TraceNarratorsWorkflowRunnerBase extends WorkflowRunner<Tr
         if (!noteExists) {
           const noteContent = (await getTemplate("Mohadith"))
             .replaceAll("{{NAME}}", narrator.name)
-            .replaceAll("{{KNOWN_NAME}}", hadithNarrator.potentialPeople[0].knownName)
+            .replaceAll("{{KNOWN_NAME}}", hadithNarrator.expectedKnownName)
             .replaceAll("{{PART}}", toArabicDigits(narrator.part))
             .replaceAll("{{PAGE}}", toArabicDigits(narrator.page))
             .replaceAll("{{SHAMELA_INDEX}}", narrator.shamelaIndex.toString())

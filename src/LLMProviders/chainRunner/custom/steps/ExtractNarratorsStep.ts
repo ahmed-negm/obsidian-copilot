@@ -31,11 +31,32 @@ export class ExtractNarratorsStep extends StepRunner<TraceNarratorsWorkflowState
       };
     }
 
-    const hadithNarrators = JSON.parse(codeBlockMatch[1]) as HadithNarrator[];
+    type HadithNarratorWithPotential = HadithNarrator & {
+      potentialPeople?: {
+        fullName: string;
+        knownName: string;
+        quizNames: string[];
+      }[];
+    };
 
-    const narratorList = hadithNarrators.map((narrator: HadithNarrator) => {
-      return `- **${narrator.name}**: ${narrator.potentialPeople.map((p) => p.knownName).join(" أو ")}`;
-    });
+    const hadithNarrators = JSON.parse(codeBlockMatch[1]) as HadithNarratorWithPotential[];
+
+    const narratorList: string[] = [];
+    for (const narrator of hadithNarrators) {
+      if (narrator.potentialPeople?.length !== 1) {
+        return {
+          response:
+            `لم أتمكن من تحديد راوٍ واحد بشكل قاطع للاسم **${narrator.name}**.` + "\n\n" + response,
+          isSuccessful: false,
+        };
+      }
+      narrator.expectedFullName = narrator.potentialPeople[0].fullName;
+      narrator.expectedKnownName = narrator.potentialPeople[0].knownName;
+      narrator.quizChoices = narrator.potentialPeople[0].quizNames;
+      delete narrator.potentialPeople;
+
+      narratorList.push(`- **${narrator.name}**: ${narrator.expectedKnownName}`);
+    }
 
     this.state.hadithNarrators = hadithNarrators.reverse();
 

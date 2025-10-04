@@ -15,7 +15,7 @@ export class VerifyNarratorsStep extends StepRunner<TraceNarratorsWorkflowState>
 
   async getUserPrompt() {
     this.narratorToFind =
-      this.state.hadithNarrators[this.state.hadithNarratorIndex].potentialPeople[0].fullName;
+      this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedFullName;
 
     // Find all narrator info that matches the first 10 letters of the name
     this.matchingNarrators = this.state.allNarrators.filter((n) =>
@@ -51,52 +51,47 @@ export class VerifyNarratorsStep extends StepRunner<TraceNarratorsWorkflowState>
   }
 
   async processResponse(response: string) {
-    if (this.matchingNarrators.length === 0) {
-      return {
-        response: this.narratorNotFoundMessage() + "\n\n" + response,
-        isSuccessful: false,
-      };
-    }
+    if (this.matchingNarrators.length > 0) {
+      const codeBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
+      if (codeBlockMatch) {
+        const result = (
+          JSON.parse(codeBlockMatch[1]) as {
+            id: number;
+            name: string;
+            confidence: string;
+          }[]
+        ).filter((r) => r.confidence === "High");
 
-    const codeBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
-    if (codeBlockMatch) {
-      const result = (
-        JSON.parse(codeBlockMatch[1]) as {
-          id: number;
-          name: string;
-          confidence: string;
-        }[]
-      ).filter((r) => r.confidence === "High");
+        if (result.length === 1) {
+          // Get the first high-confidence match or the first match
+          const first = result[0];
+          if (first) {
+            const allNarratorIndex = this.state.allNarrators.findIndex(
+              (n) => n.islamWebIndex === first.id
+            );
 
-      if (result.length === 1) {
-        // Get the first high-confidence match or the first match
-        const first = result[0];
-        if (first) {
-          const allNarratorIndex = this.state.allNarrators.findIndex(
-            (n) => n.islamWebIndex === first.id
-          );
+            if (allNarratorIndex !== -1) {
+              const foundNarrator = this.state.allNarrators[allNarratorIndex];
 
-          if (allNarratorIndex !== -1) {
-            const foundNarrator = this.state.allNarrators[allNarratorIndex];
+              // Update state
+              this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators =
+                allNarratorIndex;
 
-            // Update state
-            this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators =
-              allNarratorIndex;
-
-            const output = `
+              const output = `
 تم العثور على **${foundNarrator.name}** في تهذيب الكمال [المجلد ${toArabicDigits(foundNarrator.part)} - الصفحة ${toArabicDigits(foundNarrator.page)}](https://shamela.ws/book/3722/${foundNarrator.shamelaIndex})`;
 
-            return {
-              response: output,
-              isSuccessful: true,
-            };
+              return {
+                response: output,
+                isSuccessful: true,
+              };
+            }
           }
         }
       }
     }
 
     return {
-      response,
+      response: this.narratorNotFoundMessage() + "\n\n" + response,
       isSuccessful: false,
     };
   }

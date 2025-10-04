@@ -36,7 +36,7 @@ export class LoadTahdibStep extends StepRunner<TraceNarratorsWorkflowState> {
       if (this.state.tahdibNarrators.length > 0) {
         // Format the output message
         const output = `
-عدد من رووا عن **${this.state.hadithNarrators[this.state.hadithNarratorIndex].potentialPeople[0].knownName}** في صحيح البخاري هو **${toArabicDigits(this.state.tahdibNarrators.length)}**`;
+عدد من رووا عن **${this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedKnownName}** في صحيح البخاري هو **${toArabicDigits(this.state.tahdibNarrators.length)}**`;
 
         return {
           response: output,

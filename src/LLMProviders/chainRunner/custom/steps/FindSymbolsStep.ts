@@ -4,12 +4,12 @@ import { getPromptTemplate } from "../utils";
 
 export class FindSymbolsStep extends StepRunner<TraceNarratorsWorkflowState> {
   getContextIntroMessage() {
-    return `جاري البحث عن **${this.state.hadithNarrators[this.state.hadithNarratorIndex + 1].potentialPeople[0].knownName}** بينهم ...`;
+    return `جاري البحث عن **${this.state.hadithNarrators[this.state.hadithNarratorIndex + 1].expectedKnownName}** بينهم ...`;
   }
 
   async getUserPrompt() {
     const narratorToFind =
-      this.state.hadithNarrators[this.state.hadithNarratorIndex + 1].potentialPeople[0].fullName;
+      this.state.hadithNarrators[this.state.hadithNarratorIndex + 1].expectedFullName;
 
     // Prepare narrators to search in
     const narratorsToSearch =
@@ -50,7 +50,7 @@ export class FindSymbolsStep extends StepRunner<TraceNarratorsWorkflowState> {
 
           // Format the output message
           const output =
-            `✅ تم العثور على **${foundNarrator.name}** فيمن رووا عن **${this.state.hadithNarrators[this.state.hadithNarratorIndex].potentialPeople[0].knownName}** في  ` +
+            `✅ تم العثور على **${foundNarrator.name}** فيمن رووا عن **${this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedKnownName}** في  ` +
             "صحيح البخاري" +
             tahdibBooks;
 

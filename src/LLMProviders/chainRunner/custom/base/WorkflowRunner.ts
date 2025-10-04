@@ -42,7 +42,10 @@ export abstract class WorkflowRunner<T> extends BaseSimpleChainRunner {
 
     const nextStepIntroMessage = this.nextStep?.getContextIntroMessage();
 
-    return result.response + (nextStepIntroMessage ? `\n\n${nextStepIntroMessage}` : "");
+    return (
+      result.response +
+      (nextStepIntroMessage && result.isSuccessful ? `\n\n${nextStepIntroMessage}` : "")
+    );
   }
 
   nextRunner(): WorkflowRunner<T> | null {

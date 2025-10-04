@@ -1,10 +1,8 @@
 export interface HadithNarrator {
   name: string;
-  potentialPeople: {
-    fullName: string;
-    knownName: string;
-    quizNames: string[];
-  }[];
+  expectedFullName: string;
+  expectedKnownName: string;
+  quizChoices: string[];
   indexInAllNarrators?: number;
 }
 
