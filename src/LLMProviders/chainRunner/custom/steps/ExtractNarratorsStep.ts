@@ -19,7 +19,7 @@ export class ExtractNarratorsStep extends StepRunner<TraceNarratorsWorkflowState
 
     const prompt = await getPromptTemplate("ExtractNarratorsStep");
 
-    return `${prompt}\n\nHere is the Hadith text:\n\n '${hadithText}'`;
+    return prompt.replace("{{HADITH_TEXT}}", hadithText);
   }
 
   async processResponse(response: string) {
