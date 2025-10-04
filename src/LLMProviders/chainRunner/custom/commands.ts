@@ -1,6 +1,7 @@
 import { ExplainWorkflowRunner } from "./workflows/ExplainWorkflowRunner";
 import { ExtractNarratorsWorkflowRunner } from "./workflows/ExtractNarratorsWorkflowRunner";
-import { TraceNarratorsWorkflowRunner } from "./workflows/TraceNarratorsWorkflowRunner";
+import { TraceNarratorsWorkflowRunnerV1 } from "./workflows/TraceNarratorsWorkflowRunnerV1";
+import { TraceNarratorsWorkflowRunnerV2 } from "./workflows/TraceNarratorsWorkflowRunnerV2";
 
 export const commands = [
   {
@@ -13,6 +14,10 @@ export const commands = [
   },
   {
     command: "تتبع الرواة",
-    workflow: TraceNarratorsWorkflowRunner,
+    workflow: TraceNarratorsWorkflowRunnerV1,
+  },
+  {
+    command: "تتبع",
+    workflow: TraceNarratorsWorkflowRunnerV2,
   },
 ];

@@ -1,15 +1,10 @@
 import { WorkflowRunner } from "./../base/WorkflowRunner";
 import ChainManager from "@/LLMProviders/chainManager";
-import { ExtractNarratorsStep } from "../steps/ExtractNarratorsStep";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import { getTemplate, readVaultFile, setScore, toArabicDigits, updateVaultFile } from "../utils";
 import { ChoiceSuggestModal } from "../ui/ChoiceSuggestModal";
-import { VerifyNarratorsStep } from "../steps/VerifyNarratorsStep";
-import { LoadTahdibStep } from "../steps/LoadTahdibStep";
-import { FindSymbolsStep } from "../steps/FindSymbolsStep";
-import { Notice } from "obsidian";
 
-export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsWorkflowState> {
+export abstract class TraceNarratorsWorkflowRunnerBase extends WorkflowRunner<TraceNarratorsWorkflowState> {
   constructor(chainManager: ChainManager, args: string) {
     super(chainManager, {
       args,
@@ -22,48 +17,17 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
     this.loadNarratorsData();
   }
 
-  protected registerSteps() {
-    const step1 = new ExtractNarratorsStep(this.state, {
-      onComplete: this.showQuiz.bind(this),
-    });
-
-    const step2 = new VerifyNarratorsStep(this.state, {
-      onComplete: async () => {
-        if (this.state.hadithNarratorIndex === this.state.hadithNarrators.length - 1) {
-          this.currentStepIndex = 4;
-          await this.createNewNotes();
-          new Notice("✅ اكتمل التحقق من جميع الرواة.", 0);
-        }
-        return Promise.resolve();
-      },
-    });
-
-    const step3 = new LoadTahdibStep(this.state);
-
-    const step4 = new FindSymbolsStep(this.state, {
-      onComplete: () => {
-        this.state.hadithNarratorIndex++;
-        if (this.state.hadithNarratorIndex < this.state.hadithNarrators.length) {
-          this.currentStepIndex = 0;
-        }
-        return Promise.resolve();
-      },
-    });
-
-    return [step1, step2, step3, step4];
-  }
-
-  private async loadNarratorsData(): Promise<void> {
+  protected async loadNarratorsData(): Promise<void> {
     const jsonString = await readVaultFile("_extras/Data/Tahdhib.json");
     this.state.allNarrators = JSON.parse(jsonString);
   }
 
-  private async showQuiz(): Promise<void> {
+  protected async showQuiz(): Promise<void> {
     await this.showNarratorQuiz();
     this.showChainQuiz();
   }
 
-  private async showNarratorQuiz() {
+  protected async showNarratorQuiz() {
     for (const narrator of this.state.hadithNarrators.slice().reverse()) {
       if (narrator.name.split(" ").length > 2) {
         continue;
@@ -90,7 +54,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
     }
   }
 
-  private async showChainQuiz(): Promise<void> {
+  protected async showChainQuiz(): Promise<void> {
     await ChoiceSuggestModal.open(
       app,
       "الآن، سنختبر معرفتك بسلسلة الرواة. اختر الشخص الذي يلي كل راوٍ في السلسلة.",
@@ -130,7 +94,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
     }
   }
 
-  private async createNewNotes() {
+  protected async createNewNotes() {
     for (const hadithNarrator of this.state.hadithNarrators) {
       if (hadithNarrator.indexInAllNarrators !== undefined) {
         const narrator = this.state.allNarrators[hadithNarrator.indexInAllNarrators];
