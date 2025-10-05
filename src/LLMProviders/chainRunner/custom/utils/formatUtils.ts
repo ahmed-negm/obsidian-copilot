@@ -1,24 +1,16 @@
 import { TahdibNarrator } from "../models/narrator";
 
-const SYMBOL_MAP: Record<string, string> = {
-  خ: "Bukhari",
-  م: "Muslim",
-  ت: "Termezi",
-  س: "Nasaai",
-  ق: "Ibn Maga",
-  د: "Abu Dawood",
-};
-
-const HEADERS = [
-  "Name",
-  "Bukhari",
-  "Muslim",
-  "Termezi",
-  "Nasaai",
-  "Ibn Maga",
-  "Abu Dawood",
-  "Others",
+const OTHERS = "Others";
+const BOOKS = [
+  { symbol: "خ", name: "البخاري" },
+  { symbol: "م", name: "مسلم" },
+  { symbol: "ت", name: "الترمذي" },
+  { symbol: "س", name: "النسائي" },
+  { symbol: "ق", name: "ابن ماجه" },
+  { symbol: "د", name: "أبي داود" },
 ];
+
+const HEADERS = ["الاسم", ...BOOKS.map((b) => b.name), OTHERS];
 
 export function generateMarkdownTable(narrators: TahdibNarrator[]): string {
   const headerRow = `| ${HEADERS.join(" | ")} |`;
@@ -37,21 +29,21 @@ function processSymbols(symbols: string): Record<string, string> {
   const chars = clean.split(" ");
 
   const used = new Set<string>();
-  for (const ch of chars) {
-    if (SYMBOL_MAP[ch]) {
-      result[SYMBOL_MAP[ch]] = "✔";
-      used.add(ch);
+  for (const { symbol, name } of BOOKS) {
+    if (chars.includes(symbol)) {
+      result[name] = "✔";
+      used.add(symbol);
     }
   }
 
   const others = chars.filter((ch) => !used.has(ch) && ch !== "");
-  result["Others"] = others.join(" ");
+  result[OTHERS] = others.join(" ");
   return result;
 }
 
 function narratorToRow(narrator: TahdibNarrator): string {
   const marks = processSymbols(narrator.symbols);
-  return `| ${narrator.name} | ${marks["Bukhari"]} | ${marks["Muslim"]} | ${marks["Termezi"]} | ${marks["Nasaai"]} | ${marks["Ibn Maga"]} | ${marks["Abu Dawood"]} | ${marks["Others"]} |`;
+  return `| ${narrator.name} | ${BOOKS.map((b) => marks[b.name]).join(" | ")} | ${marks[OTHERS]} |`;
 }
 
 export function toArabicDigits(str: string | number): string {

@@ -10,9 +10,9 @@ import {
 } from "../utils";
 import { TahdibNarrator } from "../models/narrator";
 
-export class ExtractNarratedFromTahdibStep extends StepRunner<TraceNarratorsWorkflowState> {
+export class GenerateFigureStep extends StepRunner<TraceNarratorsWorkflowState> {
   getContextIntroMessage() {
-    return "جاري البحث عن من رووا عنه ...";
+    return "لم يتم العثور على الملف الخاص بهذا الراوي، جاري إنشاء الملف من بيانات تهذيب الكمال...";
   }
 
   async getUserPrompt() {
@@ -24,7 +24,7 @@ export class ExtractNarratedFromTahdibStep extends StepRunner<TraceNarratorsWork
     const tahdibFilePath = `${vaultPath}/../Tahdhib-al-Kamal/Figures/${toArabicDigits(narrator.id!)}-${narrator.name}.md`;
     const tahdibContent = await readFileFromExternalVault(tahdibFilePath);
 
-    const promptTemplate = await getPromptTemplate("ExtractNarratedFromTahdibStep");
+    const promptTemplate = await getPromptTemplate("ExtractNarratedFromTahdib");
     const prompt = promptTemplate
       .replaceAll("{{narrator_name}}", narrator.name)
       .replaceAll("{{bio}}", tahdibContent);
@@ -40,8 +40,8 @@ export class ExtractNarratedFromTahdibStep extends StepRunner<TraceNarratorsWork
         narratedTo: TahdibNarrator[];
       };
 
-      const narratedFromMarkdown = generateMarkdownTable(narratedFrom);
-      const narratedToMarkdown = generateMarkdownTable(narratedTo);
+      const narratedFromMarkdown = generateMarkdownTable(narratedFrom.filter((n) => n.symbols));
+      const narratedToMarkdown = generateMarkdownTable(narratedTo.filter((n) => n.symbols));
 
       await createFigureNote(
         this.state.allNarrators[

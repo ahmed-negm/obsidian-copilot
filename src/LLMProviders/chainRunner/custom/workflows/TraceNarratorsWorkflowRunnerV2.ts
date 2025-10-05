@@ -3,7 +3,7 @@ import { VerifyNarratorsStep } from "../steps/VerifyNarratorsStep";
 import { FindSymbolsStep } from "../steps/FindSymbolsStep";
 import { Notice } from "obsidian";
 import { TraceNarratorsWorkflowRunnerBase } from "./TraceNarratorsWorkflowRunnerBase";
-import { ExtractNarratedFromTahdibStep } from "../steps/ExtractNarratedFromTahdibStep";
+import { GenerateFigureStep } from "../steps/GenerateFigureStep";
 
 export class TraceNarratorsWorkflowRunnerV2 extends TraceNarratorsWorkflowRunnerBase {
   protected registerSteps() {
@@ -22,7 +22,7 @@ export class TraceNarratorsWorkflowRunnerV2 extends TraceNarratorsWorkflowRunner
       },
     });
 
-    const step3 = new ExtractNarratedFromTahdibStep(this.state);
+    const step3 = new GenerateFigureStep(this.state);
 
     const step4 = new FindSymbolsStep(this.state, {
       onComplete: () => {

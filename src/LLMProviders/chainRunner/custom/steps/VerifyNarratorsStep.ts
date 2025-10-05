@@ -73,15 +73,19 @@ export class VerifyNarratorsStep extends StepRunner<TraceNarratorsWorkflowState>
             if (allNarratorIndex !== -1) {
               const foundNarrator = this.state.allNarrators[allNarratorIndex];
 
+              if (!foundNarrator.id) {
+                return {
+                  response: this.narratorFoundMessage(foundNarrator) + " ولكن بدون رقم",
+                  isSuccessful: false,
+                };
+              }
+
               // Update state
               this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators =
                 allNarratorIndex;
 
-              const output = `
-تم العثور على **${foundNarrator.name}** في تهذيب الكمال [المجلد ${toArabicDigits(foundNarrator.part)} - الصفحة ${toArabicDigits(foundNarrator.page)}](https://shamela.ws/book/3722/${foundNarrator.shamelaIndex})`;
-
               return {
-                response: output,
+                response: this.narratorFoundMessage(foundNarrator),
                 isSuccessful: true,
               };
             }
@@ -98,5 +102,10 @@ export class VerifyNarratorsStep extends StepRunner<TraceNarratorsWorkflowState>
 
   private narratorNotFoundMessage() {
     return `لم يتم العثور على الراوي "${this.narratorToFind}" في تهذيب الكمال. الرجاء التحقق من صحة الاسم .`;
+  }
+
+  private narratorFoundMessage(narrator: NarratorInfo) {
+    return `
+تم العثور على **${narrator.name}** في تهذيب الكمال [المجلد ${toArabicDigits(narrator.part)} - الصفحة ${toArabicDigits(narrator.page)}](https://shamela.ws/book/3722/${narrator.shamelaIndex})`;
   }
 }
