@@ -7,11 +7,12 @@ export interface HadithNarrator {
 }
 
 export interface NarratorInfo {
+  id: number | null;
   name: string;
-  bio?: string;
-  death?: string;
-  rating?: string;
-  [key: string]: any;
+  part: number;
+  page: number;
+  islamWebIndex: number;
+  shamelaIndex: number;
 }
 
 export interface TahdibNarrator {

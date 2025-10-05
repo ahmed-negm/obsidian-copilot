@@ -1,4 +1,7 @@
 import { MarkdownView } from "obsidian";
+import { NarratorInfo } from "../models/narrator";
+import { getTemplate } from "./promptUtils";
+import { toArabicDigits } from "./formatUtils";
 
 /**
  * Get the content of the active note in Obsidian
@@ -78,4 +81,38 @@ export async function readVaultFile(filePath: string): Promise<string> {
 export async function updateVaultFile(filePath: string, content: string): Promise<void> {
   const normalizedPath = filePath.replace(/\\/g, "/");
   await app.vault.adapter.write(normalizedPath, content);
+}
+
+export async function readFileFromExternalVault(fullPath: string): Promise<string> {
+  let fs: typeof import("fs/promises");
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    fs = require("fs/promises");
+  } catch (error) {
+    console.error("Filesystem access is not available in this environment.", error);
+    throw error;
+  }
+
+  return await fs.readFile(fullPath, "utf-8");
+}
+
+export async function createFigureNote(
+  narrator: NarratorInfo,
+  knownName: string,
+  narratedFrom: string,
+  narratedTo: string
+) {
+  const filePath = `NewFigures/${narrator.name}.md`;
+  const noteContent = (await getTemplate("Mohadith"))
+    .replaceAll("{{NAME}}", narrator.name)
+    .replaceAll("{{KNOWN_NAME}}", knownName)
+    .replaceAll("{{PART}}", toArabicDigits(narrator.part))
+    .replaceAll("{{PAGE}}", toArabicDigits(narrator.page))
+    .replaceAll("{{SHAMELA_INDEX}}", narrator.shamelaIndex.toString())
+    .replaceAll("{{TAHDHIB_ID}}", narrator.id?.toString() ?? "")
+    .replaceAll("{{DATE}}", new Date().toISOString().slice(0, 10))
+    .replaceAll("{{NARRATED_FROM}}", narratedFrom)
+    .replaceAll("{{NARRATED_TO}}", narratedTo);
+
+  await app.vault.create(filePath, noteContent);
 }

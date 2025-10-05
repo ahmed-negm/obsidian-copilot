@@ -17,7 +17,7 @@ export const commands = [
     workflow: TraceNarratorsWorkflowRunnerV1,
   },
   {
-    command: "تتبع",
+    command: "الرواة",
     workflow: TraceNarratorsWorkflowRunnerV2,
   },
 ];

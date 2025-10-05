@@ -3,6 +3,7 @@ import ChainManager from "@/LLMProviders/chainManager";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import { getTemplate, readVaultFile, setScore, toArabicDigits, updateVaultFile } from "../utils";
 import { ChoiceSuggestModal } from "../ui/ChoiceSuggestModal";
+import { HadithNarrator, TahdibNarrator } from "../models/narrator";
 
 export abstract class TraceNarratorsWorkflowRunnerBase extends WorkflowRunner<TraceNarratorsWorkflowState> {
   constructor(chainManager: ChainManager, args: string) {
@@ -95,31 +96,38 @@ export abstract class TraceNarratorsWorkflowRunnerBase extends WorkflowRunner<Tr
 
   protected async createNewNotes() {
     for (const hadithNarrator of this.state.hadithNarrators) {
-      if (hadithNarrator.indexInAllNarrators !== undefined) {
-        const narrator = this.state.allNarrators[hadithNarrator.indexInAllNarrators];
-        const fileName = narrator.name.replace(/[/\\?%*:|"<>]/g, "-");
-        const filePath = `Figures/${fileName}.md`;
-        const noteExists = app.vault.getAbstractFileByPath(filePath);
-        if (!noteExists) {
-          const noteContent = (await getTemplate("Mohadith"))
-            .replaceAll("{{NAME}}", narrator.name)
-            .replaceAll("{{KNOWN_NAME}}", hadithNarrator.expectedKnownName)
-            .replaceAll("{{PART}}", toArabicDigits(narrator.part))
-            .replaceAll("{{PAGE}}", toArabicDigits(narrator.page))
-            .replaceAll("{{SHAMELA_INDEX}}", narrator.shamelaIndex.toString())
-            .replaceAll("{{TAHDHIB_ID}}", narrator.id?.toString() ?? "")
-            .replaceAll("{{DATE}}", new Date().toISOString().slice(0, 10));
-
-          await app.vault.create(filePath, noteContent).catch((err) => {
-            console.error("Error creating note:", err);
-          });
-        }
-
-        const fileContent = await readVaultFile(this.state.filePath);
-        const linkToNote = `[[${fileName}|${hadithNarrator.name}]]`;
-        const updatedContent = fileContent.replace(hadithNarrator.name, linkToNote);
-        await updateVaultFile(this.state.filePath, updatedContent);
-      }
+      await this.createFigureNote(hadithNarrator, [], []);
     }
+  }
+
+  protected async createFigureNote(
+    hadithNarrator: HadithNarrator,
+    narratedFrom: TahdibNarrator[],
+    narratedTo: TahdibNarrator[]
+  ) {
+    if (hadithNarrator.indexInAllNarrators === undefined) {
+      throw new Error("indexInAllNarrators is undefined");
+    }
+
+    const narrator = this.state.allNarrators[hadithNarrator.indexInAllNarrators];
+    const filePath = `Figures/${narrator.name}.md`;
+    const noteExists = app.vault.getAbstractFileByPath(filePath);
+    if (!noteExists) {
+      const noteContent = (await getTemplate("Mohadith"))
+        .replaceAll("{{NAME}}", narrator.name)
+        .replaceAll("{{KNOWN_NAME}}", hadithNarrator.expectedKnownName)
+        .replaceAll("{{PART}}", toArabicDigits(narrator.part))
+        .replaceAll("{{PAGE}}", toArabicDigits(narrator.page))
+        .replaceAll("{{SHAMELA_INDEX}}", narrator.shamelaIndex.toString())
+        .replaceAll("{{TAHDHIB_ID}}", narrator.id?.toString() ?? "")
+        .replaceAll("{{DATE}}", new Date().toISOString().slice(0, 10));
+
+      await app.vault.create(filePath, noteContent);
+    }
+
+    const fileContent = await readVaultFile(this.state.filePath);
+    const linkToNote = `[[${narrator.name}|${hadithNarrator.name}]]`;
+    const updatedContent = fileContent.replace(hadithNarrator.name, linkToNote);
+    await updateVaultFile(this.state.filePath, updatedContent);
   }
 }
