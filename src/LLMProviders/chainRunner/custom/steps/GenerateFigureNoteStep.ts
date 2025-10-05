@@ -10,7 +10,7 @@ import {
 } from "../utils";
 import { TahdibNarrator } from "../models/narrator";
 
-export class GenerateFigureStep extends StepRunner<TraceNarratorsWorkflowState> {
+export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowState> {
   getContextIntroMessage() {
     return "لم يتم العثور على الملف الخاص بهذا الراوي، جاري إنشاء الملف من بيانات تهذيب الكمال...";
   }
@@ -51,6 +51,11 @@ export class GenerateFigureStep extends StepRunner<TraceNarratorsWorkflowState> 
         teachersMarkdown,
         studentsMarkdown
       );
+
+      return {
+        response: "تم إنشاء ملف الراوي بنجاح.",
+        isSuccessful: true,
+      };
     }
 
     return {

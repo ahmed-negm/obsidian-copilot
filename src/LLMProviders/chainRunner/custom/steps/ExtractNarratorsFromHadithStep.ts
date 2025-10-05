@@ -3,7 +3,7 @@ import { HadithNarrator } from "../models/narrator";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import { readVaultFile, getPromptTemplate, toArabicDigits } from "../utils";
 
-export class ExtractNarratorsStep extends StepRunner<TraceNarratorsWorkflowState> {
+export class ExtractNarratorsFromHadithStep extends StepRunner<TraceNarratorsWorkflowState> {
   private hadithLink: string;
 
   async getUserPrompt() {
@@ -17,7 +17,7 @@ export class ExtractNarratorsStep extends StepRunner<TraceNarratorsWorkflowState
       ? `[[البخاري-${hadithNumber}]]`
       : `[[${app.workspace.getActiveFile()?.name || ""}]]`;
 
-    const prompt = await getPromptTemplate("ExtractNarratorsStep");
+    const prompt = await getPromptTemplate("ExtractNarrators");
 
     return prompt.replace("{{HADITH_TEXT}}", hadithText);
   }

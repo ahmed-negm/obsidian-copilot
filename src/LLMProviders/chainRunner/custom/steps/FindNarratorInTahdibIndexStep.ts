@@ -3,7 +3,7 @@ import { NarratorInfo } from "../models/narrator";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import { getPromptTemplate, toArabicDigits } from "../utils";
 
-export class VerifyNarratorsStep extends StepRunner<TraceNarratorsWorkflowState> {
+export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWorkflowState> {
   private matchingNarrators: NarratorInfo[] = [];
   private narratorToFind: string = "";
 
@@ -34,7 +34,7 @@ export class VerifyNarratorsStep extends StepRunner<TraceNarratorsWorkflowState>
       return this.narratorNotFoundMessage();
     }
 
-    const promptTemplate = await getPromptTemplate("FindSymbolsStep");
+    const promptTemplate = await getPromptTemplate("FindNarratorInList");
     const prompt = promptTemplate.replaceAll("{{name_to_search}}", this.narratorToFind).replaceAll(
       "{{JSON}}",
       JSON.stringify(
@@ -62,8 +62,7 @@ export class VerifyNarratorsStep extends StepRunner<TraceNarratorsWorkflowState>
           }[]
         ).filter((r) => r.confidence === "High");
 
-        if (result.length === 1) {
-          // Get the first high-confidence match or the first match
+        if (result.length >= 1) {
           const first = result[0];
           if (first) {
             const allNarratorIndex = this.state.allNarrators.findIndex(

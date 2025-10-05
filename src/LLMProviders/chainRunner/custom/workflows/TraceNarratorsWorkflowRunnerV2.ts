@@ -1,30 +1,30 @@
-import { ExtractNarratorsStep } from "../steps/ExtractNarratorsStep";
-import { VerifyNarratorsStep } from "../steps/VerifyNarratorsStep";
-import { FindSymbolsStep } from "../steps/FindSymbolsStep";
+import { ExtractNarratorsFromHadithStep } from "../steps/ExtractNarratorsFromHadithStep";
 import { Notice } from "obsidian";
 import { TraceNarratorsWorkflowRunnerBase } from "./TraceNarratorsWorkflowRunnerBase";
-import { GenerateFigureStep } from "../steps/GenerateFigureStep";
+import { GenerateFigureNoteStep } from "../steps/GenerateFigureNoteStep";
+import { FindNarratorInTahdibIndexStep } from "../steps/FindNarratorInTahdibIndexStep";
+import { FindTeacherStudentStep } from "../steps/FindTeacherStudentStep";
 
 export class TraceNarratorsWorkflowRunnerV2 extends TraceNarratorsWorkflowRunnerBase {
   protected registerSteps() {
-    const step1 = new ExtractNarratorsStep(this.state, {
-      onComplete: this.showQuiz.bind(this),
+    const step1 = new ExtractNarratorsFromHadithStep(this.state, {
+      // onComplete: this.showQuiz.bind(this),
     });
 
-    const step2 = new VerifyNarratorsStep(this.state, {
+    const step2 = new FindNarratorInTahdibIndexStep(this.state, {
       onComplete: async () => {
         if (this.state.hadithNarratorIndex === this.state.hadithNarrators.length - 1) {
           this.currentStepIndex = 4;
-          await this.createNewNotes();
+          // await this.createNewNotes(); TODO: Link Hadith
           new Notice("✅ اكتمل التحقق من جميع الرواة.", 0);
         }
         return Promise.resolve();
       },
     });
 
-    const step3 = new GenerateFigureStep(this.state);
+    const step3 = new GenerateFigureNoteStep(this.state);
 
-    const step4 = new FindSymbolsStep(this.state, {
+    const step4 = new FindTeacherStudentStep(this.state, {
       onComplete: () => {
         this.state.hadithNarratorIndex++;
         if (this.state.hadithNarratorIndex < this.state.hadithNarrators.length) {

@@ -1,17 +1,17 @@
-import { ExtractNarratorsStep } from "../steps/ExtractNarratorsStep";
-import { VerifyNarratorsStep } from "../steps/VerifyNarratorsStep";
 import { LoadTahdibStep } from "../steps/LoadTahdibStep";
 import { FindSymbolsStep } from "../steps/FindSymbolsStep";
 import { Notice } from "obsidian";
 import { TraceNarratorsWorkflowRunnerBase } from "./TraceNarratorsWorkflowRunnerBase";
+import { ExtractNarratorsFromHadithStep } from "../steps/ExtractNarratorsFromHadithStep";
+import { FindNarratorInTahdibIndexStep } from "../steps/FindNarratorInTahdibIndexStep";
 
 export class TraceNarratorsWorkflowRunnerV1 extends TraceNarratorsWorkflowRunnerBase {
   protected registerSteps() {
-    const step1 = new ExtractNarratorsStep(this.state, {
+    const step1 = new ExtractNarratorsFromHadithStep(this.state, {
       onComplete: this.showQuiz.bind(this),
     });
 
-    const step2 = new VerifyNarratorsStep(this.state, {
+    const step2 = new FindNarratorInTahdibIndexStep(this.state, {
       onComplete: async () => {
         if (this.state.hadithNarratorIndex === this.state.hadithNarrators.length - 1) {
           this.currentStepIndex = 4;

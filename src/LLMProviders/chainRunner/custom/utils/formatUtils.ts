@@ -8,8 +8,9 @@ const BOOKS = [
   { symbol: "س", name: "النسائي" },
   { symbol: "ق", name: "ابن ماجه" },
   { symbol: "د", name: "أبي داود" },
-];
+] as const;
 
+export type BookName = (typeof BOOKS)[number]["name"];
 const HEADERS = ["الاسم", ...BOOKS.map((b) => b.name), OTHERS];
 
 export function generateMarkdownTable(narrators: TahdibNarrator[]): string {
@@ -52,6 +53,102 @@ function processSymbols(symbols: string): Record<string, string> {
 function narratorToRow(narrator: TahdibNarrator): string {
   const marks = processSymbols(narrator.symbols);
   return `| ${narrator.name} | ${BOOKS.map((b) => marks[b.name]).join(" | ")} | ${marks[OTHERS]} |`;
+}
+
+function isCheck(cell: string | undefined): boolean {
+  if (!cell) return false;
+  return /✔|✓|✅/.test(cell);
+}
+
+function extractFirstTableLines(markdown: string, sectionTitle: string): string[] {
+  const lines = markdown.split(/\r?\n/);
+  const headerLineIndex = lines.findIndex((l) => l.trim().startsWith(`## ${sectionTitle}`));
+  if (headerLineIndex === -1) return [];
+
+  // find first table line after the header
+  let i = headerLineIndex + 1;
+  // skip non-table lines until a '|' line appears
+  while (i < lines.length && !lines[i].trim().startsWith("|")) i++;
+  if (i >= lines.length) return [];
+
+  // collect consecutive '|' lines (the first table only)
+  const tableLines: string[] = [];
+  for (; i < lines.length; i++) {
+    if (lines[i].trim().startsWith("|")) tableLines.push(lines[i]);
+    else break; // stop at first non-table line after table started
+  }
+
+  return tableLines;
+}
+
+function parseTableLines(tableLines: string[], book?: BookName): string[] {
+  if (tableLines.length === 0) return [];
+
+  // Expect header + separator + data...
+  if (tableLines.length <= 2) return []; // no data rows
+
+  const dataLines = tableLines.slice(2); // skip header and separator rows
+  const nonNameCount = HEADERS.length - 1; // 7
+
+  const narrators: string[] = [];
+
+  // Find the column index for the given book
+  let bookColIdx: number | undefined = undefined;
+  if (book) {
+    bookColIdx = HEADERS.indexOf(book);
+    if (bookColIdx === -1) bookColIdx = undefined;
+  }
+
+  for (const raw of dataLines) {
+    // split by '|' but preserve empty slots
+    const parts = raw.split("|").map((p) => p.trim());
+    // remove leading empty slot if line begins with '|'
+    if (parts.length > 0 && parts[0] === "") parts.shift();
+    // remove trailing empty slot if line ends with '|'
+    if (parts.length > 0 && parts[parts.length - 1] === "") parts.pop();
+
+    // If too many columns, the name likely contained '|' — reconstruct name by
+    // taking everything except last `nonNameCount` columns as the name.
+    let cols: string[] = [];
+    if (parts.length > HEADERS.length) {
+      const rest = parts.slice(-nonNameCount);
+      const nameParts = parts.slice(0, parts.length - nonNameCount);
+      const name = nameParts.join(" | ").trim();
+      cols = [name, ...rest];
+    } else {
+      // if fewer, pad with empty strings to keep positions stable
+      cols = parts.slice(0);
+      while (cols.length < HEADERS.length) cols.push("");
+    }
+
+    // Now cols.length should be >= HEADERS.length (we padded)
+    // Take first HEADERS.length elements to be safe
+    cols = cols.slice(0, HEADERS.length);
+
+    const name = cols[0].trim();
+
+    // If book is specified, only include narrators who have a checkmark in that book column
+    if (bookColIdx !== undefined) {
+      const cell = cols[bookColIdx];
+      if (!isCheck(cell)) continue;
+    }
+
+    narrators.push(name);
+  }
+
+  return narrators;
+}
+
+export function findStudents(markdown: string, book: BookName) {
+  const studentLines = extractFirstTableLines(markdown, "رَوَى عَنه:");
+  console.log("Student Lines:", studentLines);
+  console.log("Parsed Students:", parseTableLines(studentLines, book));
+  return parseTableLines(studentLines, book);
+}
+
+export function findTeachers(markdown: string, book: BookName) {
+  const teacherLines = extractFirstTableLines(markdown, "رَوَى عَن:");
+  return parseTableLines(teacherLines, book);
 }
 
 export function toArabicDigits(str: string | number): string {
