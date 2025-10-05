@@ -99,8 +99,8 @@ export async function readFileFromExternalVault(fullPath: string): Promise<strin
 export async function createFigureNote(
   narrator: NarratorInfo,
   knownName: string,
-  narratedFrom: string,
-  narratedTo: string
+  teachers: string,
+  students: string
 ) {
   const filePath = `NewFigures/${narrator.name}.md`;
   const noteContent = (await getTemplate("Mohadith"))
@@ -111,8 +111,8 @@ export async function createFigureNote(
     .replaceAll("{{SHAMELA_INDEX}}", narrator.shamelaIndex.toString())
     .replaceAll("{{TAHDHIB_ID}}", narrator.id?.toString() ?? "")
     .replaceAll("{{DATE}}", new Date().toISOString().slice(0, 10))
-    .replaceAll("{{NARRATED_FROM}}", narratedFrom)
-    .replaceAll("{{NARRATED_TO}}", narratedTo);
+    .replaceAll("{{TEACHERS}}", teachers)
+    .replaceAll("{{STUDENTS}}", students);
 
   await app.vault.create(filePath, noteContent);
 }

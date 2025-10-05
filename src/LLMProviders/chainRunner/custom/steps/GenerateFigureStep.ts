@@ -35,21 +35,21 @@ export class GenerateFigureStep extends StepRunner<TraceNarratorsWorkflowState> 
   async processResponse(response: string) {
     const codeBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
     if (codeBlockMatch) {
-      const { narratedFrom, narratedTo } = JSON.parse(codeBlockMatch[1]) as {
-        narratedFrom: TahdibNarrator[];
-        narratedTo: TahdibNarrator[];
+      const { teachers, students } = JSON.parse(codeBlockMatch[1]) as {
+        teachers: TahdibNarrator[];
+        students: TahdibNarrator[];
       };
 
-      const narratedFromMarkdown = generateMarkdownTable(narratedFrom.filter((n) => n.symbols));
-      const narratedToMarkdown = generateMarkdownTable(narratedTo.filter((n) => n.symbols));
+      const teachersMarkdown = generateMarkdownTable(teachers.filter((n) => n.symbols));
+      const studentsMarkdown = generateMarkdownTable(students.filter((n) => n.symbols));
 
       await createFigureNote(
         this.state.allNarrators[
           this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators!
         ],
         this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedKnownName,
-        narratedFromMarkdown,
-        narratedToMarkdown
+        teachersMarkdown,
+        studentsMarkdown
       );
     }
 

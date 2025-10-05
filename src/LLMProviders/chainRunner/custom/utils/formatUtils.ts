@@ -28,6 +28,14 @@ function processSymbols(symbols: string): Record<string, string> {
   const clean = symbols.replace(/[()]/g, "").trim();
   const chars = clean.split(" ");
 
+  // If "ع" or "٤" is present, mark all columns with check mark
+  if (chars.includes("ع") || chars.includes("٤")) {
+    for (const h of HEADERS.slice(0, -1)) {
+      result[h] = "✔";
+    }
+    return result;
+  }
+
   const used = new Set<string>();
   for (const { symbol, name } of BOOKS) {
     if (chars.includes(symbol)) {

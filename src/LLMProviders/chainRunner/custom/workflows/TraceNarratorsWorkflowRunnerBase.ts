@@ -3,7 +3,7 @@ import ChainManager from "@/LLMProviders/chainManager";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import { getTemplate, readVaultFile, setScore, toArabicDigits, updateVaultFile } from "../utils";
 import { ChoiceSuggestModal } from "../ui/ChoiceSuggestModal";
-import { HadithNarrator, TahdibNarrator } from "../models/narrator";
+import { HadithNarrator } from "../models/narrator";
 
 export abstract class TraceNarratorsWorkflowRunnerBase extends WorkflowRunner<TraceNarratorsWorkflowState> {
   constructor(chainManager: ChainManager, args: string) {
@@ -96,15 +96,11 @@ export abstract class TraceNarratorsWorkflowRunnerBase extends WorkflowRunner<Tr
 
   protected async createNewNotes() {
     for (const hadithNarrator of this.state.hadithNarrators) {
-      await this.createFigureNote(hadithNarrator, [], []);
+      await this.createFigureNote(hadithNarrator);
     }
   }
 
-  protected async createFigureNote(
-    hadithNarrator: HadithNarrator,
-    narratedFrom: TahdibNarrator[],
-    narratedTo: TahdibNarrator[]
-  ) {
+  protected async createFigureNote(hadithNarrator: HadithNarrator) {
     if (hadithNarrator.indexInAllNarrators === undefined) {
       throw new Error("indexInAllNarrators is undefined");
     }
