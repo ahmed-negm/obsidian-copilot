@@ -21,7 +21,7 @@ export abstract class StepRunner<T> {
 
   async run(response: string): Promise<ProcessResponseResult> {
     const result = await this.processResponse(response);
-    if (this.options?.onComplete) {
+    if (result.isSuccessful && this.options?.onComplete) {
       await this.options.onComplete();
     }
     return result;

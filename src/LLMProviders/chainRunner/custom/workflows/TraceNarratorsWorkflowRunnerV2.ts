@@ -17,7 +17,19 @@ export class TraceNarratorsWorkflowRunnerV2 extends TraceNarratorsWorkflowRunner
           this.currentStepIndex = 4;
           // await this.createNewNotes(); TODO: Link Hadith
           new Notice("✅ اكتمل التحقق من جميع الرواة.", 0);
+        } else {
+          const narratorIndex =
+            this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators;
+          if (narratorIndex) {
+            const filePath = `NewFigures/${this.state.allNarrators[narratorIndex].name}.md`;
+            const noteExists = app.vault.getAbstractFileByPath(filePath);
+            if (noteExists) {
+              // Skip figure note generation if note already exists
+              this.currentStepIndex = this.currentStepIndex + 1;
+            }
+          }
         }
+
         return Promise.resolve();
       },
     });
