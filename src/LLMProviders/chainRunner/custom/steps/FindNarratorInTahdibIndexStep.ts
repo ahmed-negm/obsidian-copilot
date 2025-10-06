@@ -17,10 +17,17 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     this.narratorToFind =
       this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedFullName;
 
-    // Find all narrator info that matches the first 10 letters of the name
+    // Find all narrator info that matches the first 20 letters of the name
     this.matchingNarrators = this.state.allNarrators.filter((n) =>
-      n.name?.startsWith(this.narratorToFind.slice(0, 10))
+      n.name?.startsWith(this.narratorToFind.slice(0, 20))
     );
+
+    if (this.matchingNarrators.length === 0) {
+      // If no matches found, try matching the first 10 letters
+      this.matchingNarrators = this.state.allNarrators.filter((n) =>
+        n.name?.startsWith(this.narratorToFind.slice(0, 10))
+      );
+    }
 
     if (this.matchingNarrators.length === 0) {
       // If no matches found, try matching the first 3 letters
@@ -33,6 +40,8 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
       // If still no matches found, return a prompt indicating no matches
       return this.narratorNotFoundMessage();
     }
+
+    // TODO: If there's exactly one match, we can skip the LLM step and directly update the state
 
     const promptTemplate = await getPromptTemplate("FindNarratorInList");
     const prompt = promptTemplate.replaceAll("{{name_to_search}}", this.narratorToFind).replaceAll(
