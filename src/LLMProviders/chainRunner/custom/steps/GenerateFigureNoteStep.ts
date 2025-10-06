@@ -21,7 +21,7 @@ export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowSta
     const narrator = this.state.allNarrators[indexInAllNarrators];
 
     const vaultPath = (app.vault.adapter as FileSystemAdapter).getBasePath();
-    const tahdibFilePath = `${vaultPath}/../Tahdhib-al-Kamal/Figures/${toArabicDigits(narrator.id!)}-${narrator.name}.md`;
+    const tahdibFilePath = `${vaultPath}/../Books/Tahdhib-al-Kamal/Figures/${toArabicDigits(narrator.id!)}-${narrator.name}.md`;
     const tahdibContent = await readFileFromExternalVault(tahdibFilePath);
 
     const promptTemplate = await getPromptTemplate("ExtractNarratedFromTahdib");

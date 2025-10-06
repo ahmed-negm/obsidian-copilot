@@ -1,7 +1,7 @@
 import { WorkflowRunner } from "./../base/WorkflowRunner";
 import ChainManager from "@/LLMProviders/chainManager";
 import { TraceNarratorsWorkflowState } from "../models/state";
-import { getTemplate, readVaultFile, setScore, toArabicDigits, updateVaultFile } from "../utils";
+import { readVaultFile, setScore, updateVaultFile } from "../utils";
 import { ChoiceSuggestModal } from "../ui/ChoiceSuggestModal";
 import { HadithNarrator } from "../models/narrator";
 
@@ -106,21 +106,6 @@ export abstract class TraceNarratorsWorkflowRunnerBase extends WorkflowRunner<Tr
     }
 
     const narrator = this.state.allNarrators[hadithNarrator.indexInAllNarrators];
-    const filePath = `Figures/${narrator.name}.md`;
-    const noteExists = app.vault.getAbstractFileByPath(filePath);
-    if (!noteExists) {
-      const noteContent = (await getTemplate("Mohadith"))
-        .replaceAll("{{NAME}}", narrator.name)
-        .replaceAll("{{KNOWN_NAME}}", hadithNarrator.expectedKnownName)
-        .replaceAll("{{PART}}", toArabicDigits(narrator.part))
-        .replaceAll("{{PAGE}}", toArabicDigits(narrator.page))
-        .replaceAll("{{SHAMELA_INDEX}}", narrator.shamelaIndex.toString())
-        .replaceAll("{{TAHDHIB_ID}}", narrator.id?.toString() ?? "")
-        .replaceAll("{{DATE}}", new Date().toISOString().slice(0, 10));
-
-      await app.vault.create(filePath, noteContent);
-    }
-
     const fileContent = await readVaultFile(this.state.filePath);
     const linkToNote = `[[${narrator.name}|${hadithNarrator.name}]]`;
     const updatedContent = fileContent.replace(hadithNarrator.name, linkToNote);
