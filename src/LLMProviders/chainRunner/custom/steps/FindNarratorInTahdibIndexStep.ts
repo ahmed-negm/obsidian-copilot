@@ -9,7 +9,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
 
   getContextIntroMessage() {
     return this.state.hadithNarratorIndex === 0
-      ? "سنبدأ الآن في تتبع الرواة من الأعلى واحداً يلو الآخر ..."
+      ? "سنبدأ الآن في البحث عن الرواة في تهذيب الكمال ..."
       : "لننتقل إلى الراوي التالي في السلسلة...";
   }
 

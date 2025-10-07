@@ -29,10 +29,8 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
     const narratorBio = await readVaultFile(`NewFigures/${currentNarrator.name}.md`);
 
     const students = findStudents(narratorBio, "البخاري");
-    console.log("Students found:", { students, nextNarrator });
 
     if (students.includes(nextNarrator.name)) {
-      console.log("Exact match found, skipping LLM call.");
       return "";
     }
 

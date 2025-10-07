@@ -12,16 +12,15 @@ import { TahdibNarrator } from "../models/narrator";
 
 export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowState> {
   getContextIntroMessage() {
-    return "لم يتم العثور على الملف الخاص بهذا الراوي، جاري إنشاء الملف من بيانات تهذيب الكمال...";
+    const { noteExists } = this.getNarratorNoteStatus();
+
+    return noteExists
+      ? ""
+      : "لم يتم العثور على الملف الخاص بهذا الراوي، جاري إنشاء الملف من بيانات تهذيب الكمال...";
   }
 
   async getUserPrompt() {
-    const indexInAllNarrators =
-      this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators!;
-    const narrator = this.state.allNarrators[indexInAllNarrators];
-
-    const filePath = `NewFigures/${narrator.name}.md`;
-    const noteExists = app.vault.getAbstractFileByPath(filePath);
+    const { noteExists, narrator } = this.getNarratorNoteStatus();
     if (noteExists) {
       return "";
     }
@@ -38,10 +37,20 @@ export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowSta
     return prompt;
   }
 
+  private getNarratorNoteStatus() {
+    const indexInAllNarrators =
+      this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators!;
+    const narrator = this.state.allNarrators[indexInAllNarrators];
+
+    const filePath = `NewFigures/${narrator.name}.md`;
+    const noteExists = app.vault.getAbstractFileByPath(filePath);
+    return { noteExists, narrator };
+  }
+
   async processResponse(response: string) {
     if (response === "") {
       return {
-        response: "تم إنشاء ملف الراوي بنجاح.",
+        response: "ملف الراوي موجود بالفعل، تخطي الإنشاء.",
         isSuccessful: true,
       };
     }
