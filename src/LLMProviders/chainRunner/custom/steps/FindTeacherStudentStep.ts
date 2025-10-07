@@ -1,6 +1,12 @@
 import { StepRunner } from "../base/StepRunner";
 import { TraceNarratorsWorkflowState } from "../models/state";
-import { getPromptTemplate, readVaultFile, findStudents } from "../utils";
+import {
+  getPromptTemplate,
+  readVaultFile,
+  findStudents,
+  updateStudents,
+  updateVaultFile,
+} from "../utils";
 
 export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowState> {
   narratorsToSearch: {
@@ -36,9 +42,9 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
 
     // Prepare narrators to search in
     this.narratorsToSearch =
-      students.map((narrator, index) => ({
+      students.map((student, index) => ({
         id: index,
-        name: narrator,
+        name: student,
       })) || [];
 
     const promptTemplate = await getPromptTemplate("FindNarratorInList");
@@ -75,8 +81,19 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
         const student = this.narratorsToSearch[result[0].id];
 
         if (student) {
+          const hadithNarrator = this.state.hadithNarrators[this.state.hadithNarratorIndex];
+          const currentNarrator = this.state.allNarrators[hadithNarrator.indexInAllNarrators!];
+          const nextNarrator =
+            this.state.allNarrators[
+              this.state.hadithNarrators[this.state.hadithNarratorIndex + 1].indexInAllNarrators!
+            ];
+          const filePath = `NewFigures/${currentNarrator.name}.md`;
+          const narratorBio = await readVaultFile(filePath);
+          const updateBio = updateStudents(narratorBio, student.name, nextNarrator.name);
+          await updateVaultFile(filePath, updateBio);
+
           const output =
-            `✅ تم العثور على **${student.name}** فيمن رووا عن **${this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedKnownName}** في  ` +
+            `✅ تم العثور على **${student.name}** فيمن رووا عن **${hadithNarrator.expectedKnownName}** في  ` +
             "صحيح البخاري";
 
           return {

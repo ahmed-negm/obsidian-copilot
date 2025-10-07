@@ -150,13 +150,26 @@ function parseTableLines(tableLines: string[], book?: BookName): string[] {
   return narrators;
 }
 
+const studentsTitle = "رَوَى عَنه:";
+const teachersTitle = "رَوَى عَن:";
+
 export function findStudents(markdown: string, book: BookName) {
-  const studentLines = extractFirstTableLines(markdown, "رَوَى عَنه:");
+  const studentLines = extractFirstTableLines(markdown, studentsTitle);
   return parseTableLines(studentLines, book);
 }
 
+export function updateStudents(markdown: string, displayText: string, link: string) {
+  const studentLines = extractFirstTableLines(markdown, studentsTitle);
+  const index = studentLines.findIndex((line) => line.includes(displayText));
+  if (index !== -1) {
+    const updatedLine = studentLines[index].replace(displayText, `[[${link}\\|${displayText}]]`);
+    markdown = markdown.replace(studentLines[index], updatedLine);
+  }
+  return markdown;
+}
+
 export function findTeachers(markdown: string, book: BookName) {
-  const teacherLines = extractFirstTableLines(markdown, "رَوَى عَن:");
+  const teacherLines = extractFirstTableLines(markdown, teachersTitle);
   return parseTableLines(teacherLines, book);
 }
 
