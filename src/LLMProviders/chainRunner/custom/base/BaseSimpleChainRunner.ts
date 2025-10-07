@@ -22,9 +22,10 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
     }
   ): Promise<string> {
     const streamer = new ThinkBlockStreamer(() => {});
+    let userPrompt = "";
 
     try {
-      const messages: { role: string; content: string }[] = [];
+      let messages: { role: string; content: string }[] = [];
 
       const systemPrompt = await this.getSystemPrompt();
       const chatModel = this.chainManager.chatModelManager.getChatModel();
@@ -46,11 +47,15 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
         }
       }
 
-      const userPrompt = await this.getUserPrompt(userMessage.message);
+      userPrompt = await this.getUserPrompt(userMessage.message);
       messages.push({
         role: "user",
         content: userPrompt,
       });
+
+      if (userPrompt === "") {
+        messages = [{ role: "user", content: "Say 'hello' in a very brief sentence." }];
+      }
 
       logInfo("Final Request to AI:\n", messages);
 
@@ -75,7 +80,7 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
       }
     }
 
-    const response = await this.processResponse(streamer.close());
+    const response = await this.processResponse(userPrompt === "" ? "" : streamer.close());
 
     // Only skip saving if it's a new chat (clearing everything)
     if (abortController.signal.aborted && abortController.signal.reason === ABORT_REASON.NEW_CHAT) {

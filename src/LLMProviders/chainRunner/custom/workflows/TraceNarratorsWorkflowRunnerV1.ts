@@ -15,7 +15,7 @@ export class TraceNarratorsWorkflowRunnerV1 extends TraceNarratorsWorkflowRunner
       onComplete: async () => {
         if (this.state.hadithNarratorIndex === this.state.hadithNarrators.length - 1) {
           this.currentStepIndex = 4;
-          await this.createNewNotes();
+          await this.linkHadithToNarrators();
           new Notice("✅ اكتمل التحقق من جميع الرواة.", 0);
         }
         return Promise.resolve();

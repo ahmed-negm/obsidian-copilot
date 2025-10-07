@@ -7,40 +7,38 @@ import { FindTeacherStudentStep } from "../steps/FindTeacherStudentStep";
 
 export class TraceNarratorsWorkflowRunnerV2 extends TraceNarratorsWorkflowRunnerBase {
   protected registerSteps() {
-    const step1 = new ExtractNarratorsFromHadithStep(this.state, {
-      // onComplete: this.showQuiz.bind(this),
-    });
+    const step1 = new ExtractNarratorsFromHadithStep(this.state);
 
-    const step2 = new FindNarratorInTahdibIndexStep(this.state, {
+    const step2 = new FindNarratorInTahdibIndexStep(this.state);
+
+    const step3 = new GenerateFigureNoteStep(this.state, {
       onComplete: async () => {
-        const narratorIndex =
-          this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators;
-        if (narratorIndex) {
-          const filePath = `NewFigures/${this.state.allNarrators[narratorIndex].name}.md`;
-          const noteExists = app.vault.getAbstractFileByPath(filePath);
-          if (noteExists) {
-            // Skip figure note generation if note already exists
-            this.currentStepIndex = this.currentStepIndex + 1;
-            await this.verifyAllNarratorsCompleted();
-          }
+        const nextNarratorIndex =
+          this.state.hadithNarrators[this.state.hadithNarratorIndex + 1]?.indexInAllNarrators;
+        if (
+          !nextNarratorIndex &&
+          this.state.hadithNarratorIndex < this.state.hadithNarrators.length - 1
+        ) {
+          this.state.hadithNarratorIndex++;
+          this.currentStepIndex -= 2;
+          return Promise.resolve();
+        } else {
+          this.state.hadithNarratorIndex = 0;
         }
 
         return Promise.resolve();
       },
     });
 
-    const step3 = new GenerateFigureNoteStep(this.state, {
-      onComplete: async () => {
-        await this.verifyAllNarratorsCompleted();
-        return Promise.resolve();
-      },
-    });
-
     const step4 = new FindTeacherStudentStep(this.state, {
-      onComplete: () => {
+      onComplete: async () => {
         this.state.hadithNarratorIndex++;
-        if (this.state.hadithNarratorIndex < this.state.hadithNarrators.length) {
-          this.currentStepIndex = 0;
+        if (this.state.hadithNarratorIndex < this.state.hadithNarrators.length - 1) {
+          this.currentStepIndex -= 1;
+        } else if (this.state.hadithNarratorIndex === this.state.hadithNarrators.length - 1) {
+          this.currentStepIndex = 5;
+          await this.linkHadithToNarrators();
+          new Notice("✅ اكتمل التحقق من جميع الرواة.", 0);
         }
         return Promise.resolve();
       },
@@ -49,11 +47,5 @@ export class TraceNarratorsWorkflowRunnerV2 extends TraceNarratorsWorkflowRunner
     return [step1, step2, step3, step4];
   }
 
-  private async verifyAllNarratorsCompleted() {
-    if (this.state.hadithNarratorIndex === this.state.hadithNarrators.length - 1) {
-      this.currentStepIndex = 5;
-      await this.createNewNotes();
-      new Notice("✅ اكتمل التحقق من جميع الرواة.", 0);
-    }
-  }
+  private async verifyAllNarratorsCompleted() {}
 }

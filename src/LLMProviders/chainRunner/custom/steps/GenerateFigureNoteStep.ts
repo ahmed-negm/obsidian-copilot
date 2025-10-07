@@ -20,6 +20,12 @@ export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowSta
       this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators!;
     const narrator = this.state.allNarrators[indexInAllNarrators];
 
+    const filePath = `NewFigures/${narrator.name}.md`;
+    const noteExists = app.vault.getAbstractFileByPath(filePath);
+    if (noteExists) {
+      return "";
+    }
+
     const vaultPath = (app.vault.adapter as FileSystemAdapter).getBasePath();
     const tahdibFilePath = `${vaultPath}/../Books/Tahdhib-al-Kamal/Figures/${toArabicDigits(narrator.id!)}-${narrator.name}.md`;
     const tahdibContent = await readFileFromExternalVault(tahdibFilePath);
@@ -33,6 +39,13 @@ export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowSta
   }
 
   async processResponse(response: string) {
+    if (response === "") {
+      return {
+        response: "تم إنشاء ملف الراوي بنجاح.",
+        isSuccessful: true,
+      };
+    }
+
     const codeBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
     if (codeBlockMatch) {
       const { teachers, students } = JSON.parse(codeBlockMatch[1]) as {

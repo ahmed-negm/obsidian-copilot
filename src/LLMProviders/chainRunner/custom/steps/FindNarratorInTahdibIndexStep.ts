@@ -36,20 +36,17 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
       );
     }
 
-    if (this.matchingNarrators.length === 0) {
-      // If still no matches found, return a prompt indicating no matches
-      return this.narratorNotFoundMessage();
+    if (this.matchingNarrators.length === 0 || this.matchingNarrators.length === 1) {
+      return "";
     }
-
-    // TODO: If there's exactly one match, we can skip the LLM step and directly update the state
 
     const promptTemplate = await getPromptTemplate("FindNarratorInList");
     const prompt = promptTemplate.replaceAll("{{name_to_search}}", this.narratorToFind).replaceAll(
       "{{JSON}}",
       JSON.stringify(
         this.matchingNarrators.map((n) => ({
-          id: n.islamWebIndex ?? 0,
-          name: n.name ?? "",
+          id: n.index,
+          name: n.name,
         })),
         null,
         2
@@ -60,7 +57,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
   }
 
   async processResponse(response: string) {
-    if (this.matchingNarrators.length > 0) {
+    if (this.matchingNarrators.length > 1) {
       const codeBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
       if (codeBlockMatch) {
         const result = (
@@ -72,12 +69,8 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
         ).filter((r) => r.confidence === "High");
 
         if (result.length >= 1) {
-          const first = result[0];
-          if (first) {
-            const allNarratorIndex = this.state.allNarrators.findIndex(
-              (n) => n.islamWebIndex === first.id
-            );
-
+          const allNarratorIndex = result[0].id;
+          if (allNarratorIndex) {
             if (allNarratorIndex !== -1) {
               const foundNarrator = this.state.allNarrators[allNarratorIndex];
 
@@ -100,6 +93,15 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
           }
         }
       }
+    } else if (this.matchingNarrators.length === 1) {
+      // Update state
+      this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators =
+        this.matchingNarrators[0].index;
+
+      return {
+        response: this.narratorFoundMessage(this.matchingNarrators[0]),
+        isSuccessful: true,
+      };
     }
 
     return {

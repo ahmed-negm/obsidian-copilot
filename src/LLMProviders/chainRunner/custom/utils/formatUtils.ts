@@ -133,6 +133,17 @@ function parseTableLines(tableLines: string[], book?: BookName): string[] {
       if (!isCheck(cell)) continue;
     }
 
+    // If the name is Obsedian link like [[Name|Display]], extract the actual name part
+    const linkMatch = name.match(/\[\[(.+?)(\|.+?)?\]\]/);
+    if (linkMatch) {
+      // Use the part before the pipe if present, else the whole inside of [[ ]]
+      const extractedName = linkMatch[1].trim();
+      if (extractedName) {
+        narrators.push(extractedName.replace(/\\+/g, ""));
+      }
+      continue;
+    }
+
     narrators.push(name);
   }
 
@@ -141,8 +152,6 @@ function parseTableLines(tableLines: string[], book?: BookName): string[] {
 
 export function findStudents(markdown: string, book: BookName) {
   const studentLines = extractFirstTableLines(markdown, "رَوَى عَنه:");
-  console.log("Student Lines:", studentLines);
-  console.log("Parsed Students:", parseTableLines(studentLines, book));
   return parseTableLines(studentLines, book);
 }
 

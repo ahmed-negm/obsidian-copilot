@@ -9,10 +9,11 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
   }[] = [];
 
   getContextIntroMessage() {
-    return (
-      `جاري البحث عن **${this.state.hadithNarrators[this.state.hadithNarratorIndex + 1].expectedKnownName}** فيمن رووا عن **${this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedKnownName}** في  ` +
-      "صحيح البخاري"
-    );
+    const nextNarrator = this.state.hadithNarrators[this.state.hadithNarratorIndex + 1];
+    return nextNarrator
+      ? `جاري البحث عن **${nextNarrator.expectedKnownName}** فيمن رووا عن **${this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedKnownName}** في  ` +
+          "صحيح البخاري"
+      : "";
   }
 
   async getUserPrompt() {
@@ -21,9 +22,19 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
         this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators!
       ];
 
+    const nextNarrator =
+      this.state.allNarrators[
+        this.state.hadithNarrators[this.state.hadithNarratorIndex + 1].indexInAllNarrators!
+      ];
     const narratorBio = await readVaultFile(`NewFigures/${currentNarrator.name}.md`);
 
     const students = findStudents(narratorBio, "البخاري");
+    console.log("Students found:", { students, nextNarrator });
+
+    if (students.includes(nextNarrator.name)) {
+      console.log("Exact match found, skipping LLM call.");
+      return "";
+    }
 
     // Prepare narrators to search in
     this.narratorsToSearch =
@@ -44,6 +55,14 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
   }
 
   async processResponse(response: string) {
+    if (response === "") {
+      return {
+        response:
+          `✅ تم العثور على **${this.state.hadithNarrators[this.state.hadithNarratorIndex + 1].expectedKnownName}** فيمن رووا عن **${this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedKnownName}** في  ` +
+          "صحيح البخاري",
+        isSuccessful: true,
+      };
+    }
     const codeBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
     if (codeBlockMatch) {
       const result = (

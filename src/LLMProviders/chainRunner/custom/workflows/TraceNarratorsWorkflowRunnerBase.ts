@@ -3,7 +3,6 @@ import ChainManager from "@/LLMProviders/chainManager";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import { readVaultFile, setScore, updateVaultFile } from "../utils";
 import { ChoiceSuggestModal } from "../ui/ChoiceSuggestModal";
-import { HadithNarrator } from "../models/narrator";
 
 export abstract class TraceNarratorsWorkflowRunnerBase extends WorkflowRunner<TraceNarratorsWorkflowState> {
   constructor(chainManager: ChainManager, args: string) {
@@ -94,21 +93,18 @@ export abstract class TraceNarratorsWorkflowRunnerBase extends WorkflowRunner<Tr
     }
   }
 
-  protected async createNewNotes() {
+  protected async linkHadithToNarrators() {
+    let fileContent = await readVaultFile(this.state.filePath);
+
     for (const hadithNarrator of this.state.hadithNarrators) {
-      await this.createFigureNote(hadithNarrator);
+      if (hadithNarrator.indexInAllNarrators === undefined) {
+        throw new Error("indexInAllNarrators is undefined");
+      }
+      const narrator = this.state.allNarrators[hadithNarrator.indexInAllNarrators];
+      const linkToNote = `[[${narrator.name}|${hadithNarrator.name}]]`;
+      fileContent = fileContent.replace(hadithNarrator.name, linkToNote);
     }
-  }
 
-  protected async createFigureNote(hadithNarrator: HadithNarrator) {
-    if (hadithNarrator.indexInAllNarrators === undefined) {
-      throw new Error("indexInAllNarrators is undefined");
-    }
-
-    const narrator = this.state.allNarrators[hadithNarrator.indexInAllNarrators];
-    const fileContent = await readVaultFile(this.state.filePath);
-    const linkToNote = `[[${narrator.name}|${hadithNarrator.name}]]`;
-    const updatedContent = fileContent.replace(hadithNarrator.name, linkToNote);
-    await updateVaultFile(this.state.filePath, updatedContent);
+    await updateVaultFile(this.state.filePath, fileContent);
   }
 }

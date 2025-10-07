@@ -7,6 +7,7 @@ export interface HadithNarrator {
 }
 
 export interface NarratorInfo {
+  index: number;
   id: number | null;
   name: string;
   part: number;
