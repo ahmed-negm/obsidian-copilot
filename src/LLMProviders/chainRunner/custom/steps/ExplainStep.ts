@@ -3,13 +3,13 @@ import { BaseState } from "../models/state";
 import { getActiveNote, getPromptTemplate } from "../utils";
 
 export class ExplainStep extends StepRunner<BaseState> {
-  async getSystemPrompt() {
+  async getSystemPrompt(): Promise<string> {
     const basePrompt = await super.getSystemPrompt();
     const extraSystemPrompt = await getPromptTemplate("ExplainStep");
     return basePrompt + "\n\n" + extraSystemPrompt;
   }
 
-  async getUserPrompt() {
+  async getUserPrompt(): Promise<string> {
     const noteContent = await getActiveNote();
     let toExplain = "";
     let reference = "";
@@ -29,7 +29,7 @@ export class ExplainStep extends StepRunner<BaseState> {
     );
   }
 
-  async processResponse(response: string) {
+  async processResponse(response: string): Promise<{ response: string; isSuccessful: boolean }> {
     return { response, isSuccessful: true };
   }
 }

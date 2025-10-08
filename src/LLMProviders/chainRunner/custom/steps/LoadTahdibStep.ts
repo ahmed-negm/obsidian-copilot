@@ -8,7 +8,7 @@ export class LoadTahdibStep extends StepRunner<TraceNarratorsWorkflowState> {
     return "جاري البحث عن من رووا عنه ...";
   }
 
-  async getUserPrompt() {
+  async getUserPrompt(): Promise<string> {
     const indexInAllNarrators =
       this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators!;
 

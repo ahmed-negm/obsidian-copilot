@@ -7,22 +7,19 @@ export class FindSymbolsStep extends StepRunner<TraceNarratorsWorkflowState> {
     return `جاري البحث عن **${this.state.hadithNarrators[this.state.hadithNarratorIndex + 1].expectedKnownName}** بينهم ...`;
   }
 
-  async getUserPrompt() {
+  async getUserPrompt(): Promise<string> {
     const narratorToFind =
       this.state.hadithNarrators[this.state.hadithNarratorIndex + 1].expectedFullName;
-
     // Prepare narrators to search in
     const narratorsToSearch =
       this.state.tahdibNarrators?.map((narrator, index) => ({
         id: index,
         name: narrator.name,
       })) || [];
-
     const promptTemplate = await getPromptTemplate("FindSymbolsStep");
     const prompt = promptTemplate
       .replaceAll("{{name_to_search}}", narratorToFind)
       .replaceAll("{{JSON}}", JSON.stringify(narratorsToSearch, null, 2));
-
     return prompt;
   }
 

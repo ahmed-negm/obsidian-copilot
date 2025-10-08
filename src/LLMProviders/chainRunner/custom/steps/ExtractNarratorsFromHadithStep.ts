@@ -10,20 +10,21 @@ import { Notice } from "obsidian";
  * Step to extract narrators from a hadith text
  */
 export class ExtractNarratorsFromHadithStep extends StepRunner<TraceNarratorsWorkflowState> {
-  /** The wikilink to the hadith file */
-  private hadithLink: string;
+  private hadithLink = "";
 
   /**
-   * Get the user prompt for this step
+   * Returns a context introduction for the step (optional override)
+   */
+  getContextIntroMessage(): string {
+    return "";
+  }
+
+  /**
    * Reads the hadith text and constructs a prompt to extract narrators
-   *
-   * @returns Promise resolving to the user prompt
    */
   async getUserPrompt(): Promise<string> {
     try {
       const hadithNumber = this.state.args;
-
-      // Set the file path based on arguments or active file
       if (hadithNumber) {
         this.state.filePath = `${PATHS.BUKHARI_HADITH}/البخاري-${toArabicDigits(hadithNumber)}${FILE_EXTENSIONS.MARKDOWN}`;
         this.hadithLink = `[[البخاري-${hadithNumber}]]`;
@@ -32,15 +33,8 @@ export class ExtractNarratorsFromHadithStep extends StepRunner<TraceNarratorsWor
         this.state.filePath = activeFile?.path || "";
         this.hadithLink = activeFile ? `[[${activeFile.name}]]` : "";
       }
-
-      if (!this.state.filePath) {
-        throw new Error("No file path available");
-      }
-
-      // Read hadith text from file
+      if (!this.state.filePath) throw new Error("No file path available");
       const hadithText = await readVaultFile(this.state.filePath);
-
-      // Get prompt template and replace placeholder
       const prompt = await getPromptTemplate(TEMPLATES.EXTRACT_NARRATORS);
       return prompt.replace("{{HADITH_TEXT}}", hadithText);
     } catch (error) {
@@ -51,14 +45,10 @@ export class ExtractNarratorsFromHadithStep extends StepRunner<TraceNarratorsWor
   }
 
   /**
-   * Process the AI response to extract narrator information
-   *
-   * @param response - The AI response containing narrator data
-   * @returns Processed result with narrator information
+   * Processes the AI response to extract narrator information
    */
   async processResponse(response: string): Promise<ProcessResponseResult> {
     try {
-      // Extract JSON data from code block
       const codeBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
       if (!codeBlockMatch) {
         return {
@@ -66,29 +56,15 @@ export class ExtractNarratorsFromHadithStep extends StepRunner<TraceNarratorsWor
           isSuccessful: false,
         };
       }
-
-      // Define extended type for processing
       type HadithNarratorWithPotential = HadithNarrator & {
-        potentialPeople?: {
-          fullName: string;
-          knownName: string;
-          quizNames: string[];
-        }[];
+        potentialPeople?: { fullName: string; knownName: string; quizNames: string[] }[];
       };
-
-      // Parse narrator data
       const hadithNarrators = JSON.parse(codeBlockMatch[1]) as HadithNarratorWithPotential[];
       if (!hadithNarrators || !Array.isArray(hadithNarrators) || hadithNarrators.length === 0) {
-        return {
-          response: "No narrators found in the hadith text.",
-          isSuccessful: false,
-        };
+        return { response: "No narrators found in the hadith text.", isSuccessful: false };
       }
-
-      // Process each narrator
       const narratorList: string[] = [];
       for (const narrator of hadithNarrators) {
-        // Check if narrator identification is conclusive
         if (!narrator.potentialPeople || narrator.potentialPeople.length !== 1) {
           return {
             response:
@@ -98,31 +74,16 @@ export class ExtractNarratorsFromHadithStep extends StepRunner<TraceNarratorsWor
             isSuccessful: false,
           };
         }
-
-        // Store narrator information
         narrator.expectedFullName = narrator.potentialPeople[0].fullName;
         narrator.expectedKnownName = narrator.potentialPeople[0].knownName;
         narrator.quizChoices = narrator.potentialPeople[0].quizNames;
         delete narrator.potentialPeople;
-
         narratorList.push(`- **${narrator.name}**: ${narrator.expectedKnownName}`);
       }
-
-      // Update state with narrators (in reverse order for chain analysis)
       this.state.hadithNarrators = hadithNarrators.reverse();
-
-      // Format the response
       const bulletList = narratorList.join("\n");
-      const result = `
-سند الحديث ${this.hadithLink} هو:
-
-${bulletList}
-`;
-
-      return {
-        response: result,
-        isSuccessful: true,
-      };
+      const result = `\nسند الحديث ${this.hadithLink} هو:\n\n${bulletList}\n`;
+      return { response: result, isSuccessful: true };
     } catch (error) {
       logError("Error processing narrator extraction response", error);
       return {

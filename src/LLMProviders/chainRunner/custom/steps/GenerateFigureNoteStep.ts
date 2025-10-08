@@ -19,7 +19,7 @@ export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowSta
       : "لم يتم العثور على الملف الخاص بهذا الراوي، جاري إنشاء الملف من بيانات تهذيب الكمال...";
   }
 
-  async getUserPrompt() {
+  async getUserPrompt(): Promise<string> {
     const { noteExists, narrator } = this.getNarratorNoteStatus();
     if (noteExists) {
       return "";
@@ -47,7 +47,7 @@ export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowSta
     return { noteExists, narrator };
   }
 
-  async processResponse(response: string) {
+  async processResponse(response: string): Promise<{ response: string; isSuccessful: boolean }> {
     if (response === "") {
       return {
         response: "ملف الراوي موجود بالفعل، تخطي الإنشاء.",
