@@ -6,11 +6,6 @@ import { toArabicDigits } from "./formatUtils";
 import { PATHS, FILE_EXTENSIONS, TEMPLATES } from "../constants";
 import { applyTemplateReplacements } from "./promptUtils";
 
-/**
- * Get the content of the active note in Obsidian
- * @param stripProperties Whether to strip front matter properties from the content
- * @returns Promise resolving to the content of the active note
- */
 export async function getActiveNote(stripProperties: boolean = true): Promise<string> {
   try {
     const activeFile = app.workspace.getActiveFile();
@@ -27,16 +22,11 @@ export async function getActiveNote(stripProperties: boolean = true): Promise<st
   }
 }
 
-/**
- * Get the selected text in the active view
- * @returns The selected text or an empty string if no selection
- */
 export function getSelectedText(): string {
   try {
     const view = app.workspace.getActiveViewOfType(MarkdownView);
     if (!view) return "";
 
-    // Case 1: Source mode or Live Preview (editor available)
     if (view.getMode() === "source" || view.getMode() === "preview") {
       const editor = view.editor;
       if (editor) {
@@ -47,7 +37,6 @@ export function getSelectedText(): string {
       }
     }
 
-    // Case 2: Reading/View mode (DOM selection)
     if (view.getMode() === "preview") {
       const previewEl = view.containerEl.querySelector(".markdown-preview-view");
       if (previewEl) {
@@ -68,30 +57,14 @@ export function getSelectedText(): string {
   }
 }
 
-/**
- * Remove Obsidian front matter from content
- * @param content The content to process
- * @returns The content without front matter
- */
 function stripObsidianProperties(content: string): string {
   return content.replace(/^---\n[\s\S]*?\n---\n?/, "");
 }
 
-/**
- * Normalize a file path by replacing backslashes with forward slashes
- * @param filePath Path to normalize
- * @returns Normalized path
- */
 function normalizePath(filePath: string): string {
   return filePath.replace(/\\/g, "/");
 }
 
-/**
- * Read a file from the vault
- * @param filePath Path to the file
- * @returns Promise resolving to the file content
- * @throws Error if the file cannot be read
- */
 export async function readVaultFile(filePath: string): Promise<string> {
   try {
     const normalizedPath = normalizePath(filePath);
@@ -102,13 +75,6 @@ export async function readVaultFile(filePath: string): Promise<string> {
   }
 }
 
-/**
- * Update a file in the vault
- * @param filePath Path to the file
- * @param content New content to write
- * @returns Promise resolving when the file is updated
- * @throws Error if the file cannot be updated
- */
 export async function updateVaultFile(filePath: string, content: string): Promise<void> {
   try {
     const normalizedPath = normalizePath(filePath);
@@ -119,12 +85,6 @@ export async function updateVaultFile(filePath: string, content: string): Promis
   }
 }
 
-/**
- * Read a file from an external filesystem (requires Node.js)
- * @param fullPath Full path to the file
- * @returns Promise resolving to the file content
- * @throws Error if filesystem access is not available or the file cannot be read
- */
 export async function readFileFromExternalVault(fullPath: string): Promise<string> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -136,15 +96,6 @@ export async function readFileFromExternalVault(fullPath: string): Promise<strin
   }
 }
 
-/**
- * Create a new figure note in the vault
- * @param narrator Narrator information
- * @param knownName Known name of the narrator
- * @param teachers List of teachers
- * @param students List of students
- * @returns Promise resolving when the file is created
- * @throws Error if the file cannot be created
- */
 export async function createFigureNote(
   narrator: NarratorInfo,
   knownName: string,

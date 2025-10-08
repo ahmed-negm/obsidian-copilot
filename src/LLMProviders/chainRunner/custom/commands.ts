@@ -3,9 +3,6 @@ import { ExtractNarratorsWorkflowRunner } from "./workflows/ExtractNarratorsWork
 import { TraceNarratorsWorkflowRunner } from "./workflows/TraceNarratorsWorkflowRunner";
 import { COMMANDS } from "./constants";
 
-/**
- * Command definitions mapping command strings to workflow runners
- */
 export const commands = [
   {
     command: COMMANDS.EXPLAIN,

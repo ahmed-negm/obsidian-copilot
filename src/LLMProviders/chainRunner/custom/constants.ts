@@ -1,10 +1,8 @@
-// Command strings for workflows
 export const COMMANDS = {
   EXPLAIN: "أشرح",
   EXTRACT_NARRATORS: "استخرج الرواة",
   TRACE_NARRATORS: "تتبع الرواة",
 };
-// Paths
 export const PATHS = {
   PROMPTS: "_extras/Prompt",
   TEMPLATES: "_extras/Templates",
@@ -14,13 +12,11 @@ export const PATHS = {
   NEW_FIGURES: "NewFigures",
 };
 
-// File extensions
 export const FILE_EXTENSIONS = {
   MARKDOWN: ".md",
   JSON: ".json",
 };
 
-// Template names
 export const TEMPLATES = {
   SYSTEM: "SystemPrompt",
   EXTRACT_NARRATORS: "ExtractNarrators",
@@ -29,18 +25,12 @@ export const TEMPLATES = {
   FIND_SYMBOLS_STEP: "FindSymbolsStep",
 };
 
-// User interface messages
 export const UI_MESSAGES = {
   WORKFLOW_COMPLETE: "✅ اكتمل التحقق من جميع الرواة.",
   WORKFLOW_STEP_FAILED: "❌ تم إيقاف السلسلة بسبب فشل في خطوة ما.",
   NARRATOR_IDENTIFICATION_FAILED: "لم أتمكن من تحديد راوٍ واحد بشكل قاطع للاسم",
 };
-/**
- * Centralized file for all magic strings used in the custom workflow code.
- * Update this file to add, remove, or change any repeated string literal.
- */
 
-// UI/response messages
 export const MSG_FOUND_NARRATOR =
   "✅ تم العثور على **{student}** فيمن رووا عن **{teacher}** في  صحيح البخاري";
 export const MSG_FOUND_NARRATOR_SELF =
@@ -50,7 +40,6 @@ export const MSG_NARRATOR_FILE_CREATED = "تم إنشاء ملف الراوي ب
 export const MSG_CHAIN_IS = "\nسند الحديث {hadithLink} هو:\n\n{narrators}\n";
 export const MSG_NARRATOR_IDENTIFICATION_FAILED = "تعذر تحديد الراوي";
 
-// Book names and symbols
 export const BOOKS = [
   { symbol: "خ", name: "البخاري" },
   { symbol: "م", name: "مسلم" },
@@ -60,7 +49,6 @@ export const BOOKS = [
   { symbol: "د", name: "أبي داود" },
 ] as const;
 
-// Miscellaneous
 export const OTHERS = "Others";
 export const STUDENTS_TITLE = "رَوَى عَنه:";
 export const TEACHERS_TITLE = "رَوَى عن:";

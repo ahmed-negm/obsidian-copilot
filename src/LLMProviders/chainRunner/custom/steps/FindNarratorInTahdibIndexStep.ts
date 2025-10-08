@@ -17,30 +17,22 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
   async getUserPrompt() {
     this.narratorToFind =
       this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedFullName;
-
-    // Find all narrator info that matches the first 20 letters of the name
     this.matchingNarrators = this.state.allNarrators.filter((n) =>
       n.name?.startsWith(this.narratorToFind.slice(0, 20))
     );
-
     if (this.matchingNarrators.length === 0) {
-      // If no matches found, try matching the first 10 letters
       this.matchingNarrators = this.state.allNarrators.filter((n) =>
         n.name?.startsWith(this.narratorToFind.slice(0, 10))
       );
     }
-
     if (this.matchingNarrators.length === 0) {
-      // If no matches found, try matching the first 3 letters
       this.matchingNarrators = this.state.allNarrators.filter((n) =>
         n.name?.startsWith(this.narratorToFind.slice(0, 3))
       );
     }
-
     if (this.matchingNarrators.length === 0 || this.matchingNarrators.length === 1) {
       return "";
     }
-
     const promptTemplate = await getPromptTemplate("FindNarratorInList");
     const prompt = promptTemplate.replaceAll("{{name_to_search}}", this.narratorToFind).replaceAll(
       "{{JSON}}",
@@ -53,7 +45,6 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
         2
       )
     );
-
     return prompt;
   }
 
@@ -74,7 +65,6 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
                   isSuccessful: false,
                 };
               }
-              // Update state
               this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators =
                 allNarratorIndex;
               return {
@@ -90,16 +80,13 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
         }
       }
     } else if (this.matchingNarrators.length === 1) {
-      // Update state
       this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators =
         this.matchingNarrators[0].index;
-
       return {
         response: this.narratorFoundMessage(this.matchingNarrators[0]),
         isSuccessful: true,
       };
     }
-
     return {
       response: this.narratorNotFoundMessage() + "\n\n" + response,
       isSuccessful: false,
