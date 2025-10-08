@@ -1,7 +1,7 @@
 import { StepRunner } from "../base/StepRunner";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import { getPromptTemplate, extractJsonCodeBlock } from "../utils";
-import { BOOKS } from "../utils/formatUtils";
+import { BOOKS, MSG_FOUND_NARRATOR, formatMessage } from "../utils/formatUtils";
 
 export class FindSymbolsStep extends StepRunner<TraceNarratorsWorkflowState> {
   getContextIntroMessage() {
@@ -37,11 +37,12 @@ export class FindSymbolsStep extends StepRunner<TraceNarratorsWorkflowState> {
           .split(" ")
           .filter((s) => s !== BOOKS[0].symbol);
         const tahdibBooks = this.getTahdibBooks(symbols);
-        // Format the output message
+        // Format the output message using template
         const output =
-          `✅ تم العثور على **${foundNarrator.name}** فيمن رووا عن **${this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedKnownName}** في  ` +
-          "صحيح البخاري" +
-          tahdibBooks;
+          formatMessage(MSG_FOUND_NARRATOR, {
+            student: foundNarrator.name,
+            teacher: this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedKnownName,
+          }) + tahdibBooks;
         return {
           response: output,
           isSuccessful: true,

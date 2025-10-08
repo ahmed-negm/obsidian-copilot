@@ -2,6 +2,7 @@ import { StepRunner } from "../base/StepRunner";
 import { NarratorInfo } from "../models/narrator";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import { getPromptTemplate, toArabicDigits, extractJsonCodeBlock } from "../utils";
+import { MSG_FOUND_NARRATOR, formatMessage } from "../utils/formatUtils";
 
 export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWorkflowState> {
   private matchingNarrators: NarratorInfo[] = [];
@@ -77,7 +78,11 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
               this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators =
                 allNarratorIndex;
               return {
-                response: this.narratorFoundMessage(foundNarrator),
+                response: formatMessage(MSG_FOUND_NARRATOR, {
+                  student: foundNarrator.name,
+                  teacher:
+                    this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedKnownName,
+                }),
                 isSuccessful: true,
               };
             }

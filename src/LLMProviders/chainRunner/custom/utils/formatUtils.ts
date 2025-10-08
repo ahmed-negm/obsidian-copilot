@@ -1,4 +1,21 @@
 /**
+ * Formats a message template by replacing {placeholders} with values.
+ * @param template The template string with {key} placeholders
+ * @param values An object mapping keys to replacement values
+ */
+export function formatMessage(template: string, values: Record<string, string | number>): string {
+  return Object.entries(values).reduce(
+    (msg, [key, val]) => msg.replaceAll(`{${key}}`, String(val)),
+    template
+  );
+}
+
+// Message templates for narrator/teacher/student steps
+export const MSG_FOUND_NARRATOR =
+  "✅ تم العثور على **{student}** فيمن رووا عن **{teacher}** في  صحيح البخاري";
+export const MSG_FOUND_NARRATOR_SELF =
+  "✅ تم العثور على **{narrator}** فيمن رووا عن **{teacher}** في  صحيح البخاري";
+/**
  * Extracts and parses a JSON code block from a string (e.g., LLM response).
  * Returns the parsed object or null if not found/invalid.
  * @param text The string to extract the JSON code block from

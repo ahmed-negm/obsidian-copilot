@@ -1,3 +1,4 @@
+import { formatMessage } from "../utils/formatUtils";
 import { FileSystemAdapter } from "obsidian";
 import { StepRunner } from "../base/StepRunner";
 import { TraceNarratorsWorkflowState } from "../models/state";
@@ -72,7 +73,7 @@ export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowSta
         studentsMarkdown
       );
       return {
-        response: "تم إنشاء ملف الراوي بنجاح.",
+        response: formatMessage("تم إنشاء ملف الراوي بنجاح.", {}),
         isSuccessful: true,
       };
     }

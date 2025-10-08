@@ -3,7 +3,7 @@ import { StepRunner, ProcessResponseResult } from "../base/StepRunner";
 import { HadithNarrator } from "../models/narrator";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import { readVaultFile, getPromptTemplate, toArabicDigits } from "../utils";
-import { BOOKS } from "../utils/formatUtils";
+import { BOOKS, formatMessage } from "../utils/formatUtils";
 import { PATHS, TEMPLATES, FILE_EXTENSIONS, UI_MESSAGES } from "../constants";
 import { Notice } from "obsidian";
 
@@ -83,7 +83,10 @@ export class ExtractNarratorsFromHadithStep extends StepRunner<TraceNarratorsWor
       }
       this.state.hadithNarrators = hadithNarrators.reverse();
       const bulletList = narratorList.join("\n");
-      const result = `\nسند الحديث ${this.hadithLink} هو:\n\n${bulletList}\n`;
+      const result = formatMessage("\nسند الحديث {hadithLink} هو:\n\n{narrators}\n", {
+        hadithLink: this.hadithLink,
+        narrators: bulletList,
+      });
       return { response: result, isSuccessful: true };
     } catch (error) {
       logError("Error processing narrator extraction response", error);

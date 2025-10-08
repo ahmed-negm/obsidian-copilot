@@ -8,7 +8,12 @@ import {
   updateVaultFile,
   extractJsonCodeBlock,
 } from "../utils";
-import { BOOKS } from "../utils/formatUtils";
+import {
+  BOOKS,
+  MSG_FOUND_NARRATOR,
+  MSG_FOUND_NARRATOR_SELF,
+  formatMessage,
+} from "../utils/formatUtils";
 
 export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowState> {
   private narratorsToSearch: { id: number; name: string }[] = [];
@@ -51,7 +56,11 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
   async processResponse(response: string) {
     if (response === "") {
       return {
-        response: `✅ تم العثور على **${this.state.hadithNarrators[this.state.hadithNarratorIndex + 1].expectedKnownName}** فيمن رووا عن **${this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedKnownName}** في  صحيح البخاري`,
+        response: formatMessage(MSG_FOUND_NARRATOR_SELF, {
+          narrator:
+            this.state.hadithNarrators[this.state.hadithNarratorIndex + 1].expectedKnownName,
+          teacher: this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedKnownName,
+        }),
         isSuccessful: true,
       };
     }
@@ -73,7 +82,10 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
           const updateBio = updateStudents(narratorBio, student.name, nextNarrator.name);
           await updateVaultFile(filePath, updateBio);
           return {
-            response: `✅ تم العثور على **${student.name}** فيمن رووا عن **${hadithNarrator.expectedKnownName}** في  صحيح البخاري`,
+            response: formatMessage(MSG_FOUND_NARRATOR, {
+              student: student.name,
+              teacher: hadithNarrator.expectedKnownName,
+            }),
             isSuccessful: true,
           };
         }
