@@ -1,6 +1,6 @@
 import { StepRunner } from "../base/StepRunner";
 import { TraceNarratorsWorkflowState } from "../models/state";
-import { getPromptTemplate } from "../utils";
+import { getPromptTemplate, extractJsonCodeBlock } from "../utils";
 
 export class FindSymbolsStep extends StepRunner<TraceNarratorsWorkflowState> {
   getContextIntroMessage() {
@@ -24,38 +24,27 @@ export class FindSymbolsStep extends StepRunner<TraceNarratorsWorkflowState> {
   }
 
   async processResponse(response: string) {
-    const codeBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
-    if (codeBlockMatch) {
-      const result = JSON.parse(codeBlockMatch[1]) as {
-        id: number;
-        name: string;
-        confidence: string;
-      }[];
-
-      if (result.length > 0) {
-        const first = result[0];
-        if (first && this.state.tahdibNarrators) {
-          const foundNarrator = this.state.tahdibNarrators[first.id];
-
-          // Extract symbols, excluding `خ` which is for Bukhari
-          const symbols = foundNarrator.symbols
-            .replace(/^\(|\)$/g, "")
-            .split(" ")
-            .filter((s) => s !== "خ");
-
-          const tahdibBooks = this.getTahdibBooks(symbols);
-
-          // Format the output message
-          const output =
-            `✅ تم العثور على **${foundNarrator.name}** فيمن رووا عن **${this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedKnownName}** في  ` +
-            "صحيح البخاري" +
-            tahdibBooks;
-
-          return {
-            response: output,
-            isSuccessful: true,
-          };
-        }
+    const parsed =
+      extractJsonCodeBlock<{ id: number; name: string; confidence: string }[]>(response);
+    if (parsed && parsed.length > 0) {
+      const first = parsed[0];
+      if (first && this.state.tahdibNarrators) {
+        const foundNarrator = this.state.tahdibNarrators[first.id];
+        // Extract symbols, excluding `خ` which is for Bukhari
+        const symbols = foundNarrator.symbols
+          .replace(/^[()]|[()]$/g, "")
+          .split(" ")
+          .filter((s) => s !== "خ");
+        const tahdibBooks = this.getTahdibBooks(symbols);
+        // Format the output message
+        const output =
+          `✅ تم العثور على **${foundNarrator.name}** فيمن رووا عن **${this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedKnownName}** في  ` +
+          "صحيح البخاري" +
+          tahdibBooks;
+        return {
+          response: output,
+          isSuccessful: true,
+        };
       }
     }
 

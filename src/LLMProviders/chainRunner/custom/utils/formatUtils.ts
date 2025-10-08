@@ -1,3 +1,18 @@
+/**
+ * Extracts and parses a JSON code block from a string (e.g., LLM response).
+ * Returns the parsed object or null if not found/invalid.
+ * @param text The string to extract the JSON code block from
+ * @returns The parsed object or null
+ */
+export function extractJsonCodeBlock<T = any>(text: string): T | null {
+  const match = text.match(/```json\s*([\s\S]*?)\s*```/);
+  if (!match) return null;
+  try {
+    return JSON.parse(match[1]);
+  } catch {
+    return null;
+  }
+}
 import { TahdibNarrator } from "../models/narrator";
 
 const OTHERS = "Others";

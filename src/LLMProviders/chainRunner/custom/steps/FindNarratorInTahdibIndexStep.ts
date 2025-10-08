@@ -1,7 +1,7 @@
 import { StepRunner } from "../base/StepRunner";
 import { NarratorInfo } from "../models/narrator";
 import { TraceNarratorsWorkflowState } from "../models/state";
-import { getPromptTemplate, toArabicDigits } from "../utils";
+import { getPromptTemplate, toArabicDigits, extractJsonCodeBlock } from "../utils";
 
 export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWorkflowState> {
   private matchingNarrators: NarratorInfo[] = [];
@@ -58,33 +58,24 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
 
   async processResponse(response: string) {
     if (this.matchingNarrators.length > 1) {
-      const codeBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
-      if (codeBlockMatch) {
-        const result = (
-          JSON.parse(codeBlockMatch[1]) as {
-            id: number;
-            name: string;
-            confidence: string;
-          }[]
-        ).filter((r) => r.confidence === "High");
-
+      const parsed =
+        extractJsonCodeBlock<{ id: number; name: string; confidence: string }[]>(response);
+      if (parsed) {
+        const result = parsed.filter((r) => r.confidence === "High");
         if (result.length >= 1) {
           const allNarratorIndex = result[0].id;
           if (allNarratorIndex) {
             if (allNarratorIndex !== -1) {
               const foundNarrator = this.state.allNarrators[allNarratorIndex];
-
               if (!foundNarrator.id) {
                 return {
                   response: this.narratorFoundMessage(foundNarrator) + " ولكن بدون رقم",
                   isSuccessful: false,
                 };
               }
-
               // Update state
               this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators =
                 allNarratorIndex;
-
               return {
                 response: this.narratorFoundMessage(foundNarrator),
                 isSuccessful: true,

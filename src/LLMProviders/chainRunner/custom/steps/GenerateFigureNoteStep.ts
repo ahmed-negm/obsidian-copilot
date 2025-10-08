@@ -7,6 +7,7 @@ import {
   getPromptTemplate,
   readFileFromExternalVault,
   toArabicDigits,
+  extractJsonCodeBlock,
 } from "../utils";
 import { TahdibNarrator } from "../models/narrator";
 
@@ -55,16 +56,13 @@ export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowSta
       };
     }
 
-    const codeBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
-    if (codeBlockMatch) {
-      const { teachers, students } = JSON.parse(codeBlockMatch[1]) as {
-        teachers: TahdibNarrator[];
-        students: TahdibNarrator[];
-      };
-
+    const parsed = extractJsonCodeBlock<{ teachers: TahdibNarrator[]; students: TahdibNarrator[] }>(
+      response
+    );
+    if (parsed) {
+      const { teachers, students } = parsed;
       const teachersMarkdown = generateMarkdownTable(teachers.filter((n) => n.symbols));
       const studentsMarkdown = generateMarkdownTable(students.filter((n) => n.symbols));
-
       await createFigureNote(
         this.state.allNarrators[
           this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators!
@@ -73,7 +71,6 @@ export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowSta
         teachersMarkdown,
         studentsMarkdown
       );
-
       return {
         response: "تم إنشاء ملف الراوي بنجاح.",
         isSuccessful: true,

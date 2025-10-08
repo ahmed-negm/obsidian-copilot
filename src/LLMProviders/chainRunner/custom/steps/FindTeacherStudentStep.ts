@@ -6,6 +6,7 @@ import {
   findStudents,
   updateStudents,
   updateVaultFile,
+  extractJsonCodeBlock,
 } from "../utils";
 
 export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowState> {
@@ -49,15 +50,10 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
         isSuccessful: true,
       };
     }
-    const codeBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
-    if (codeBlockMatch) {
-      const result = (
-        JSON.parse(codeBlockMatch[1]) as {
-          id: number;
-          name: string;
-          confidence: string;
-        }[]
-      ).filter((r) => r.confidence === "High");
+    const parsed =
+      extractJsonCodeBlock<{ id: number; name: string; confidence: string }[]>(response);
+    if (parsed) {
+      const result = parsed.filter((r) => r.confidence === "High");
       if (result.length === 1) {
         const student = this.narratorsToSearch[result[0].id];
         if (student) {
