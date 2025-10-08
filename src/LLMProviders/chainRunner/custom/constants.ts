@@ -25,6 +25,8 @@ export const TEMPLATES = {
   SYSTEM: "SystemPrompt",
   EXTRACT_NARRATORS: "ExtractNarrators",
   MOHADITH: "Mohadith",
+  EXPLAIN_STEP: "ExplainStep",
+  FIND_SYMBOLS_STEP: "FindSymbolsStep",
 };
 
 // User interface messages
