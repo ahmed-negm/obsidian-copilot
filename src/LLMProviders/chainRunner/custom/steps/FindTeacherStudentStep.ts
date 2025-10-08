@@ -8,6 +8,7 @@ import {
   updateVaultFile,
   extractJsonCodeBlock,
 } from "../utils";
+import { BOOKS } from "../utils/formatUtils";
 
 export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowState> {
   private narratorsToSearch: { id: number; name: string }[] = [];
@@ -29,11 +30,15 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
         this.state.hadithNarrators[this.state.hadithNarratorIndex + 1].indexInAllNarrators!
       ];
     const narratorBio = await readVaultFile(`NewFigures/${currentNarrator.name}.md`);
-    const students = findStudents(narratorBio, "البخاري");
+    const students = findStudents(narratorBio, BOOKS[0].name);
     if (students.includes(nextNarrator.name)) {
       return "";
     }
-    this.narratorsToSearch = students.map((student, index) => ({ id: index, name: student })) || [];
+    this.narratorsToSearch =
+      (students as string[]).map((student: string, index: number) => ({
+        id: index,
+        name: student,
+      })) || [];
     const promptTemplate = await getPromptTemplate("FindNarratorInList");
     return promptTemplate
       .replaceAll(

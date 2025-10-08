@@ -16,7 +16,12 @@ export function extractJsonCodeBlock<T = any>(text: string): T | null {
 import { TahdibNarrator } from "../models/narrator";
 
 const OTHERS = "Others";
-const BOOKS = [
+const STUDENTS_TITLE = "رَوَى عَنه:";
+const TEACHERS_TITLE = "رَوَى عَن:";
+const CHECKMARKS = ["✔", "✓", "✅"];
+const ARABIC_DIGITS = "٠١٢٣٤٥٦٧٨٩";
+
+export const BOOKS = [
   { symbol: "خ", name: "البخاري" },
   { symbol: "م", name: "مسلم" },
   { symbol: "ت", name: "الترمذي" },
@@ -47,7 +52,7 @@ function processSymbols(symbols: string): Record<string, string> {
   // If "ع" or "٤" is present, mark all columns with check mark
   if (chars.includes("ع") || chars.includes("٤")) {
     for (const h of HEADERS.slice(0, -1)) {
-      result[h] = "✔";
+      result[h] = CHECKMARKS[0];
     }
     return result;
   }
@@ -72,7 +77,7 @@ function narratorToRow(narrator: TahdibNarrator): string {
 
 function isCheck(cell: string | undefined): boolean {
   if (!cell) return false;
-  return /✔|✓|✅/.test(cell);
+  return CHECKMARKS.some((mark) => cell.includes(mark));
 }
 
 function extractFirstTableLines(markdown: string, sectionTitle: string): string[] {
@@ -164,36 +169,30 @@ function parseTableLines(tableLines: string[], book?: BookName): string[] {
 
   return narrators;
 }
-
-const studentsTitle = "رَوَى عَنه:";
-const teachersTitle = "رَوَى عَن:";
-
 export function findStudents(markdown: string, book: BookName) {
-  const studentLines = extractFirstTableLines(markdown, studentsTitle);
+  const studentLines = extractFirstTableLines(markdown, STUDENTS_TITLE);
   return parseTableLines(studentLines, book);
 }
 
 export function updateStudents(markdown: string, displayText: string, link: string) {
-  const studentLines = extractFirstTableLines(markdown, studentsTitle);
+  const studentLines = extractFirstTableLines(markdown, STUDENTS_TITLE);
   const index = studentLines.findIndex((line) => line.includes(displayText));
   if (index !== -1) {
-    const updatedLine = studentLines[index].replace(displayText, `[[${link}\\|${displayText}]]`);
+    const updatedLine = studentLines[index].replace(displayText, `[[${link}|${displayText}]]`);
     markdown = markdown.replace(studentLines[index], updatedLine);
   }
   return markdown;
 }
 
 export function findTeachers(markdown: string, book: BookName) {
-  const teacherLines = extractFirstTableLines(markdown, teachersTitle);
+  const teacherLines = extractFirstTableLines(markdown, TEACHERS_TITLE);
   return parseTableLines(teacherLines, book);
 }
 
 export function toArabicDigits(str: string | number): string {
-  const arabic = "٠١٢٣٤٥٦٧٨٩";
-  return String(str).replace(/[0-9]/g, (d) => arabic[parseInt(d)]);
+  return String(str).replace(/[0-9]/g, (d) => ARABIC_DIGITS[parseInt(d)]);
 }
 
 export function toEnglishDigits(str: string | number): string {
-  const arabicDigits = "٠١٢٣٤٥٦٧٨٩";
-  return String(str).replace(/[٠-٩]/g, (d) => arabicDigits.indexOf(d).toString());
+  return String(str).replace(/[٠-٩]/g, (d) => ARABIC_DIGITS.indexOf(d).toString());
 }

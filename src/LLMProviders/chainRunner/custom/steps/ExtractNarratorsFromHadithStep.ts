@@ -3,6 +3,7 @@ import { StepRunner, ProcessResponseResult } from "../base/StepRunner";
 import { HadithNarrator } from "../models/narrator";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import { readVaultFile, getPromptTemplate, toArabicDigits } from "../utils";
+import { BOOKS } from "../utils/formatUtils";
 import { PATHS, TEMPLATES, FILE_EXTENSIONS, UI_MESSAGES } from "../constants";
 import { Notice } from "obsidian";
 
@@ -26,8 +27,8 @@ export class ExtractNarratorsFromHadithStep extends StepRunner<TraceNarratorsWor
     try {
       const hadithNumber = this.state.args;
       if (hadithNumber) {
-        this.state.filePath = `${PATHS.BUKHARI_HADITH}/البخاري-${toArabicDigits(hadithNumber)}${FILE_EXTENSIONS.MARKDOWN}`;
-        this.hadithLink = `[[البخاري-${hadithNumber}]]`;
+        this.state.filePath = `${PATHS.BUKHARI_HADITH}/${BOOKS[0].name}-${toArabicDigits(hadithNumber)}${FILE_EXTENSIONS.MARKDOWN}`;
+        this.hadithLink = `[[${BOOKS[0].name}-${hadithNumber}]]`;
       } else {
         const activeFile = app.workspace.getActiveFile();
         this.state.filePath = activeFile?.path || "";

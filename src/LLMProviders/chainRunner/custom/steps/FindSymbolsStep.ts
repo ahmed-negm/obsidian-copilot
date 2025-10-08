@@ -1,6 +1,7 @@
 import { StepRunner } from "../base/StepRunner";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import { getPromptTemplate, extractJsonCodeBlock } from "../utils";
+import { BOOKS } from "../utils/formatUtils";
 
 export class FindSymbolsStep extends StepRunner<TraceNarratorsWorkflowState> {
   getContextIntroMessage() {
@@ -34,7 +35,7 @@ export class FindSymbolsStep extends StepRunner<TraceNarratorsWorkflowState> {
         const symbols = foundNarrator.symbols
           .replace(/^[()]|[()]$/g, "")
           .split(" ")
-          .filter((s) => s !== "خ");
+          .filter((s) => s !== BOOKS[0].symbol);
         const tahdibBooks = this.getTahdibBooks(symbols);
         // Format the output message
         const output =
