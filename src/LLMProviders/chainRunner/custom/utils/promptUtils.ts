@@ -1,3 +1,4 @@
+import { logError } from "@/logger";
 import { readVaultFile } from "./fileUtils";
 import { PATHS, FILE_EXTENSIONS } from "../constants";
 
@@ -11,7 +12,7 @@ export async function getPromptTemplate(name: string): Promise<string> {
   try {
     return await readVaultFile(`${PATHS.PROMPTS}/${name}${FILE_EXTENSIONS.MARKDOWN}`);
   } catch (error) {
-    console.error(`Failed to read prompt template: ${name}`, error);
+    logError(`Failed to read prompt template: ${name}`, error);
     throw new Error(`Failed to read prompt template: ${name}`);
   }
 }
@@ -26,7 +27,7 @@ export async function getTemplate(name: string): Promise<string> {
   try {
     return await readVaultFile(`${PATHS.TEMPLATES}/${name}${FILE_EXTENSIONS.MARKDOWN}`);
   } catch (error) {
-    console.error(`Failed to read template: ${name}`, error);
+    logError(`Failed to read template: ${name}`, error);
     throw new Error(`Failed to read template: ${name}`);
   }
 }

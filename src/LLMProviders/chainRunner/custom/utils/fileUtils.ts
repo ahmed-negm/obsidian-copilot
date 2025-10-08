@@ -1,3 +1,4 @@
+import { logError } from "@/logger";
 import { MarkdownView, Notice, TFile } from "obsidian";
 import { NarratorInfo } from "../models/narrator";
 import { getTemplate } from "./promptUtils";
@@ -20,7 +21,7 @@ export async function getActiveNote(stripProperties: boolean = true): Promise<st
     const fileContent = await app.vault.read(activeFile);
     return stripProperties ? stripObsidianProperties(fileContent) : fileContent;
   } catch (error) {
-    console.error("Error reading active note", error);
+    logError("Error reading active note", error);
     new Notice("Failed to read active note");
     return "";
   }
@@ -62,7 +63,7 @@ export function getSelectedText(): string {
 
     return "";
   } catch (error) {
-    console.error("Error getting selected text", error);
+    logError("Error getting selected text", error);
     return "";
   }
 }
@@ -96,7 +97,7 @@ export async function readVaultFile(filePath: string): Promise<string> {
     const normalizedPath = normalizePath(filePath);
     return await app.vault.adapter.read(normalizedPath);
   } catch (error) {
-    console.error(`Failed to read file: ${filePath}`, error);
+    logError(`Failed to read file: ${filePath}`, error);
     throw new Error(`Failed to read file: ${filePath}`);
   }
 }
@@ -113,7 +114,7 @@ export async function updateVaultFile(filePath: string, content: string): Promis
     const normalizedPath = normalizePath(filePath);
     await app.vault.adapter.write(normalizedPath, content);
   } catch (error) {
-    console.error(`Failed to update file: ${filePath}`, error);
+    logError(`Failed to update file: ${filePath}`, error);
     throw new Error(`Failed to update file: ${filePath}`);
   }
 }
@@ -130,7 +131,7 @@ export async function readFileFromExternalVault(fullPath: string): Promise<strin
     const fs = require("fs/promises");
     return await fs.readFile(fullPath, "utf-8");
   } catch (error) {
-    console.error(`Failed to read external file: ${fullPath}`, error);
+    logError(`Failed to read external file: ${fullPath}`, error);
     throw new Error("Filesystem access is not available or file could not be read");
   }
 }
@@ -178,7 +179,7 @@ export async function createFigureNote(
     await app.vault.create(filePath, noteContent);
     new Notice(`Created note for ${narrator.name}`);
   } catch (error) {
-    console.error(`Failed to create figure note for: ${narrator.name}`, error);
+    logError(`Failed to create figure note for: ${narrator.name}`, error);
     new Notice(`Failed to create note for ${narrator.name}`);
     throw error;
   }

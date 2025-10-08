@@ -1,3 +1,4 @@
+import { logError } from "@/logger";
 import ChainManager from "@/LLMProviders/chainManager";
 import { BaseSimpleChainRunner } from "./BaseSimpleChainRunner";
 import { StepRunner } from "./StepRunner";
@@ -34,11 +35,11 @@ export abstract class WorkflowRunner<T> extends BaseSimpleChainRunner {
 
       // Validate steps
       if (!this.steps || this.steps.length === 0) {
-        console.error("No steps registered for workflow");
+        logError("No steps registered for workflow");
         this.steps = [];
       }
     } catch (error) {
-      console.error("Error initializing workflow steps", error);
+      logError("Error initializing workflow steps", error);
       new Notice("Failed to initialize workflow steps");
       this.steps = [];
     }
@@ -86,7 +87,7 @@ export abstract class WorkflowRunner<T> extends BaseSimpleChainRunner {
     try {
       return await this.currentStep.getSystemPrompt();
     } catch (error) {
-      console.error("Error getting system prompt", error);
+      logError("Error getting system prompt", error);
       return "You are a helpful assistant.";
     }
   }
@@ -101,7 +102,7 @@ export abstract class WorkflowRunner<T> extends BaseSimpleChainRunner {
     try {
       return await this.currentStep.getUserPrompt();
     } catch (error) {
-      console.error("Error getting user prompt", error);
+      logError("Error getting user prompt", error);
       return "Please help me with this task.";
     }
   }
@@ -124,7 +125,7 @@ export abstract class WorkflowRunner<T> extends BaseSimpleChainRunner {
         (nextStepIntroMessage && result.isSuccessful ? `\n\n${nextStepIntroMessage}` : "")
       );
     } catch (error) {
-      console.error("Error processing response", error);
+      logError("Error processing response", error);
       this.isRunnerSuccessful = false;
       return "An error occurred while processing the response.";
     }

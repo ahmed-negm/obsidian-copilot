@@ -1,4 +1,5 @@
 import { WorkflowRunner } from "./../base/WorkflowRunner";
+import { logError, logWarn } from "@/logger";
 import ChainManager from "@/LLMProviders/chainManager";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import { readVaultFile, setScore, updateVaultFile } from "../utils";
@@ -36,7 +37,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
 
     // Load narrators data
     this.loadNarratorsData().catch((error) => {
-      console.error("Failed to load narrators data", error);
+      logError("Failed to load narrators data", error);
       new Notice("Failed to load narrators database");
     });
   }
@@ -73,7 +74,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
             this.state.hadithNarratorIndex = 0;
           }
         } catch (error) {
-          console.error("Error in generate figure note completion", error);
+          logError("Error in generate figure note completion", error);
         }
         return Promise.resolve();
       },
@@ -96,7 +97,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
             new Notice(UI_MESSAGES.WORKFLOW_COMPLETE, 0);
           }
         } catch (error) {
-          console.error("Error in find teacher-student completion", error);
+          logError("Error in find teacher-student completion", error);
         }
         return Promise.resolve();
       },
@@ -117,7 +118,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
         throw new Error("Invalid narrators data format");
       }
     } catch (error) {
-      console.error("Failed to load narrators data", error);
+      logError("Failed to load narrators data", error);
       throw new Error("Failed to load narrators database");
     }
   }
@@ -130,7 +131,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
       await this.showNarratorQuiz();
       await this.showChainQuiz();
     } catch (error) {
-      console.error("Error showing quiz", error);
+      logError("Error showing quiz", error);
       new Notice("Failed to show quiz");
     }
   }
@@ -218,7 +219,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
         await setScore(choice === correctNextNarrator, correctNextNarrator);
       }
     } catch (error) {
-      console.error("Error showing chain quiz", error);
+      logError("Error showing chain quiz", error);
       new Notice("Failed to show chain quiz");
     }
   }
@@ -240,14 +241,14 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
       for (const hadithNarrator of this.state.hadithNarrators) {
         // Validate narrator data
         if (hadithNarrator.indexInAllNarrators === undefined) {
-          console.warn(`Missing index for narrator: ${hadithNarrator.name}`);
+          logWarn(`Missing index for narrator: ${hadithNarrator.name}`);
           continue;
         }
 
         // Get the full narrator info from the database
         const narrator = this.state.allNarrators[hadithNarrator.indexInAllNarrators];
         if (!narrator) {
-          console.warn(`Cannot find narrator at index ${hadithNarrator.indexInAllNarrators}`);
+          logWarn(`Cannot find narrator at index ${hadithNarrator.indexInAllNarrators}`);
           continue;
         }
 
@@ -264,7 +265,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
       await updateVaultFile(this.state.filePath, fileContent);
       new Notice("Successfully linked narrators in hadith text");
     } catch (error) {
-      console.error("Error linking hadith to narrators", error);
+      logError("Error linking hadith to narrators", error);
       new Notice("Failed to link narrators in hadith text");
     }
   }

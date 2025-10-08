@@ -1,3 +1,4 @@
+import { logError } from "@/logger";
 import { StepRunner, ProcessResponseResult } from "../base/StepRunner";
 import { HadithNarrator } from "../models/narrator";
 import { TraceNarratorsWorkflowState } from "../models/state";
@@ -43,7 +44,7 @@ export class ExtractNarratorsFromHadithStep extends StepRunner<TraceNarratorsWor
       const prompt = await getPromptTemplate(TEMPLATES.EXTRACT_NARRATORS);
       return prompt.replace("{{HADITH_TEXT}}", hadithText);
     } catch (error) {
-      console.error("Error preparing extract narrators prompt", error);
+      logError("Error preparing extract narrators prompt", error);
       new Notice("Failed to prepare hadith extraction");
       return "Please provide a valid hadith text to analyze.";
     }
@@ -123,7 +124,7 @@ ${bulletList}
         isSuccessful: true,
       };
     } catch (error) {
-      console.error("Error processing narrator extraction response", error);
+      logError("Error processing narrator extraction response", error);
       return {
         response: "An error occurred while processing the narrator information: " + error.message,
         isSuccessful: false,

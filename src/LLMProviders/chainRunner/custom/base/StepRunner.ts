@@ -1,3 +1,4 @@
+import { logError } from "@/logger";
 import { getPromptTemplate } from "../utils";
 import { TEMPLATES } from "../constants";
 
@@ -58,7 +59,7 @@ export abstract class StepRunner<T> {
     try {
       return await getPromptTemplate(TEMPLATES.SYSTEM);
     } catch (error) {
-      console.error("Error loading system prompt", error);
+      logError("Error loading system prompt", error);
       return "You are a helpful assistant.";
     }
   }
@@ -80,7 +81,7 @@ export abstract class StepRunner<T> {
 
       return result;
     } catch (error) {
-      console.error("Error running step", error);
+      logError("Error running step", error);
       return {
         response: "An error occurred while processing this step.",
         isSuccessful: false,
