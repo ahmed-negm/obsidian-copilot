@@ -1,19 +1,29 @@
-import { MarkdownView } from "obsidian";
+import { MarkdownView, Notice, TFile } from "obsidian";
 import { NarratorInfo } from "../models/narrator";
 import { getTemplate } from "./promptUtils";
 import { toArabicDigits } from "./formatUtils";
+import { PATHS, FILE_EXTENSIONS, TEMPLATES } from "../constants";
+import { applyTemplateReplacements } from "./promptUtils";
 
 /**
  * Get the content of the active note in Obsidian
+ * @param stripProperties Whether to strip front matter properties from the content
  * @returns Promise resolving to the content of the active note
  */
 export async function getActiveNote(stripProperties: boolean = true): Promise<string> {
-  const activeFile = app.workspace.getActiveFile();
-  let fileContent = "";
-  if (activeFile) {
-    fileContent = await app.vault.read(activeFile);
+  try {
+    const activeFile = app.workspace.getActiveFile();
+    if (!activeFile) {
+      return "";
+    }
+
+    const fileContent = await app.vault.read(activeFile);
+    return stripProperties ? stripObsidianProperties(fileContent) : fileContent;
+  } catch (error) {
+    console.error("Error reading active note", error);
+    new Notice("Failed to read active note");
+    return "";
   }
-  return stripProperties ? stripObsidianProperties(fileContent) : fileContent;
 }
 
 /**
@@ -21,35 +31,40 @@ export async function getActiveNote(stripProperties: boolean = true): Promise<st
  * @returns The selected text or an empty string if no selection
  */
 export function getSelectedText(): string {
-  const view = app.workspace.getActiveViewOfType(MarkdownView);
-  if (!view) return "";
+  try {
+    const view = app.workspace.getActiveViewOfType(MarkdownView);
+    if (!view) return "";
 
-  // Case 1: Source mode or Live Preview (editor available)
-  if (view.getMode() === "source" || view.getMode() === "preview") {
-    const editor = view.editor;
-    if (editor) {
-      const selection = editor.getSelection();
-      if (selection && selection.length > 0) {
-        return selection;
-      }
-    }
-  }
-
-  // Case 2: Reading/View mode (DOM selection)
-  if (view.getMode() === "preview") {
-    const previewEl = view.containerEl.querySelector(".markdown-preview-view");
-    if (previewEl) {
-      const selection = window.getSelection();
-      if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        if (previewEl.contains(range.commonAncestorContainer)) {
-          return selection.toString();
+    // Case 1: Source mode or Live Preview (editor available)
+    if (view.getMode() === "source" || view.getMode() === "preview") {
+      const editor = view.editor;
+      if (editor) {
+        const selection = editor.getSelection();
+        if (selection && selection.length > 0) {
+          return selection;
         }
       }
     }
-  }
 
-  return "";
+    // Case 2: Reading/View mode (DOM selection)
+    if (view.getMode() === "preview") {
+      const previewEl = view.containerEl.querySelector(".markdown-preview-view");
+      if (previewEl) {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          if (previewEl.contains(range.commonAncestorContainer)) {
+            return selection.toString();
+          }
+        }
+      }
+    }
+
+    return "";
+  } catch (error) {
+    console.error("Error getting selected text", error);
+    return "";
+  }
 }
 
 /**
@@ -62,14 +77,28 @@ function stripObsidianProperties(content: string): string {
 }
 
 /**
+ * Normalize a file path by replacing backslashes with forward slashes
+ * @param filePath Path to normalize
+ * @returns Normalized path
+ */
+function normalizePath(filePath: string): string {
+  return filePath.replace(/\\/g, "/");
+}
+
+/**
  * Read a file from the vault
  * @param filePath Path to the file
  * @returns Promise resolving to the file content
+ * @throws Error if the file cannot be read
  */
 export async function readVaultFile(filePath: string): Promise<string> {
-  const normalizedPath = filePath.replace(/\\/g, "/");
-  const content = await app.vault.adapter.read(normalizedPath);
-  return content;
+  try {
+    const normalizedPath = normalizePath(filePath);
+    return await app.vault.adapter.read(normalizedPath);
+  } catch (error) {
+    console.error(`Failed to read file: ${filePath}`, error);
+    throw new Error(`Failed to read file: ${filePath}`);
+  }
 }
 
 /**
@@ -77,42 +106,80 @@ export async function readVaultFile(filePath: string): Promise<string> {
  * @param filePath Path to the file
  * @param content New content to write
  * @returns Promise resolving when the file is updated
+ * @throws Error if the file cannot be updated
  */
 export async function updateVaultFile(filePath: string, content: string): Promise<void> {
-  const normalizedPath = filePath.replace(/\\/g, "/");
-  await app.vault.adapter.write(normalizedPath, content);
+  try {
+    const normalizedPath = normalizePath(filePath);
+    await app.vault.adapter.write(normalizedPath, content);
+  } catch (error) {
+    console.error(`Failed to update file: ${filePath}`, error);
+    throw new Error(`Failed to update file: ${filePath}`);
+  }
 }
 
+/**
+ * Read a file from an external filesystem (requires Node.js)
+ * @param fullPath Full path to the file
+ * @returns Promise resolving to the file content
+ * @throws Error if filesystem access is not available or the file cannot be read
+ */
 export async function readFileFromExternalVault(fullPath: string): Promise<string> {
-  let fs: typeof import("fs/promises");
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    fs = require("fs/promises");
+    const fs = require("fs/promises");
+    return await fs.readFile(fullPath, "utf-8");
   } catch (error) {
-    console.error("Filesystem access is not available in this environment.", error);
-    throw error;
+    console.error(`Failed to read external file: ${fullPath}`, error);
+    throw new Error("Filesystem access is not available or file could not be read");
   }
-
-  return await fs.readFile(fullPath, "utf-8");
 }
 
+/**
+ * Create a new figure note in the vault
+ * @param narrator Narrator information
+ * @param knownName Known name of the narrator
+ * @param teachers List of teachers
+ * @param students List of students
+ * @returns Promise resolving when the file is created
+ * @throws Error if the file cannot be created
+ */
 export async function createFigureNote(
   narrator: NarratorInfo,
   knownName: string,
   teachers: string,
   students: string
-) {
-  const filePath = `NewFigures/${narrator.name}.md`;
-  const noteContent = (await getTemplate("Mohadith"))
-    .replaceAll("{{NAME}}", narrator.name)
-    .replaceAll("{{KNOWN_NAME}}", knownName)
-    .replaceAll("{{PART}}", toArabicDigits(narrator.part))
-    .replaceAll("{{PAGE}}", toArabicDigits(narrator.page))
-    .replaceAll("{{SHAMELA_INDEX}}", narrator.shamelaIndex.toString())
-    .replaceAll("{{TAHDHIB_ID}}", narrator.id?.toString() ?? "")
-    .replaceAll("{{DATE}}", new Date().toISOString().slice(0, 10))
-    .replaceAll("{{TEACHERS}}", teachers)
-    .replaceAll("{{STUDENTS}}", students);
+): Promise<void> {
+  try {
+    const filePath = `${PATHS.NEW_FIGURES}/${narrator.name}${FILE_EXTENSIONS.MARKDOWN}`;
 
-  await app.vault.create(filePath, noteContent);
+    // Check if file already exists
+    const existingFile = app.vault.getAbstractFileByPath(filePath);
+    if (existingFile instanceof TFile) {
+      new Notice(`Note for ${narrator.name} already exists`);
+      return;
+    }
+
+    const replacements = {
+      NAME: narrator.name,
+      KNOWN_NAME: knownName,
+      PART: toArabicDigits(narrator.part),
+      PAGE: toArabicDigits(narrator.page),
+      SHAMELA_INDEX: narrator.shamelaIndex.toString(),
+      TAHDHIB_ID: narrator.id?.toString() ?? "",
+      DATE: new Date().toISOString().slice(0, 10),
+      TEACHERS: teachers,
+      STUDENTS: students,
+    };
+
+    const template = await getTemplate(TEMPLATES.MOHADITH);
+    const noteContent = applyTemplateReplacements(template, replacements);
+
+    await app.vault.create(filePath, noteContent);
+    new Notice(`Created note for ${narrator.name}`);
+  } catch (error) {
+    console.error(`Failed to create figure note for: ${narrator.name}`, error);
+    new Notice(`Failed to create note for ${narrator.name}`);
+    throw error;
+  }
 }

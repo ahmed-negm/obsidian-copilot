@@ -6,6 +6,7 @@ import { BaseChainRunner, ChainRunner } from "../../BaseChainRunner";
 import { ThinkBlockStreamer } from "../../utils/ThinkBlockStreamer";
 import { getPromptTemplate } from "../utils";
 import { Notice } from "obsidian";
+import { UI_MESSAGES } from "../constants";
 
 export class BaseSimpleChainRunner extends BaseChainRunner {
   protected isRunnerSuccessful: boolean = false;
@@ -107,7 +108,7 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
           options
         );
       } else {
-        new Notice("❌ تم إيقاف السلسلة بسبب فشل في خطوة ما.", 0);
+        new Notice(UI_MESSAGES.WORKFLOW_STEP_FAILED, 0);
       }
     }
 
