@@ -3,8 +3,13 @@ import ChainManager from "@/LLMProviders/chainManager";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import { readVaultFile, setScore, updateVaultFile } from "../utils";
 import { ChoiceSuggestModal } from "../ui/ChoiceSuggestModal";
+import { Notice } from "obsidian";
+import { ExtractNarratorsFromHadithStep } from "../steps/ExtractNarratorsFromHadithStep";
+import { FindNarratorInTahdibIndexStep } from "../steps/FindNarratorInTahdibIndexStep";
+import { FindTeacherStudentStep } from "../steps/FindTeacherStudentStep";
+import { GenerateFigureNoteStep } from "../steps/GenerateFigureNoteStep";
 
-export abstract class TraceNarratorsWorkflowRunnerBase extends WorkflowRunner<TraceNarratorsWorkflowState> {
+export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsWorkflowState> {
   constructor(chainManager: ChainManager, args: string) {
     super(chainManager, {
       args,
@@ -15,6 +20,47 @@ export abstract class TraceNarratorsWorkflowRunnerBase extends WorkflowRunner<Tr
       filePath: "",
     });
     this.loadNarratorsData();
+  }
+
+  protected registerSteps() {
+    const step1 = new ExtractNarratorsFromHadithStep(this.state);
+
+    const step2 = new FindNarratorInTahdibIndexStep(this.state);
+
+    const step3 = new GenerateFigureNoteStep(this.state, {
+      onComplete: async () => {
+        const nextNarratorIndex =
+          this.state.hadithNarrators[this.state.hadithNarratorIndex + 1]?.indexInAllNarrators;
+        if (
+          !nextNarratorIndex &&
+          this.state.hadithNarratorIndex < this.state.hadithNarrators.length - 1
+        ) {
+          this.state.hadithNarratorIndex++;
+          this.currentStepIndex -= 2;
+          return Promise.resolve();
+        } else {
+          this.state.hadithNarratorIndex = 0;
+        }
+
+        return Promise.resolve();
+      },
+    });
+
+    const step4 = new FindTeacherStudentStep(this.state, {
+      onComplete: async () => {
+        this.state.hadithNarratorIndex++;
+        if (this.state.hadithNarratorIndex < this.state.hadithNarrators.length - 1) {
+          this.currentStepIndex -= 1;
+        } else if (this.state.hadithNarratorIndex === this.state.hadithNarrators.length - 1) {
+          this.currentStepIndex = 5;
+          await this.linkHadithToNarrators();
+          new Notice("✅ اكتمل التحقق من جميع الرواة.", 0);
+        }
+        return Promise.resolve();
+      },
+    });
+
+    return [step1, step2, step3, step4];
   }
 
   protected async loadNarratorsData(): Promise<void> {
