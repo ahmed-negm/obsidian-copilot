@@ -1,22 +1,3 @@
-export const COMMANDS = {
-  EXPLAIN: "أشرح",
-  EXTRACT_NARRATORS: "استخرج الرواة",
-  TRACE_NARRATORS: "تتبع الرواة",
-};
-export const PATHS = {
-  PROMPTS: "_extras/Prompt",
-  TEMPLATES: "_extras/Templates",
-  DATA: "_extras/Data",
-  TAHDHIB_INDEX: "_extras/Data/Tahdhib.json",
-  BUKHARI_HADITH: "Sunnah/صحيح البخاري",
-  NEW_FIGURES: "NewFigures",
-};
-
-export const FILE_EXTENSIONS = {
-  MARKDOWN: ".md",
-  JSON: ".json",
-};
-
 export const TEMPLATES = {
   SYSTEM: "SystemPrompt",
   EXTRACT_NARRATORS: "ExtractNarrators",
@@ -29,6 +10,20 @@ export const UI_MESSAGES = {
   WORKFLOW_COMPLETE: "✅ اكتمل التحقق من جميع الرواة.",
   WORKFLOW_STEP_FAILED: "❌ تم إيقاف السلسلة بسبب فشل في خطوة ما.",
   NARRATOR_IDENTIFICATION_FAILED: "لم أتمكن من تحديد راوٍ واحد بشكل قاطع للاسم",
+};
+
+export const PATHS = {
+  PROMPTS: "_extras/Prompt",
+  TEMPLATES: "_extras/Templates",
+  DATA: "_extras/Data",
+  TAHDHIB_INDEX: "_extras/Data/Tahdhib.json",
+  BUKHARI_HADITH: "Sunnah/صحيح البخاري",
+  NEW_FIGURES: "NewFigures",
+};
+
+export const FILE_EXTENSIONS = {
+  MARKDOWN: ".md",
+  JSON: ".json",
 };
 
 export const MSG_FOUND_NARRATOR =

@@ -23,39 +23,42 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
     }
   ): Promise<string> {
     const streamer = new ThinkBlockStreamer(() => {});
+    const SAY_HELLO_FALLBACK = "Say 'hello' in a very brief sentence.";
     let userPrompt = "";
 
     try {
+      userPrompt = await this.getUserPrompt(userMessage.message);
+
       let messages: { role: string; content: string }[] = [];
 
-      const systemPrompt = await this.getSystemPrompt();
-      const chatModel = this.chainManager.chatModelManager.getChatModel();
-
-      if (systemPrompt) {
-        messages.push({
-          role: getMessageRole(chatModel),
-          content: systemPrompt,
-        });
-      }
-
-      if (this.includeChatHistory() === true) {
-        const memory = this.chainManager.memoryManager.getMemory();
-        const memoryVariables = await memory.loadMemoryVariables({});
-        const chatHistory = extractChatHistory(memoryVariables);
-
-        for (const entry of chatHistory) {
-          messages.push({ role: entry.role, content: entry.content });
-        }
-      }
-
-      userPrompt = await this.getUserPrompt(userMessage.message);
-      messages.push({
-        role: "user",
-        content: userPrompt,
-      });
-
       if (userPrompt === "") {
-        messages = [{ role: "user", content: "Say 'hello' in a very brief sentence." }];
+        // Fallback: Ensure the AI always receives a valid prompt
+        messages = [{ role: "user", content: SAY_HELLO_FALLBACK }];
+      } else {
+        const systemPrompt = await this.getSystemPrompt();
+        const chatModel = this.chainManager.chatModelManager.getChatModel();
+
+        if (systemPrompt) {
+          messages.push({
+            role: getMessageRole(chatModel),
+            content: systemPrompt,
+          });
+        }
+
+        if (this.includeChatHistory() === true) {
+          const memory = this.chainManager.memoryManager.getMemory();
+          const memoryVariables = await memory.loadMemoryVariables({});
+          const chatHistory = extractChatHistory(memoryVariables);
+
+          for (const entry of chatHistory) {
+            messages.push({ role: entry.role, content: entry.content });
+          }
+        }
+
+        messages.push({
+          role: "user",
+          content: userPrompt,
+        });
       }
 
       logInfo("Final Request to AI:\n", messages);

@@ -1,4 +1,3 @@
-import { logError } from "@/logger";
 import { getPromptTemplate } from "../utils";
 import { TEMPLATES } from "../constants";
 
@@ -18,28 +17,15 @@ export abstract class StepRunner<T> {
   ) {}
 
   async getSystemPrompt(): Promise<string> {
-    try {
-      return await getPromptTemplate(TEMPLATES.SYSTEM);
-    } catch (error) {
-      logError("Error loading system prompt", error);
-      return "You are a helpful assistant.";
-    }
+    return getPromptTemplate(TEMPLATES.SYSTEM);
   }
 
   async run(response: string): Promise<ProcessResponseResult> {
-    try {
-      const result = await this.processResponse(response);
-      if (result.isSuccessful && this.options?.onComplete) {
-        await this.options.onComplete();
-      }
-      return result;
-    } catch (error) {
-      logError("Error running step", error);
-      return {
-        response: "An error occurred while processing this step.",
-        isSuccessful: false,
-      };
+    const result = await this.processResponse(response);
+    if (result.isSuccessful && this.options?.onComplete) {
+      await this.options.onComplete();
     }
+    return result;
   }
 
   getContextIntroMessage(): string {

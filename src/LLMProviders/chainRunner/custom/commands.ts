@@ -1,19 +1,18 @@
 import { ExplainWorkflowRunner } from "./workflows/ExplainWorkflowRunner";
 import { ExtractNarratorsWorkflowRunner } from "./workflows/ExtractNarratorsWorkflowRunner";
 import { TraceNarratorsWorkflowRunner } from "./workflows/TraceNarratorsWorkflowRunner";
-import { COMMANDS } from "./constants";
 
 export const commands = [
   {
-    command: COMMANDS.EXPLAIN,
+    command: "أشرح",
     workflow: ExplainWorkflowRunner,
   },
   {
-    command: COMMANDS.EXTRACT_NARRATORS,
+    command: "استخرج الرواة",
     workflow: ExtractNarratorsWorkflowRunner,
   },
   {
-    command: COMMANDS.TRACE_NARRATORS,
+    command: "تتبع الرواة",
     workflow: TraceNarratorsWorkflowRunner,
   },
 ];
