@@ -19,7 +19,6 @@ export function extractJsonCodeBlock<T = any>(text: string): T | null {
     return null;
   }
 }
-import { TahdibNarrator } from "../models/narrator";
 
 const OTHERS = "Others";
 const STUDENTS_TITLE = "رَوَى عَنه:";
@@ -38,6 +37,11 @@ export const BOOKS = [
 
 export type BookName = (typeof BOOKS)[number]["name"];
 const HEADERS = ["الاسم", ...BOOKS.map((b) => b.name), OTHERS];
+
+export interface TahdibNarrator {
+  name: string;
+  symbols: string;
+}
 
 export function generateMarkdownTable(narrators: TahdibNarrator[]): string {
   const headerRow = `| ${HEADERS.join(" | ")} |`;

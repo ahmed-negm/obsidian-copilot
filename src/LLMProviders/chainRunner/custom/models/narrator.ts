@@ -15,8 +15,3 @@ export interface NarratorInfo {
   islamWebIndex: number;
   shamelaIndex: number;
 }
-
-export interface TahdibNarrator {
-  name: string;
-  symbols: string;
-}

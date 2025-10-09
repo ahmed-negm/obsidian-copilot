@@ -1,4 +1,4 @@
-import { formatMessage } from "../utils/formatUtils";
+import { formatMessage, TahdibNarrator } from "../utils/formatUtils";
 import { FileSystemAdapter } from "obsidian";
 import { StepRunner } from "../base/StepRunner";
 import { TraceNarratorsWorkflowState } from "../models/state";
@@ -10,7 +10,6 @@ import {
   toArabicDigits,
   extractJsonCodeBlock,
 } from "../utils";
-import { TahdibNarrator } from "../models/narrator";
 
 export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowState> {
   getContextIntroMessage() {
