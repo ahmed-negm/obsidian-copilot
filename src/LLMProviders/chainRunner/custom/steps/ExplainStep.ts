@@ -1,15 +1,15 @@
-import { StepRunner, ProcessResponseResult } from "../base/StepRunner";
+import { StepRunner } from "../base/StepRunner";
 import { BaseState } from "../models/state";
 import { getActiveNote, getPromptTemplate } from "../utils";
 
 export class ExplainStep extends StepRunner<BaseState> {
-  async getSystemPrompt(): Promise<string> {
+  async getSystemPrompt() {
     const basePrompt = await super.getSystemPrompt();
     const extraSystemPrompt = await getPromptTemplate("ExplainStep");
     return `${basePrompt}\n\n${extraSystemPrompt}`;
   }
 
-  async getUserPrompt(): Promise<string> {
+  async getUserPrompt() {
     const noteContent = await getActiveNote();
     let toExplain = "";
     let reference = "";
@@ -26,7 +26,7 @@ export class ExplainStep extends StepRunner<BaseState> {
     }`;
   }
 
-  async processResponse(response: string): Promise<ProcessResponseResult> {
+  async processResponse(response: string) {
     return { response, isSuccessful: true };
   }
 }

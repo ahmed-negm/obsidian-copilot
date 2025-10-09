@@ -3,7 +3,7 @@ import { MarkdownView, Notice, TFile } from "obsidian";
 import { NarratorInfo } from "../models/narrator";
 import { getTemplate } from "./promptUtils";
 import { toArabicDigits } from "./formatUtils";
-import { PATHS, FILE_EXTENSIONS } from "../constants";
+import { PATHS } from "../constants";
 import { applyTemplateReplacements } from "./promptUtils";
 
 export async function getActiveNote(stripProperties: boolean = true): Promise<string> {
@@ -103,7 +103,7 @@ export async function createFigureNote(
   students: string
 ): Promise<void> {
   try {
-    const filePath = `${PATHS.NEW_FIGURES}/${narrator.name}${FILE_EXTENSIONS.MARKDOWN}`;
+    const filePath = `${PATHS.NEW_FIGURES}/${narrator.name}.md`;
 
     // Check if file already exists
     const existingFile = app.vault.getAbstractFileByPath(filePath);

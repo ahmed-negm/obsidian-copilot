@@ -13,11 +13,6 @@ export const PATHS = {
   NEW_FIGURES: "NewFigures",
 };
 
-export const FILE_EXTENSIONS = {
-  MARKDOWN: ".md",
-  JSON: ".json",
-};
-
 export const MSG_FOUND_NARRATOR =
   "✅ تم العثور على **{student}** فيمن رووا عن **{teacher}** في  صحيح البخاري";
 export const MSG_FOUND_NARRATOR_SELF =
