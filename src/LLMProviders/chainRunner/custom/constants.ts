@@ -1,7 +1,6 @@
 export const UI_MESSAGES = {
   WORKFLOW_COMPLETE: "✅ اكتمل التحقق من جميع الرواة.",
   WORKFLOW_STEP_FAILED: "❌ تم إيقاف السلسلة بسبب فشل في خطوة ما.",
-  NARRATOR_IDENTIFICATION_FAILED: "لم أتمكن من تحديد راوٍ واحد بشكل قاطع للاسم",
 };
 
 export const PATHS = {
@@ -19,8 +18,10 @@ export const MSG_FOUND_NARRATOR_SELF =
   "✅ تم العثور على **{narrator}** فيمن رووا عن **{teacher}** في  صحيح البخاري";
 export const MSG_NARRATOR_FILE_EXISTS = "ملف الراوي موجود بالفعل، تخطي الإنشاء.";
 export const MSG_NARRATOR_FILE_CREATED = "تم إنشاء ملف الراوي بنجاح.";
-export const MSG_CHAIN_IS = "\nسند الحديث {hadithLink} هو:\n\n{narrators}\n";
+export const MSG_CHAIN_IS = "\nسند الحديث {{hadithLink}} هو:\n\n{{narrators}}\n";
 export const MSG_NARRATOR_IDENTIFICATION_FAILED = "تعذر تحديد الراوي";
+export const MSG_NO_NARRATORS_FOUND = "لم يتم العثور على أي رواة في نص الحديث.";
+export const NARRATOR_IDENTIFICATION_FAILED = "لم أتمكن من تحديد راوٍ واحد بشكل قاطع للاسم";
 
 export const BOOKS = [
   { symbol: "خ", name: "البخاري" },

@@ -29,10 +29,7 @@ export async function getTemplate(name: Template): Promise<string> {
   }
 }
 
-export function applyTemplateReplacements(
-  template: string,
-  replacements: Record<string, string>
-): string {
+export function populateTemplate(template: string, replacements: Record<string, string>): string {
   let result = template;
 
   for (const [placeholder, value] of Object.entries(replacements)) {

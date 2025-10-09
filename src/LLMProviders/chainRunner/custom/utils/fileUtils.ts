@@ -1,10 +1,9 @@
 import { logError } from "@/logger";
 import { MarkdownView, Notice, TFile } from "obsidian";
 import { NarratorInfo } from "../models/narrator";
-import { getTemplate } from "./promptUtils";
 import { toArabicDigits } from "./formatUtils";
 import { PATHS } from "../constants";
-import { applyTemplateReplacements } from "./promptUtils";
+import { getTemplate, populateTemplate } from "./templateUtils";
 
 export async function getActiveNote(stripProperties: boolean = true): Promise<string> {
   try {
@@ -125,7 +124,7 @@ export async function createFigureNote(
     };
 
     const template = await getTemplate("Mohadith");
-    const noteContent = applyTemplateReplacements(template, replacements);
+    const noteContent = populateTemplate(template, replacements);
 
     await app.vault.create(filePath, noteContent);
     new Notice(`Created note for ${narrator.name}`);
