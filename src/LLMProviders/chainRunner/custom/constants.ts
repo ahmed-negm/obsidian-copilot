@@ -1,11 +1,3 @@
-export const TEMPLATES = {
-  SYSTEM: "SystemPrompt",
-  EXTRACT_NARRATORS: "ExtractNarrators",
-  MOHADITH: "Mohadith",
-  EXPLAIN_STEP: "ExplainStep",
-  FIND_SYMBOLS_STEP: "FindSymbolsStep",
-};
-
 export const UI_MESSAGES = {
   WORKFLOW_COMPLETE: "✅ اكتمل التحقق من جميع الرواة.",
   WORKFLOW_STEP_FAILED: "❌ تم إيقاف السلسلة بسبب فشل في خطوة ما.",

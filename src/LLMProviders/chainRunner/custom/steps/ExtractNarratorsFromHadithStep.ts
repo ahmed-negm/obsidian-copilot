@@ -4,7 +4,7 @@ import { HadithNarrator } from "../models/narrator";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import { readVaultFile, getPromptTemplate, toArabicDigits } from "../utils";
 import { BOOKS, formatMessage } from "../utils/formatUtils";
-import { PATHS, TEMPLATES, FILE_EXTENSIONS, UI_MESSAGES } from "../constants";
+import { PATHS, FILE_EXTENSIONS, UI_MESSAGES } from "../constants";
 import { Notice } from "obsidian";
 
 interface HadithNarratorWithPotential extends HadithNarrator {
@@ -29,7 +29,7 @@ export class ExtractNarratorsFromHadithStep extends StepRunner<TraceNarratorsWor
         throw new Error("No file path available");
       }
       const hadithText = await readVaultFile(this.state.filePath);
-      const prompt = await getPromptTemplate(TEMPLATES.EXTRACT_NARRATORS);
+      const prompt = await getPromptTemplate("ExtractNarrators");
       return prompt.replace("{{HADITH_TEXT}}", hadithText);
     } catch (error) {
       logError("Error preparing extract narrators prompt", error);

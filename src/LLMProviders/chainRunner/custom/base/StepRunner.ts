@@ -1,5 +1,4 @@
 import { getPromptTemplate } from "../utils";
-import { TEMPLATES } from "../constants";
 
 export interface StepRunnerOptions {
   onComplete?: () => Promise<void>;
@@ -17,7 +16,7 @@ export abstract class StepRunner<T> {
   ) {}
 
   async getSystemPrompt(): Promise<string> {
-    return getPromptTemplate(TEMPLATES.SYSTEM);
+    return getPromptTemplate("SystemPrompt");
   }
 
   async run(response: string): Promise<ProcessResponseResult> {

@@ -2,7 +2,14 @@ import { logError } from "@/logger";
 import { readVaultFile } from "./fileUtils";
 import { PATHS, FILE_EXTENSIONS } from "../constants";
 
-export async function getPromptTemplate(name: string): Promise<string> {
+export type PromptTemplate =
+  | "ExplainStep"
+  | "ExtractNarratedFromTahdib"
+  | "ExtractNarrators"
+  | "FindNarratorInList"
+  | "SystemPrompt";
+
+export async function getPromptTemplate(name: PromptTemplate): Promise<string> {
   try {
     return await readVaultFile(`${PATHS.PROMPTS}/${name}${FILE_EXTENSIONS.MARKDOWN}`);
   } catch (error) {
@@ -11,7 +18,9 @@ export async function getPromptTemplate(name: string): Promise<string> {
   }
 }
 
-export async function getTemplate(name: string): Promise<string> {
+export type Template = "Mohadith";
+
+export async function getTemplate(name: Template): Promise<string> {
   try {
     return await readVaultFile(`${PATHS.TEMPLATES}/${name}${FILE_EXTENSIONS.MARKDOWN}`);
   } catch (error) {

@@ -3,7 +3,7 @@ import { MarkdownView, Notice, TFile } from "obsidian";
 import { NarratorInfo } from "../models/narrator";
 import { getTemplate } from "./promptUtils";
 import { toArabicDigits } from "./formatUtils";
-import { PATHS, FILE_EXTENSIONS, TEMPLATES } from "../constants";
+import { PATHS, FILE_EXTENSIONS } from "../constants";
 import { applyTemplateReplacements } from "./promptUtils";
 
 export async function getActiveNote(stripProperties: boolean = true): Promise<string> {
@@ -124,7 +124,7 @@ export async function createFigureNote(
       STUDENTS: students,
     };
 
-    const template = await getTemplate(TEMPLATES.MOHADITH);
+    const template = await getTemplate("Mohadith");
     const noteContent = applyTemplateReplacements(template, replacements);
 
     await app.vault.create(filePath, noteContent);
