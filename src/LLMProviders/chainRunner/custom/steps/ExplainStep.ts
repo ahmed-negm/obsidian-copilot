@@ -19,11 +19,13 @@ export class ExplainStep extends StepRunner<BaseState> {
         reference = noteContent;
       }
     } else {
-      toExplain = noteContent || "No text available to explain.";
+      toExplain = noteContent || "";
     }
-    return `Explain the following text:\n\n${toExplain}${
-      reference ? `\n\nHere is the full context for reference:\n\n${reference}` : ""
-    }`;
+    return toExplain
+      ? `Explain the following text:\n\n${toExplain}${
+          reference ? `\n\nHere is the full context for reference:\n\n${reference}` : ""
+        }`
+      : "";
   }
 
   async processResponse(response: string) {

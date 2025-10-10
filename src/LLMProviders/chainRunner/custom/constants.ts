@@ -20,6 +20,10 @@ export const MSG_NARRATOR_FILE_CREATED = "تم إنشاء ملف الراوي ب
 export const MSG_CHAIN_IS = "\nسند الحديث {{hadithLink}} هو:\n\n{{narrators}}\n";
 export const MSG_NARRATOR_IDENTIFICATION_FAILED = "تعذر تحديد الراوي";
 export const MSG_NO_NARRATORS_FOUND = "لم يتم العثور على أي رواة في نص الحديث.";
+
+export const MSG_SEARCHING_NARRATORS = "سنبدأ الآن في البحث عن الرواة في تهذيب الكمال ...";
+export const MSG_SEARCHING_NEXT_NARRATOR = "لننتقل إلى الراوي التالي في السلسلة...";
+
 export const NARRATOR_IDENTIFICATION_FAILED = "لم أتمكن من تحديد راوٍ واحد بشكل قاطع للاسم";
 export const START_CHAIN_QUIZ =
   "الآن، سنختبر معرفتك بسلسلة الرواة. اختر الشخص الذي يلي كل راوٍ في السلسلة.";

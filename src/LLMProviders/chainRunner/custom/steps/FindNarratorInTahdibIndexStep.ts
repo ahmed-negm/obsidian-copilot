@@ -1,5 +1,10 @@
 import { StepRunner } from "../base/StepRunner";
-import { MSG_FOUND_NARRATOR, MSG_NARRATOR_NOT_FOUND } from "../constants";
+import {
+  MSG_FOUND_NARRATOR,
+  MSG_NARRATOR_NOT_FOUND,
+  MSG_SEARCHING_NARRATORS,
+  MSG_SEARCHING_NEXT_NARRATOR,
+} from "../constants";
 import { NarratorInfo } from "../models/narrator";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import {
@@ -9,75 +14,85 @@ import {
   populateTemplate,
 } from "../utils";
 
+/**
+ * Step to find a narrator in the Tahdib index, with progressive filtering and prompt generation.
+ * Improves readability and maintainability by extracting logic and clarifying responsibilities.
+ */
 export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWorkflowState> {
   private matchingNarrators: NarratorInfo[] = [];
   private narratorToFind: string = "";
 
-  getContextIntroMessage() {
+  /**
+   * Returns the context intro message based on the current narrator index.
+   */
+  getContextIntroMessage(): string {
     return this.state.hadithNarratorIndex === 0
-      ? "سنبدأ الآن في البحث عن الرواة في تهذيب الكمال ..."
-      : "لننتقل إلى الراوي التالي في السلسلة...";
+      ? MSG_SEARCHING_NARRATORS
+      : MSG_SEARCHING_NEXT_NARRATOR;
   }
 
-  async getUserPrompt() {
+  /**
+   * Finds matching narrators using progressive prefix filtering.
+   * @param nameToFind The name to search for.
+   * @returns Array of matching NarratorInfo objects.
+   */
+  private findMatchingNarrators(nameToFind: string): NarratorInfo[] {
+    const { allNarrators } = this.state;
+    const prefixLengths = [20, 10, 3];
+    for (const len of prefixLengths) {
+      const matches = allNarrators.filter((n) => n.name?.startsWith(nameToFind.slice(0, len)));
+      if (matches.length > 0) return matches;
+    }
+    return [];
+  }
+
+  /**
+   * Generates the user prompt for narrator selection if needed.
+   */
+  async getUserPrompt(): Promise<string> {
     this.narratorToFind =
       this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedFullName;
-    this.matchingNarrators = this.state.allNarrators.filter((n) =>
-      n.name?.startsWith(this.narratorToFind.slice(0, 20))
-    );
-    if (this.matchingNarrators.length === 0) {
-      this.matchingNarrators = this.state.allNarrators.filter((n) =>
-        n.name?.startsWith(this.narratorToFind.slice(0, 10))
-      );
-    }
-    if (this.matchingNarrators.length === 0) {
-      this.matchingNarrators = this.state.allNarrators.filter((n) =>
-        n.name?.startsWith(this.narratorToFind.slice(0, 3))
-      );
-    }
+    this.matchingNarrators = this.findMatchingNarrators(this.narratorToFind);
+
     if (this.matchingNarrators.length === 0 || this.matchingNarrators.length === 1) {
       return "";
     }
+
     const promptTemplate = await getPromptTemplate("FindNarratorInList");
-    const prompt = promptTemplate.replaceAll("{{name_to_search}}", this.narratorToFind).replaceAll(
-      "{{JSON}}",
-      JSON.stringify(
-        this.matchingNarrators.map((n) => ({
-          id: n.index,
-          name: n.name,
-        })),
-        null,
-        2
-      )
+    const narratorsJson = JSON.stringify(
+      this.matchingNarrators.map((n) => ({ id: n.index, name: n.name })),
+      null,
+      2
     );
-    return prompt;
+    return populateTemplate(promptTemplate, {
+      name_to_search: this.narratorToFind,
+      JSON: narratorsJson,
+    });
   }
 
-  async processResponse(response: string) {
+  /**
+   * Processes the LLM response to select the correct narrator or handle not found cases.
+   */
+  async processResponse(response: string): Promise<{ response: string; isSuccessful: boolean }> {
     if (this.matchingNarrators.length > 1) {
       const parsed =
         extractJsonCodeBlock<{ id: number; name: string; confidence: string }[]>(response);
       if (parsed) {
-        const result = parsed.filter((r) => r.confidence === "High");
-        if (result.length >= 1) {
-          const allNarratorIndex = result[0].id;
-          if (allNarratorIndex) {
-            if (allNarratorIndex !== -1) {
-              const foundNarrator = this.state.allNarrators[allNarratorIndex];
-              if (!foundNarrator.id) {
-                return {
-                  response: this.narratorFoundMessage(foundNarrator) + " ولكن بدون رقم",
-                  isSuccessful: false,
-                };
-              }
-              this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators =
-                allNarratorIndex;
-              return {
-                response: this.narratorFoundMessage(foundNarrator),
-                isSuccessful: true,
-              };
-            }
+        const highConfidence = parsed.find((r) => r.confidence === "High");
+        if (highConfidence && typeof highConfidence.id === "number" && highConfidence.id !== -1) {
+          const foundNarrator = this.state.allNarrators[highConfidence.id];
+          if (!foundNarrator.id) {
+            return {
+              response: this.narratorFoundMessage(foundNarrator) + " ولكن بدون رقم",
+              isSuccessful: false,
+            };
           }
+          this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators =
+            highConfidence.id;
+          return {
+            response: this.narratorFoundMessage(foundNarrator),
+            isSuccessful: true,
+          };
         }
       }
     } else if (this.matchingNarrators.length === 1) {
@@ -94,11 +109,17 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     };
   }
 
-  private narratorNotFoundMessage() {
+  /**
+   * Returns a formatted message for narrator not found.
+   */
+  private narratorNotFoundMessage(): string {
     return populateTemplate(MSG_NARRATOR_NOT_FOUND, { narrator: this.narratorToFind });
   }
 
-  private narratorFoundMessage(narrator: NarratorInfo) {
+  /**
+   * Returns a formatted message for narrator found.
+   */
+  private narratorFoundMessage(narrator: NarratorInfo): string {
     return populateTemplate(MSG_FOUND_NARRATOR, {
       narrator: narrator.name,
       part: toArabicDigits(narrator.part),
