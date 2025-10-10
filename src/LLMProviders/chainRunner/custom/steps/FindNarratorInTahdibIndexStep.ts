@@ -1,8 +1,13 @@
 import { StepRunner } from "../base/StepRunner";
+import { MSG_FOUND_NARRATOR, MSG_NARRATOR_NOT_FOUND } from "../constants";
 import { NarratorInfo } from "../models/narrator";
 import { TraceNarratorsWorkflowState } from "../models/state";
-import { getPromptTemplate, toArabicDigits, extractJsonCodeBlock } from "../utils";
-import { MSG_FOUND_NARRATOR, formatMessage } from "../utils/formatUtils";
+import {
+  getPromptTemplate,
+  toArabicDigits,
+  extractJsonCodeBlock,
+  populateTemplate,
+} from "../utils";
 
 export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWorkflowState> {
   private matchingNarrators: NarratorInfo[] = [];
@@ -68,11 +73,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
               this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators =
                 allNarratorIndex;
               return {
-                response: formatMessage(MSG_FOUND_NARRATOR, {
-                  student: foundNarrator.name,
-                  teacher:
-                    this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedKnownName,
-                }),
+                response: this.narratorFoundMessage(foundNarrator),
                 isSuccessful: true,
               };
             }
@@ -94,11 +95,15 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
   }
 
   private narratorNotFoundMessage() {
-    return `لم يتم العثور على الراوي "${this.narratorToFind}" في تهذيب الكمال. الرجاء التحقق من صحة الاسم .`;
+    return populateTemplate(MSG_NARRATOR_NOT_FOUND, { narrator: this.narratorToFind });
   }
 
   private narratorFoundMessage(narrator: NarratorInfo) {
-    return `
-تم العثور على **${narrator.name}** في تهذيب الكمال [المجلد ${toArabicDigits(narrator.part)} - الصفحة ${toArabicDigits(narrator.page)}](https://shamela.ws/book/3722/${narrator.shamelaIndex})`;
+    return populateTemplate(MSG_FOUND_NARRATOR, {
+      narrator: narrator.name,
+      part: toArabicDigits(narrator.part),
+      page: toArabicDigits(narrator.page),
+      shamelaIndex: narrator.shamelaIndex,
+    });
   }
 }

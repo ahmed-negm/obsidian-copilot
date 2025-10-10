@@ -1,4 +1,4 @@
-import { formatMessage, TahdibNarrator } from "../utils/formatUtils";
+import { TahdibNarrator } from "../utils/formatUtils";
 import { FileSystemAdapter } from "obsidian";
 import { StepRunner } from "../base/StepRunner";
 import { TraceNarratorsWorkflowState } from "../models/state";
@@ -9,6 +9,7 @@ import {
   readFileFromExternalVault,
   toArabicDigits,
   extractJsonCodeBlock,
+  populateTemplate,
 } from "../utils";
 
 export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowState> {
@@ -72,7 +73,7 @@ export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowSta
         studentsMarkdown
       );
       return {
-        response: formatMessage("تم إنشاء ملف الراوي بنجاح.", {}),
+        response: populateTemplate("تم إنشاء ملف الراوي بنجاح.", {}),
         isSuccessful: true,
       };
     }

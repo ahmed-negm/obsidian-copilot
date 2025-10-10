@@ -1,15 +1,3 @@
-export function formatMessage(template: string, values: Record<string, string | number>): string {
-  return Object.entries(values).reduce(
-    (msg, [key, val]) => msg.replaceAll(`{${key}}`, String(val)),
-    template
-  );
-}
-
-export const MSG_FOUND_NARRATOR =
-  "✅ تم العثور على **{student}** فيمن رووا عن **{teacher}** في  صحيح البخاري";
-export const MSG_FOUND_NARRATOR_SELF =
-  "✅ تم العثور على **{narrator}** فيمن رووا عن **{teacher}** في  صحيح البخاري";
-
 export function extractJsonCodeBlock<T = any>(text: string): T | null {
   const match = text.match(/```json\s*([\s\S]*?)\s*```/);
   if (!match) return null;

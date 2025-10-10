@@ -1,4 +1,5 @@
 import { StepRunner } from "../base/StepRunner";
+import { MSG_FOUND_STUDENT, MSG_STUDENT_TEACHER_LOOKUP } from "../constants";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import {
   getPromptTemplate,
@@ -7,13 +8,9 @@ import {
   updateStudents,
   updateVaultFile,
   extractJsonCodeBlock,
+  populateTemplate,
 } from "../utils";
-import {
-  BOOKS,
-  MSG_FOUND_NARRATOR,
-  MSG_FOUND_NARRATOR_SELF,
-  formatMessage,
-} from "../utils/formatUtils";
+import { BOOKS } from "../utils/formatUtils";
 
 export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowState> {
   private narratorsToSearch: { id: number; name: string }[] = [];
@@ -21,7 +18,10 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
   getContextIntroMessage(): string {
     const nextNarrator = this.state.hadithNarrators[this.state.hadithNarratorIndex + 1];
     return nextNarrator
-      ? `جاري البحث عن **${nextNarrator.expectedKnownName}** فيمن رووا عن **${this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedKnownName}** في  صحيح البخاري`
+      ? populateTemplate(MSG_STUDENT_TEACHER_LOOKUP, {
+          student: nextNarrator.expectedKnownName,
+          teacher: this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedKnownName,
+        })
       : "";
   }
 
@@ -56,9 +56,8 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
   async processResponse(response: string) {
     if (response === "") {
       return {
-        response: formatMessage(MSG_FOUND_NARRATOR_SELF, {
-          narrator:
-            this.state.hadithNarrators[this.state.hadithNarratorIndex + 1].expectedKnownName,
+        response: populateTemplate(MSG_FOUND_STUDENT, {
+          student: this.state.hadithNarrators[this.state.hadithNarratorIndex + 1].expectedKnownName,
           teacher: this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedKnownName,
         }),
         isSuccessful: true,
@@ -82,7 +81,7 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
           const updateBio = updateStudents(narratorBio, student.name, nextNarrator.name);
           await updateVaultFile(filePath, updateBio);
           return {
-            response: formatMessage(MSG_FOUND_NARRATOR, {
+            response: populateTemplate(MSG_FOUND_STUDENT, {
               student: student.name,
               teacher: hadithNarrator.expectedKnownName,
             }),

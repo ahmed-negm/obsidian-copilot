@@ -29,12 +29,15 @@ export async function getTemplate(name: Template): Promise<string> {
   }
 }
 
-export function populateTemplate(template: string, replacements: Record<string, string>): string {
+export function populateTemplate(
+  template: string,
+  replacements: Record<string, string | number>
+): string {
   let result = template;
 
   for (const [placeholder, value] of Object.entries(replacements)) {
     const regex = new RegExp(`{{${placeholder}}}`, "g");
-    result = result.replace(regex, value);
+    result = result.replace(regex, String(value));
   }
 
   return result;
