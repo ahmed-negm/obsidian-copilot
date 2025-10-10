@@ -14,112 +14,165 @@ import {
   populateTemplate,
 } from "../utils";
 
-/**
- * Step to find a narrator in the Tahdib index, with progressive filtering and prompt generation.
- * Improves readability and maintainability by extracting logic and clarifying responsibilities.
- */
-export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWorkflowState> {
-  private matchingNarrators: NarratorInfo[] = [];
-  private narratorToFind: string = "";
+const SEARCH_PREFIX_LENGTHS = [20, 10, 3] as const;
+const HIGH_CONFIDENCE = "High";
+const NO_ID_SUFFIX = " ولكن بدون رقم";
 
-  /**
-   * Returns the context intro message based on the current narrator index.
-   */
+interface LLMNarratorResponse {
+  id: number;
+  name: string;
+  confidence: string;
+}
+
+interface ProcessResult {
+  response: string;
+  isSuccessful: boolean;
+}
+
+interface NarratorSearchContext {
+  narratorToFind: string;
+  matchingNarrators: NarratorInfo[];
+  currentNarratorIndex: number;
+}
+
+export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWorkflowState> {
+  private searchContext: NarratorSearchContext;
+
   getContextIntroMessage(): string {
     return this.state.hadithNarratorIndex === 0
       ? MSG_SEARCHING_NARRATORS
       : MSG_SEARCHING_NEXT_NARRATOR;
   }
 
-  /**
-   * Finds matching narrators using progressive prefix filtering.
-   * @param nameToFind The name to search for.
-   * @returns Array of matching NarratorInfo objects.
-   */
-  private findMatchingNarrators(nameToFind: string): NarratorInfo[] {
-    const { allNarrators } = this.state;
-    const prefixLengths = [20, 10, 3];
-    for (const len of prefixLengths) {
-      const matches = allNarrators.filter((n) => n.name?.startsWith(nameToFind.slice(0, len)));
-      if (matches.length > 0) return matches;
-    }
-    return [];
-  }
-
-  /**
-   * Generates the user prompt for narrator selection if needed.
-   */
   async getUserPrompt(): Promise<string> {
-    this.narratorToFind =
-      this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedFullName;
-    this.matchingNarrators = this.findMatchingNarrators(this.narratorToFind);
+    this.searchContext = this.buildNarratorSearchContext();
 
-    if (this.matchingNarrators.length === 0 || this.matchingNarrators.length === 1) {
+    // No prompt needed if we have 0 or 1 matches (handled in processResponse)
+    if (this.searchContext.matchingNarrators.length <= 1) {
       return "";
     }
 
+    return this.generatePrompt(this.searchContext);
+  }
+
+  async processResponse(response: string): Promise<ProcessResult> {
+    if (this.searchContext.matchingNarrators.length === 0) {
+      return this.handleNarratorNotFound(response, this.searchContext.narratorToFind);
+    }
+
+    if (this.searchContext.matchingNarrators.length === 1) {
+      return this.handleSingleMatch(this.searchContext.matchingNarrators[0]);
+    }
+
+    return this.handleMultipleMatches(response, this.searchContext);
+  }
+
+  private buildNarratorSearchContext(): NarratorSearchContext {
+    const currentNarrator = this.state.hadithNarrators[this.state.hadithNarratorIndex];
+    const narratorToFind = currentNarrator.expectedFullName;
+    const matchingNarrators = this.findMatchingNarrators(narratorToFind);
+
+    return {
+      narratorToFind,
+      matchingNarrators,
+      currentNarratorIndex: this.state.hadithNarratorIndex,
+    };
+  }
+
+  private findMatchingNarrators(nameToFind: string): NarratorInfo[] {
+    const { allNarrators } = this.state;
+
+    for (const prefixLength of SEARCH_PREFIX_LENGTHS) {
+      const prefix = nameToFind.slice(0, prefixLength);
+      const matches = allNarrators.filter((narrator) => narrator.name?.startsWith(prefix));
+
+      if (matches.length > 0) {
+        return matches;
+      }
+    }
+
+    return [];
+  }
+
+  private async generatePrompt(context: NarratorSearchContext): Promise<string> {
     const promptTemplate = await getPromptTemplate("FindNarratorInList");
     const narratorsJson = JSON.stringify(
-      this.matchingNarrators.map((n) => ({ id: n.index, name: n.name })),
+      context.matchingNarrators.map((narrator) => ({
+        id: narrator.index,
+        name: narrator.name,
+      })),
       null,
       2
     );
+
     return populateTemplate(promptTemplate, {
-      name_to_search: this.narratorToFind,
+      name_to_search: context.narratorToFind,
       JSON: narratorsJson,
     });
   }
 
-  /**
-   * Processes the LLM response to select the correct narrator or handle not found cases.
-   */
-  async processResponse(response: string): Promise<{ response: string; isSuccessful: boolean }> {
-    if (this.matchingNarrators.length > 1) {
-      const parsed =
-        extractJsonCodeBlock<{ id: number; name: string; confidence: string }[]>(response);
-      if (parsed) {
-        const highConfidence = parsed.find((r) => r.confidence === "High");
-        if (highConfidence && typeof highConfidence.id === "number" && highConfidence.id !== -1) {
-          const foundNarrator = this.state.allNarrators[highConfidence.id];
-          if (!foundNarrator.id) {
-            return {
-              response: this.narratorFoundMessage(foundNarrator) + " ولكن بدون رقم",
-              isSuccessful: false,
-            };
-          }
-          this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators =
-            highConfidence.id;
-          return {
-            response: this.narratorFoundMessage(foundNarrator),
-            isSuccessful: true,
-          };
-        }
-      }
-    } else if (this.matchingNarrators.length === 1) {
-      this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators =
-        this.matchingNarrators[0].index;
-      return {
-        response: this.narratorFoundMessage(this.matchingNarrators[0]),
-        isSuccessful: true,
-      };
-    }
+  private handleNarratorNotFound(response: string, narratorToFind: string): ProcessResult {
+    const notFoundMessage = populateTemplate(MSG_NARRATOR_NOT_FOUND, {
+      narrator: narratorToFind,
+    });
+
     return {
-      response: this.narratorNotFoundMessage() + "\n\n" + response,
+      response: `${notFoundMessage}\n\n${response}`,
       isSuccessful: false,
     };
   }
 
-  /**
-   * Returns a formatted message for narrator not found.
-   */
-  private narratorNotFoundMessage(): string {
-    return populateTemplate(MSG_NARRATOR_NOT_FOUND, { narrator: this.narratorToFind });
+  private handleSingleMatch(narrator: NarratorInfo): ProcessResult {
+    this.updateStateWithNarrator(narrator.index);
+
+    return {
+      response: this.formatNarratorFoundMessage(narrator),
+      isSuccessful: true,
+    };
   }
 
-  /**
-   * Returns a formatted message for narrator found.
-   */
-  private narratorFoundMessage(narrator: NarratorInfo): string {
+  private handleMultipleMatches(response: string, context: NarratorSearchContext): ProcessResult {
+    const selectedNarrator = this.extractSelectedNarratorFromResponse(response);
+
+    if (!selectedNarrator) {
+      return this.handleNarratorNotFound(response, context.narratorToFind);
+    }
+
+    const foundNarrator = this.state.allNarrators[selectedNarrator.id];
+    if (!foundNarrator) {
+      return this.handleNarratorNotFound(response, context.narratorToFind);
+    }
+
+    // Check if narrator has required ID
+    if (!foundNarrator.id) {
+      return {
+        response: this.formatNarratorFoundMessage(foundNarrator) + NO_ID_SUFFIX,
+        isSuccessful: false,
+      };
+    }
+
+    this.updateStateWithNarrator(selectedNarrator.id);
+    return {
+      response: this.formatNarratorFoundMessage(foundNarrator),
+      isSuccessful: true,
+    };
+  }
+
+  private extractSelectedNarratorFromResponse(response: string): LLMNarratorResponse | null {
+    const parsed = extractJsonCodeBlock<LLMNarratorResponse[]>(response);
+
+    if (!parsed || !Array.isArray(parsed)) {
+      return null;
+    }
+
+    return parsed.find((result) => result.confidence === HIGH_CONFIDENCE) || null;
+  }
+
+  private updateStateWithNarrator(narratorIndex: number): void {
+    this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators = narratorIndex;
+  }
+
+  private formatNarratorFoundMessage(narrator: NarratorInfo): string {
     return populateTemplate(MSG_FOUND_NARRATOR, {
       narrator: narrator.name,
       part: toArabicDigits(narrator.part),

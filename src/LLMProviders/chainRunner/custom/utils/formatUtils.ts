@@ -176,7 +176,7 @@ export function updateStudents(markdown: string, displayText: string, link: stri
   const studentLines = extractFirstTableLines(markdown, STUDENTS_TITLE);
   const index = studentLines.findIndex((line) => line.includes(displayText));
   if (index !== -1) {
-    const updatedLine = studentLines[index].replace(displayText, `[[${link}|${displayText}]]`);
+    const updatedLine = studentLines[index].replace(displayText, `[[${link}\\|${displayText}]]`);
     markdown = markdown.replace(studentLines[index], updatedLine);
   }
   return markdown;
