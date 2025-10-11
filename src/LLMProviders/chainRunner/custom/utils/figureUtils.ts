@@ -1,4 +1,9 @@
-import { BOOKS } from "../constants";
+import { logError } from "@/logger";
+import { TFile, Notice } from "obsidian";
+import { BOOKS, PATHS } from "../constants";
+import { NarratorInfo } from "../models/narrator";
+import { getTemplate, populateTemplate } from "./templateUtils";
+import { getSignedUrl, toArabicDigits } from "./variousUtils";
 
 export type BookName = (typeof BOOKS)[number]["name"];
 
@@ -172,4 +177,45 @@ export function updateStudents(markdown: string, displayText: string, link: stri
 export function findTeachers(markdown: string, book: BookName) {
   const teacherLines = extractFirstTableLines(markdown, TEACHERS_TITLE);
   return parseTableLines(teacherLines, book);
+}
+
+export async function createFigureNote(
+  narrator: NarratorInfo,
+  knownName: string,
+  teachers: string,
+  students: string
+): Promise<void> {
+  try {
+    const filePath = `${PATHS.FIGURES}/${narrator.name}.md`;
+
+    // Check if file already exists
+    const existingFile = app.vault.getAbstractFileByPath(filePath);
+    if (existingFile instanceof TFile) {
+      new Notice(`Note for ${narrator.name} already exists`);
+      return;
+    }
+
+    const replacements = {
+      NAME: narrator.name,
+      SIGNED_NAME: getSignedUrl(toArabicDigits(narrator.id!) + "-" + narrator.name),
+      KNOWN_NAME: knownName,
+      PART: toArabicDigits(narrator.part),
+      PAGE: toArabicDigits(narrator.page),
+      SHAMELA_INDEX: narrator.shamelaIndex.toString(),
+      TAHDHIB_ID: narrator.id?.toString() ?? "",
+      DATE: new Date().toISOString().slice(0, 10),
+      TEACHERS: teachers,
+      STUDENTS: students,
+    };
+
+    const template = await getTemplate("Mohadith");
+    const noteContent = populateTemplate(template, replacements);
+
+    await app.vault.create(filePath, noteContent);
+    new Notice(`Created note for ${narrator.name}`);
+  } catch (error) {
+    logError(`Failed to create figure note for: ${narrator.name}`, error);
+    new Notice(`Failed to create note for ${narrator.name}`);
+    throw error;
+  }
 }

@@ -118,7 +118,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
         `من هو ${narrator.name}؟`,
         choices,
         "bottom",
-        false
+        true
       );
 
       const isCorrect = choice === narrator.expectedKnownName;

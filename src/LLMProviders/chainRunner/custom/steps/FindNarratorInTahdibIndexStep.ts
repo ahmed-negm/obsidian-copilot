@@ -12,6 +12,7 @@ import {
   toArabicDigits,
   extractJsonCodeBlock,
   populateTemplate,
+  getSignedUrl,
 } from "../utils";
 
 const SEARCH_PREFIX_LENGTHS = [20, 10, 3] as const;
@@ -172,7 +173,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
       narrator: narrator.name,
       part: toArabicDigits(narrator.part),
       page: toArabicDigits(narrator.page),
-      shamelaIndex: narrator.shamelaIndex,
+      signed_name: getSignedUrl(toArabicDigits(narrator.id!) + "-" + narrator.name),
     });
   }
 }

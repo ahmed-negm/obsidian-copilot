@@ -45,3 +45,7 @@ export function toArabicDigits(str: string | number): string {
 export function toEnglishDigits(str: string | number): string {
   return String(str).replace(/[٠-٩]/g, (d) => ARABIC_DIGITS.indexOf(d).toString());
 }
+
+export function getSignedUrl(url: string): string {
+  return url.replaceAll(" ", "%20");
+}

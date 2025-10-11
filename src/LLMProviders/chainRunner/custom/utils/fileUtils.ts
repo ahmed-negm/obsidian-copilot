@@ -1,9 +1,5 @@
 import { logError } from "@/logger";
-import { MarkdownView, Notice, TFile } from "obsidian";
-import { NarratorInfo } from "../models/narrator";
-import { PATHS } from "../constants";
-import { getTemplate, populateTemplate } from "./templateUtils";
-import { toArabicDigits } from "./variousUtils";
+import { MarkdownView, Notice } from "obsidian";
 
 export async function getActiveNote(stripProperties: boolean = true): Promise<string> {
   try {
@@ -92,45 +88,5 @@ export async function readFileFromExternalVault(fullPath: string): Promise<strin
   } catch (error) {
     logError(`Failed to read external file: ${fullPath}`, error);
     throw new Error("Filesystem access is not available or file could not be read");
-  }
-}
-
-export async function createFigureNote(
-  narrator: NarratorInfo,
-  knownName: string,
-  teachers: string,
-  students: string
-): Promise<void> {
-  try {
-    const filePath = `${PATHS.FIGURES}/${narrator.name}.md`;
-
-    // Check if file already exists
-    const existingFile = app.vault.getAbstractFileByPath(filePath);
-    if (existingFile instanceof TFile) {
-      new Notice(`Note for ${narrator.name} already exists`);
-      return;
-    }
-
-    const replacements = {
-      NAME: narrator.name,
-      KNOWN_NAME: knownName,
-      PART: toArabicDigits(narrator.part),
-      PAGE: toArabicDigits(narrator.page),
-      SHAMELA_INDEX: narrator.shamelaIndex.toString(),
-      TAHDHIB_ID: narrator.id?.toString() ?? "",
-      DATE: new Date().toISOString().slice(0, 10),
-      TEACHERS: teachers,
-      STUDENTS: students,
-    };
-
-    const template = await getTemplate("Mohadith");
-    const noteContent = populateTemplate(template, replacements);
-
-    await app.vault.create(filePath, noteContent);
-    new Notice(`Created note for ${narrator.name}`);
-  } catch (error) {
-    logError(`Failed to create figure note for: ${narrator.name}`, error);
-    new Notice(`Failed to create note for ${narrator.name}`);
-    throw error;
   }
 }

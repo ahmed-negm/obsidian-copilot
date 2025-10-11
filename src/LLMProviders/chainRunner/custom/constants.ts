@@ -18,7 +18,7 @@ export const PATHS = {
 };
 
 export const MSG_FOUND_NARRATOR =
-  "✅ تم العثور على **{{narrator}}** في تهذيب الكمال [المجلد {{part}} - الصفحة {{page}}](https://shamela.ws/book/3722/{{shamelaIndex}})";
+  "✅ تم العثور على **{{narrator}}** في تهذيب الكمال [المجلد {{part}} - الصفحة {{page}}](obsidian://open?vault=Tahdhib-al-Kamal&file=Figures/{{signed_name}})";
 export const MSG_NARRATOR_NOT_FOUND =
   "لم يتم العثور على الراوي **{{narrator}}** في تهذيب الكمال. الرجاء التحقق من صحة الاسم .";
 export const MSG_FOUND_STUDENT =
