@@ -15,18 +15,13 @@ import {
 } from "../utils";
 
 const SEARCH_PREFIX_LENGTHS = [20, 10, 3] as const;
-const HIGH_CONFIDENCE = "High";
+export const HIGH_CONFIDENCE = "High";
 const NO_ID_SUFFIX = " ولكن بدون رقم";
 
-interface LLMNarratorResponse {
+export interface LLMNarratorResponse {
   id: number;
   name: string;
   confidence: string;
-}
-
-interface ProcessResult {
-  response: string;
-  isSuccessful: boolean;
 }
 
 interface NarratorSearchContext {
@@ -38,13 +33,13 @@ interface NarratorSearchContext {
 export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWorkflowState> {
   private searchContext: NarratorSearchContext;
 
-  getContextIntroMessage(): string {
+  getContextIntroMessage() {
     return this.state.hadithNarratorIndex === 0
       ? MSG_SEARCHING_NARRATORS
       : MSG_SEARCHING_NEXT_NARRATOR;
   }
 
-  async getUserPrompt(): Promise<string> {
+  async getUserPrompt() {
     this.searchContext = this.buildNarratorSearchContext();
 
     // No prompt needed if we have 0 or 1 matches (handled in processResponse)
@@ -55,7 +50,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     return this.generatePrompt(this.searchContext);
   }
 
-  async processResponse(response: string): Promise<ProcessResult> {
+  async processResponse(response: string) {
     if (this.searchContext.matchingNarrators.length === 0) {
       return this.handleNarratorNotFound(response, this.searchContext.narratorToFind);
     }
@@ -79,7 +74,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     };
   }
 
-  private findMatchingNarrators(nameToFind: string): NarratorInfo[] {
+  private findMatchingNarrators(nameToFind: string) {
     const { allNarrators } = this.state;
 
     for (const prefixLength of SEARCH_PREFIX_LENGTHS) {
@@ -94,7 +89,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     return [];
   }
 
-  private async generatePrompt(context: NarratorSearchContext): Promise<string> {
+  private async generatePrompt(context: NarratorSearchContext) {
     const promptTemplate = await getPromptTemplate("FindNarratorInList");
     const narratorsJson = JSON.stringify(
       context.matchingNarrators.map((narrator) => ({
@@ -111,7 +106,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     });
   }
 
-  private handleNarratorNotFound(response: string, narratorToFind: string): ProcessResult {
+  private handleNarratorNotFound(response: string, narratorToFind: string) {
     const notFoundMessage = populateTemplate(MSG_NARRATOR_NOT_FOUND, {
       narrator: narratorToFind,
     });
@@ -122,7 +117,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     };
   }
 
-  private handleSingleMatch(narrator: NarratorInfo): ProcessResult {
+  private handleSingleMatch(narrator: NarratorInfo) {
     this.updateStateWithNarrator(narrator.index);
 
     return {
@@ -131,7 +126,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     };
   }
 
-  private handleMultipleMatches(response: string, context: NarratorSearchContext): ProcessResult {
+  private handleMultipleMatches(response: string, context: NarratorSearchContext) {
     const selectedNarrator = this.extractSelectedNarratorFromResponse(response);
 
     if (!selectedNarrator) {
@@ -158,7 +153,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     };
   }
 
-  private extractSelectedNarratorFromResponse(response: string): LLMNarratorResponse | null {
+  private extractSelectedNarratorFromResponse(response: string) {
     const parsed = extractJsonCodeBlock<LLMNarratorResponse[]>(response);
 
     if (!parsed || !Array.isArray(parsed)) {
@@ -172,7 +167,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators = narratorIndex;
   }
 
-  private formatNarratorFoundMessage(narrator: NarratorInfo): string {
+  private formatNarratorFoundMessage(narrator: NarratorInfo) {
     return populateTemplate(MSG_FOUND_NARRATOR, {
       narrator: narrator.name,
       part: toArabicDigits(narrator.part),

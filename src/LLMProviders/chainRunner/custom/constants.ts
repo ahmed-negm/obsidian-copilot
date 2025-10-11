@@ -4,7 +4,7 @@ export const PATHS = {
   DATA: "_extras/Data",
   TAHDHIB_INDEX: "_extras/Data/Tahdhib.json",
   BUKHARI_HADITH: "Sunnah/صحيح البخاري",
-  NEW_FIGURES: "NewFigures",
+  FIGURES: "Figures",
 };
 
 export const MSG_FOUND_NARRATOR =

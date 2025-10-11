@@ -11,6 +11,7 @@ import {
   extractJsonCodeBlock,
   populateTemplate,
 } from "../utils";
+import { PATHS } from "../constants";
 
 export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowState> {
   getContextIntroMessage() {
@@ -44,7 +45,7 @@ export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowSta
       this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators!;
     const narrator = this.state.allNarrators[indexInAllNarrators];
 
-    const filePath = `NewFigures/${narrator.name}.md`;
+    const filePath = `${PATHS.FIGURES}/${narrator.name}.md`;
     const noteExists = app.vault.getAbstractFileByPath(filePath);
     return { noteExists, narrator };
   }

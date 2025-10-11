@@ -102,7 +102,7 @@ export async function createFigureNote(
   students: string
 ): Promise<void> {
   try {
-    const filePath = `${PATHS.NEW_FIGURES}/${narrator.name}.md`;
+    const filePath = `${PATHS.FIGURES}/${narrator.name}.md`;
 
     // Check if file already exists
     const existingFile = app.vault.getAbstractFileByPath(filePath);
