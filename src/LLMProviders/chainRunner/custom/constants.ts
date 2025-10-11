@@ -5,6 +5,7 @@ export const PATHS = {
   TAHDHIB_INDEX: "_extras/Data/Tahdhib.json",
   BUKHARI_HADITH: "Sunnah/صحيح البخاري",
   FIGURES: "Figures",
+  TAHDHIB_FIGURES_DIR: "../Books/Tahdhib-al-Kamal/Figures/",
 };
 
 export const MSG_FOUND_NARRATOR =
@@ -17,6 +18,8 @@ export const MSG_STUDENT_TEACHER_LOOKUP =
   "جاري البحث عن **{{student}}** فيمن رووا عن **{{teacher}}** في صحيح البخاري";
 export const MSG_NARRATOR_FILE_EXISTS = "ملف الراوي موجود بالفعل، تخطي الإنشاء.";
 export const MSG_NARRATOR_FILE_CREATED = "تم إنشاء ملف الراوي بنجاح.";
+export const MSG_NARRATOR_FILE_NOT_FOUND_CREATING =
+  "لم يتم العثور على الملف الخاص بهذا الراوي، جاري إنشاء الملف من بيانات تهذيب الكمال...";
 export const MSG_CHAIN_IS = "\nسند الحديث {{hadithLink}} هو:\n\n{{narrators}}\n";
 export const MSG_NARRATOR_IDENTIFICATION_FAILED = "تعذر تحديد الراوي";
 export const MSG_NO_NARRATORS_FOUND = "لم يتم العثور على أي رواة في نص الحديث.";
