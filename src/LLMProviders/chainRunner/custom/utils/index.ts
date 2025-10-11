@@ -1,5 +1,5 @@
 export * from "./fileUtils";
 export * from "./templateUtils";
-export * from "./formatUtils";
-export * from "./scoreUtils";
+export * from "./figureUtils";
+export * from "./variousUtils";
 export * from "./shamelaUtils";

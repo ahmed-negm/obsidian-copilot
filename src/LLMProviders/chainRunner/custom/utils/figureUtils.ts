@@ -1,34 +1,21 @@
-export function extractJsonCodeBlock<T = any>(text: string): T | null {
-  const match = text.match(/```json\s*([\s\S]*?)\s*```/);
-  if (!match) return null;
-  try {
-    return JSON.parse(match[1]);
-  } catch {
-    return null;
-  }
-}
-
-const OTHERS = "Others";
-const STUDENTS_TITLE = "رَوَى عَنه:";
-const TEACHERS_TITLE = "رَوَى عَن:";
-const CHECKMARKS = ["✔", "✓", "✅"];
-const ARABIC_DIGITS = "٠١٢٣٤٥٦٧٨٩";
-
-export const BOOKS = [
-  { symbol: "خ", name: "البخاري" },
-  { symbol: "م", name: "مسلم" },
-  { symbol: "ت", name: "الترمذي" },
-  { symbol: "س", name: "النسائي" },
-  { symbol: "ق", name: "ابن ماجه" },
-  { symbol: "د", name: "أبي داود" },
-] as const;
+import { BOOKS } from "../constants";
 
 export type BookName = (typeof BOOKS)[number]["name"];
-const HEADERS = ["الاسم", ...BOOKS.map((b) => b.name), OTHERS];
 
-export interface TahdibNarrator {
+const OTHERS_COLUMN = "Others";
+const STUDENTS_TITLE = "رَوَى عَنه:";
+const TEACHERS_TITLE = "رَوَى عن:";
+const CHECKMARKS = ["✔", "✓", "✅"];
+const HEADERS = ["الاسم", ...BOOKS.map((b) => b.name), OTHERS_COLUMN];
+
+interface TahdibNarrator {
   name: string;
   symbols: string;
+}
+
+export interface ExtractedNarratorData {
+  teachers: TahdibNarrator[];
+  students: TahdibNarrator[];
 }
 
 export function generateMarkdownTable(narrators: TahdibNarrator[]): string {
@@ -64,13 +51,13 @@ function processSymbols(symbols: string): Record<string, string> {
   }
 
   const others = chars.filter((ch) => !used.has(ch) && ch !== "");
-  result[OTHERS] = others.join(" ");
+  result[OTHERS_COLUMN] = others.join(" ");
   return result;
 }
 
 function narratorToRow(narrator: TahdibNarrator): string {
   const marks = processSymbols(narrator.symbols);
-  return `| ${narrator.name} | ${BOOKS.map((b) => marks[b.name]).join(" | ")} | ${marks[OTHERS]} |`;
+  return `| ${narrator.name} | ${BOOKS.map((b) => marks[b.name]).join(" | ")} | ${marks[OTHERS_COLUMN]} |`;
 }
 
 function isCheck(cell: string | undefined): boolean {
@@ -185,12 +172,4 @@ export function updateStudents(markdown: string, displayText: string, link: stri
 export function findTeachers(markdown: string, book: BookName) {
   const teacherLines = extractFirstTableLines(markdown, TEACHERS_TITLE);
   return parseTableLines(teacherLines, book);
-}
-
-export function toArabicDigits(str: string | number): string {
-  return String(str).replace(/[0-9]/g, (d) => ARABIC_DIGITS[parseInt(d)]);
-}
-
-export function toEnglishDigits(str: string | number): string {
-  return String(str).replace(/[٠-٩]/g, (d) => ARABIC_DIGITS.indexOf(d).toString());
 }

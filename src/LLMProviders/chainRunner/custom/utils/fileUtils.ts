@@ -1,9 +1,9 @@
 import { logError } from "@/logger";
 import { MarkdownView, Notice, TFile } from "obsidian";
 import { NarratorInfo } from "../models/narrator";
-import { toArabicDigits } from "./formatUtils";
 import { PATHS } from "../constants";
 import { getTemplate, populateTemplate } from "./templateUtils";
+import { toArabicDigits } from "./variousUtils";
 
 export async function getActiveNote(stripProperties: boolean = true): Promise<string> {
   try {

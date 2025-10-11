@@ -1,11 +1,20 @@
+export const BOOKS = [
+  { symbol: "خ", name: "البخاري" },
+  { symbol: "م", name: "مسلم" },
+  { symbol: "ت", name: "الترمذي" },
+  { symbol: "س", name: "النسائي" },
+  { symbol: "ق", name: "ابن ماجه" },
+  { symbol: "د", name: "أبي داود" },
+] as const;
+
 export const PATHS = {
   PROMPTS: "_extras/Prompt",
   TEMPLATES: "_extras/Templates",
   DATA: "_extras/Data",
   TAHDHIB_INDEX: "_extras/Data/Tahdhib.json",
-  BUKHARI_HADITH: "Sunnah/صحيح البخاري",
+  BUKHARI: "Sunnah/صحيح البخاري",
   FIGURES: "Figures",
-  TAHDHIB_FIGURES_DIR: "../Books/Tahdhib-al-Kamal/Figures/",
+  TAHDHIB_VAULT: "../Books/Tahdhib-al-Kamal/Figures/",
 };
 
 export const MSG_FOUND_NARRATOR =
@@ -32,18 +41,3 @@ export const START_CHAIN_QUIZ =
   "الآن، سنختبر معرفتك بسلسلة الرواة. اختر الشخص الذي يلي كل راوٍ في السلسلة.";
 export const WORKFLOW_COMPLETE = "✅ اكتمل التحقق من جميع الرواة.";
 export const WORKFLOW_STEP_FAILED = "❌ تم إيقاف السلسلة بسبب فشل في خطوة ما.";
-
-export const BOOKS = [
-  { symbol: "خ", name: "البخاري" },
-  { symbol: "م", name: "مسلم" },
-  { symbol: "ت", name: "الترمذي" },
-  { symbol: "س", name: "النسائي" },
-  { symbol: "ق", name: "ابن ماجه" },
-  { symbol: "د", name: "أبي داود" },
-] as const;
-
-export const OTHERS = "Others";
-export const STUDENTS_TITLE = "رَوَى عَنه:";
-export const TEACHERS_TITLE = "رَوَى عن:";
-export const CHECKMARKS = ["✔", "✓", "✅"];
-export const ARABIC_DIGITS = "٠١٢٣٤٥٦٧٨٩";

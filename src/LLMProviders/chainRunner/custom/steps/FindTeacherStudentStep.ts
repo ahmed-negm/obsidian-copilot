@@ -1,5 +1,5 @@
 import { StepRunner } from "../base/StepRunner";
-import { MSG_FOUND_STUDENT, MSG_STUDENT_TEACHER_LOOKUP, PATHS } from "../constants";
+import { BOOKS, MSG_FOUND_STUDENT, MSG_STUDENT_TEACHER_LOOKUP, PATHS } from "../constants";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import { NarratorInfo } from "../models/narrator";
 import {
@@ -11,7 +11,6 @@ import {
   extractJsonCodeBlock,
   populateTemplate,
 } from "../utils";
-import { BOOKS } from "../utils/formatUtils";
 import { HIGH_CONFIDENCE, LLMNarratorResponse } from "./FindNarratorInTahdibIndexStep";
 
 interface TeacherStudentContext {

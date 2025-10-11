@@ -1,6 +1,7 @@
 import { Notice } from "obsidian";
 import { readVaultFile, updateVaultFile } from "./fileUtils";
-import { toArabicDigits } from "./formatUtils";
+
+const ARABIC_DIGITS = "٠١٢٣٤٥٦٧٨٩";
 
 export async function setScore(isCorrect: boolean, correctAnswer: string): Promise<void> {
   const scoreFile = "_extras/Data/Score.json";
@@ -25,4 +26,22 @@ export async function setScore(isCorrect: boolean, correctAnswer: string): Promi
       (!isCorrect ? `الإجابة الصحيحة : ${correctAnswer}` + "\n\n" : "") +
       `الدقة : ${toArabicDigits(score.toFixed(0))}% إجماليًا`
   );
+}
+
+export function extractJsonCodeBlock<T = any>(text: string): T | null {
+  const match = text.match(/```json\s*([\s\S]*?)\s*```/);
+  if (!match) return null;
+  try {
+    return JSON.parse(match[1]);
+  } catch {
+    return null;
+  }
+}
+
+export function toArabicDigits(str: string | number): string {
+  return String(str).replace(/[0-9]/g, (d) => ARABIC_DIGITS[parseInt(d)]);
+}
+
+export function toEnglishDigits(str: string | number): string {
+  return String(str).replace(/[٠-٩]/g, (d) => ARABIC_DIGITS.indexOf(d).toString());
 }

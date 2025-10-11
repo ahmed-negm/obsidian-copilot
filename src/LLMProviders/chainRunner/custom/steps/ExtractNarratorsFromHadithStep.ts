@@ -6,10 +6,10 @@ import {
   getPromptTemplate,
   toArabicDigits,
   populateTemplate,
-  BOOKS,
   extractJsonCodeBlock,
 } from "../utils";
 import {
+  BOOKS,
   MSG_CHAIN_IS,
   MSG_NO_NARRATORS_FOUND,
   NARRATOR_IDENTIFICATION_FAILED,
@@ -63,7 +63,7 @@ export class ExtractNarratorsFromHadithStep extends StepRunner<TraceNarratorsWor
   private async retrieveHadithFilePath(): Promise<void> {
     const hadithNumber = this.state.args;
     if (hadithNumber) {
-      this.state.filePath = `${PATHS.BUKHARI_HADITH}/${BOOKS[0].name}-${toArabicDigits(hadithNumber)}.md`;
+      this.state.filePath = `${PATHS.BUKHARI}/${BOOKS[0].name}-${toArabicDigits(hadithNumber)}.md`;
       this.hadithLink = `[[${BOOKS[0].name}-${hadithNumber}]]`;
     } else {
       const activeFile = app.workspace.getActiveFile();

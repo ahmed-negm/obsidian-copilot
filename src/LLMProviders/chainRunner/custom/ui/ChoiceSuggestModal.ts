@@ -15,16 +15,13 @@ export class ChoiceSuggestModal extends SuggestModal<string> {
     super(app);
     this.setPlaceholder(message);
 
-    // Apply custom placeholder color styling to the input element
     setTimeout(() => {
       const inputEl = this.inputEl;
       if (inputEl) {
-        // Using CSS custom property for placeholder color
-        inputEl.style.setProperty("--placeholder-color", "rgb(203, 77, 73)"); // Change to your desired color
-        inputEl.style.setProperty("color", "rgb(203, 77, 73)"); // Set the text color as well
-        inputEl.style.fontSize = "22px"; // Set font size to 22px
+        inputEl.style.setProperty("--placeholder-color", "rgb(203, 77, 73)");
+        inputEl.style.setProperty("color", "rgb(203, 77, 73)");
+        inputEl.style.fontSize = "22px";
 
-        // Apply placeholder styles for different browsers
         const styleEl = document.createElement("style");
         styleEl.textContent = `
           .prompt-input::placeholder {
@@ -52,9 +49,6 @@ export class ChoiceSuggestModal extends SuggestModal<string> {
     return modal.choice;
   }
 
-  /**
-   * Show the modal and return a Promise that resolves with the user's choice.
-   */
   openAndWait(): Promise<void> {
     return new Promise((resolve) => {
       this.resolve = resolve;
@@ -67,7 +61,6 @@ export class ChoiceSuggestModal extends SuggestModal<string> {
   }
 
   renderSuggestion(choice: string, el: HTMLElement) {
-    // Add the suggestion-item class to each suggestion for consistent styling
     el.addClass("suggestion-item");
     el.createEl("div", {
       text: choice,
@@ -83,7 +76,6 @@ export class ChoiceSuggestModal extends SuggestModal<string> {
       this.addBlurToAppContainer();
     }
 
-    // Add CSS animation styles
     const styleEl = document.createElement("style");
     styleEl.textContent = `
       @keyframes slide-up {
@@ -105,24 +97,20 @@ export class ChoiceSuggestModal extends SuggestModal<string> {
     `;
     document.head.appendChild(styleEl);
 
-    // Position the modal at the bottom of the screen
     if (this.modalEl) {
-      // Ensure modal is above the blur overlay
       this.modalEl.style.zIndex = "10000";
-      // Set position to absolute and position at the bottom
       this.modalEl.style.direction = "rtl";
       this.modalEl.style.position = "absolute";
       this.modalEl.style.bottom = this.location === "bottom" ? "50px" : "unset";
       this.modalEl.style.top = this.location === "top" ? "50px" : "unset";
-      this.modalEl.style.maxHeight = "50vh"; // Limit height to 50% of viewport height
-      this.modalEl.style.width = "50%"; // Set width to 50% of the screen
-      this.modalEl.style.left = "50%"; // Center horizontally
-      this.modalEl.style.transform = "translateX(-50%)"; // Center align
+      this.modalEl.style.maxHeight = "50vh";
+      this.modalEl.style.width = "50%";
+      this.modalEl.style.left = "50%";
+      this.modalEl.style.transform = "translateX(-50%)";
       this.modalEl.style.animation = "slide-up 0.3s ease-out forwards";
-      this.modalEl.style.borderRadius = "12px"; // Rounded corners
+      this.modalEl.style.borderRadius = "12px";
     }
 
-    // Add a message element above the input
     this.messageEl = this.contentEl.createDiv({
       cls: "modal-message",
       attr: {
@@ -150,11 +138,7 @@ export class ChoiceSuggestModal extends SuggestModal<string> {
     this.resolve();
   }
 
-  /**
-   * Adds a blur effect to the main app container (background only).
-   */
   private addBlurToAppContainer() {
-    // Inject CSS if not already present
     if (!document.getElementById("copilot-blur-bg-style")) {
       const style = document.createElement("style");
       style.id = "copilot-blur-bg-style";
@@ -165,9 +149,6 @@ export class ChoiceSuggestModal extends SuggestModal<string> {
     if (appContainer) appContainer.classList.add("copilot-blur-bg");
   }
 
-  /**
-   * Removes the blur effect from the main app container.
-   */
   private removeBlurFromAppContainer() {
     const appContainer = document.querySelector(".app-container");
     if (appContainer) appContainer.classList.remove("copilot-blur-bg");
