@@ -41,7 +41,7 @@ export class ExtractNarratorsFromHadithStep extends StepRunner<TraceNarratorsWor
     const narrators = extractJsonCodeBlock<HadithNarratorWithPossibleMatches[]>(response);
     if (!narrators || !Array.isArray(narrators) || narrators.length === 0) {
       return {
-        response: MSG_NO_NARRATORS_FOUND,
+        response: MSG_NO_NARRATORS_FOUND + `\n\n${response}`,
         isSuccessful: false,
       };
     }

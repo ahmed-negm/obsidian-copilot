@@ -95,6 +95,8 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
   }
 
   protected async showQuiz() {
+    await ChoiceSuggestModal.open(app, START_CHAIN_QUIZ, ["ابدأ الاختبار"], "bottom", false);
+
     await this.showNarratorQuiz();
     await this.showChainQuiz();
   }
@@ -127,8 +129,6 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
   }
 
   protected async showChainQuiz() {
-    await ChoiceSuggestModal.open(app, START_CHAIN_QUIZ, ["ابدأ الاختبار"], "bottom", false);
-
     const hadithNarrators = this.state.hadithNarrators.slice().reverse();
 
     for (let i = 0; i < hadithNarrators.length - 1; i++) {

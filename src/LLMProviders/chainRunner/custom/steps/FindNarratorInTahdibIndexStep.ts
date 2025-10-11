@@ -1,7 +1,7 @@
 import { StepRunner } from "../base/StepRunner";
 import {
   MSG_FOUND_NARRATOR,
-  MSG_NARRATOR_NOT_FOUND,
+  MSG_NARRATOR_NOT_FOUND_IN_TAHDIB,
   MSG_SEARCHING_NARRATORS,
   MSG_SEARCHING_NEXT_NARRATOR,
 } from "../constants";
@@ -108,14 +108,18 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
   }
 
   private handleNarratorNotFound(response: string, narratorToFind: string) {
-    const notFoundMessage = populateTemplate(MSG_NARRATOR_NOT_FOUND, {
+    const notFoundMessage = populateTemplate(MSG_NARRATOR_NOT_FOUND_IN_TAHDIB, {
       narrator: narratorToFind,
     });
 
     return {
-      response: `${notFoundMessage}\n\n${response}`,
+      response: `${notFoundMessage}${this.getContextInfo()}\n\nResponse:${response}`,
       isSuccessful: false,
     };
+  }
+
+  private getContextInfo() {
+    return `\n\nContext: \`\`\`json\n${JSON.stringify(this.searchContext, null, 2)}\n\`\`\``;
   }
 
   private handleSingleMatch(narrator: NarratorInfo) {
@@ -142,7 +146,8 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     // Check if narrator has required ID
     if (!foundNarrator.id) {
       return {
-        response: this.formatNarratorFoundMessage(foundNarrator) + NO_ID_SUFFIX,
+        response:
+          this.formatNarratorFoundMessage(foundNarrator) + NO_ID_SUFFIX + this.getContextInfo(),
         isSuccessful: false,
       };
     }

@@ -1,5 +1,11 @@
 import { StepRunner } from "../base/StepRunner";
-import { BOOKS, MSG_FOUND_STUDENT, MSG_STUDENT_TEACHER_LOOKUP, PATHS } from "../constants";
+import {
+  BOOKS,
+  MSG_FOUND_STUDENT,
+  MSG_NARRATOR_NOT_FOUND,
+  MSG_STUDENT_TEACHER_LOOKUP,
+  PATHS,
+} from "../constants";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import { NarratorInfo } from "../models/narrator";
 import {
@@ -46,7 +52,7 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
       return "";
     }
 
-    return this.generateStudentSearchPrompt(this.searchContext);
+    return this.generateStudentSearchPrompt();
   }
 
   async processResponse(response: string) {
@@ -96,12 +102,12 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
     };
   }
 
-  private async generateStudentSearchPrompt(context: TeacherStudentContext): Promise<string> {
+  private async generateStudentSearchPrompt(): Promise<string> {
     const promptTemplate = await getPromptTemplate("FindNarratorInList");
 
     return populateTemplate(promptTemplate, {
-      name_to_search: context.studentFullName,
-      JSON: JSON.stringify(context.studentsToSearch, null, 2),
+      name_to_search: this.searchContext.studentFullName,
+      JSON: JSON.stringify(this.searchContext.studentsToSearch, null, 2),
     });
   }
 
@@ -116,22 +122,22 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
   }
 
   private async handleStudentSelection(response: string) {
-    const selectedStudent = this.extractSelectedStudentFromResponse(response);
+    const notFoundResponse = {
+      response:
+        populateTemplate(MSG_NARRATOR_NOT_FOUND, { narrator: this.searchContext.studentName }) +
+        this.getContextInfo() +
+        `\n\nResponse:${response}`,
+      isSuccessful: false,
+    };
 
+    const selectedStudent = this.extractSelectedStudentFromResponse(response);
     if (!selectedStudent) {
-      return {
-        response,
-        isSuccessful: false,
-      };
+      return notFoundResponse;
     }
 
     const studentFromList = this.searchContext.studentsToSearch[selectedStudent.id];
-
     if (!studentFromList) {
-      return {
-        response,
-        isSuccessful: false,
-      };
+      return notFoundResponse;
     }
 
     await this.updateTeacherBiography(studentFromList.name);
@@ -143,6 +149,14 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
       }),
       isSuccessful: true,
     };
+  }
+
+  private getContextInfo() {
+    const context = {
+      name_to_search: this.searchContext.studentFullName,
+      JSON: this.searchContext.studentsToSearch,
+    };
+    return `\n\nContext: \`\`\`json\n${JSON.stringify(context, null, 2)}\n\`\`\``;
   }
 
   private extractSelectedStudentFromResponse(response: string) {

@@ -18,11 +18,14 @@ export const PATHS = {
 };
 
 export const MSG_FOUND_NARRATOR =
-  "✅ تم العثور على **{{narrator}}** في تهذيب الكمال [المجلد {{part}} - الصفحة {{page}}](obsidian://open?vault=Tahdhib-al-Kamal&file=Figures/{{signed_name}})";
-export const MSG_NARRATOR_NOT_FOUND =
+  "✔ تم العثور على **{{narrator}}** في تهذيب الكمال [المجلد {{part}} - الصفحة {{page}}](obsidian://open?vault=Tahdhib-al-Kamal&file=Figures/{{signed_name}})";
+export const MSG_NARRATOR_NOT_FOUND_IN_TAHDIB =
   "لم يتم العثور على الراوي **{{narrator}}** في تهذيب الكمال. الرجاء التحقق من صحة الاسم .";
+
+export const MSG_NARRATOR_NOT_FOUND = "لم يتم العثور على الراوي **{{narrator}}**";
+
 export const MSG_FOUND_STUDENT =
-  "✅ تم العثور على **{{student}}** فيمن رووا عن **{{teacher}}** في  صحيح البخاري";
+  "✔ تم العثور على **{{student}}** فيمن رووا عن **{{teacher}}** في  صحيح البخاري";
 export const MSG_STUDENT_TEACHER_LOOKUP =
   "جاري البحث عن **{{student}}** فيمن رووا عن **{{teacher}}** في صحيح البخاري";
 export const MSG_NARRATOR_FILE_EXISTS = "ملف الراوي موجود بالفعل، تخطي الإنشاء.";
@@ -39,5 +42,5 @@ export const MSG_SEARCHING_NEXT_NARRATOR = "لننتقل إلى الراوي ا�
 export const NARRATOR_IDENTIFICATION_FAILED = "لم أتمكن من تحديد راوٍ واحد بشكل قاطع للاسم";
 export const START_CHAIN_QUIZ =
   "الآن، سنختبر معرفتك بسلسلة الرواة. اختر الشخص الذي يلي كل راوٍ في السلسلة.";
-export const WORKFLOW_COMPLETE = "✅ اكتمل التحقق من جميع الرواة.";
-export const WORKFLOW_STEP_FAILED = "❌ تم إيقاف السلسلة بسبب فشل في خطوة ما.";
+export const WORKFLOW_COMPLETE = "🎉 اكتمل التحقق من جميع الرواة.";
+export const WORKFLOW_STEP_FAILED = "🚫 تم إيقاف السلسلة بسبب فشل في خطوة ما.";
