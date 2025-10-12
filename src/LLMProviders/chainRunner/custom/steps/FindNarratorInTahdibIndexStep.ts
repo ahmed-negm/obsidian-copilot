@@ -1,5 +1,6 @@
 import { StepRunner } from "../base/StepRunner";
 import {
+  BOOKS,
   MSG_FOUND_NARRATOR,
   MSG_NARRATOR_NOT_FOUND_IN_TAHDIB,
   MSG_SEARCHING_NARRATORS,
@@ -13,6 +14,7 @@ import {
   extractJsonCodeBlock,
   populateTemplate,
   getSignedUrl,
+  getAIKnowledge,
 } from "../utils";
 
 const SEARCH_PREFIX_LENGTHS = [20, 10, 3] as const;
@@ -104,6 +106,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     return populateTemplate(promptTemplate, {
       name_to_search: context.narratorToFind,
       JSON: narratorsJson,
+      KNOWLEDGE: await getAIKnowledge(BOOKS[0].name),
     });
   }
 

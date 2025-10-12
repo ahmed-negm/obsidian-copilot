@@ -1,6 +1,7 @@
 import { logError } from "@/logger";
 import { readVaultFile } from "./fileUtils";
 import { PATHS } from "../constants";
+import { BookName } from "./figureUtils";
 
 export type PromptTemplate =
   | "ExplainStep"
@@ -26,6 +27,15 @@ export async function getTemplate(name: Template): Promise<string> {
   } catch (error) {
     logError(`Failed to read template: ${name}`, error);
     throw new Error(`Failed to read template: ${name}`);
+  }
+}
+
+export async function getAIKnowledge(book: BookName): Promise<string> {
+  try {
+    return await readVaultFile(`${PATHS.AI_KNOWLEDGE}/${book}.md`);
+  } catch (error) {
+    logError(`Failed to read AI knowledge file`, error);
+    throw new Error(`Failed to read AI knowledge file`);
   }
 }
 

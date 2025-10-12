@@ -16,6 +16,7 @@ import {
   updateVaultFile,
   extractJsonCodeBlock,
   populateTemplate,
+  getAIKnowledge,
 } from "../utils";
 import { HIGH_CONFIDENCE, LLMNarratorResponse } from "./FindNarratorInTahdibIndexStep";
 
@@ -108,6 +109,7 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
     return populateTemplate(promptTemplate, {
       name_to_search: this.searchContext.studentFullName,
       JSON: JSON.stringify(this.searchContext.studentsToSearch, null, 2),
+      KNOWLEDGE: await getAIKnowledge(BOOKS[0].name),
     });
   }
 

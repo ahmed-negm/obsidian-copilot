@@ -1,14 +1,8 @@
 import { StepRunner } from "../base/StepRunner";
 import { BaseState } from "../models/state";
-import { getActiveNote, getPromptTemplate } from "../utils";
+import { getActiveNote, getPromptTemplate, populateTemplate } from "../utils";
 
 export class ExplainStep extends StepRunner<BaseState> {
-  async getSystemPrompt() {
-    const basePrompt = await super.getSystemPrompt();
-    const extraSystemPrompt = await getPromptTemplate("ExplainStep");
-    return `${basePrompt}\n\n${extraSystemPrompt}`;
-  }
-
   async getUserPrompt() {
     const noteContent = await getActiveNote();
     let toExplain = "";
@@ -21,11 +15,12 @@ export class ExplainStep extends StepRunner<BaseState> {
     } else {
       toExplain = noteContent || "";
     }
-    return toExplain
-      ? `Explain the following text:\n\n${toExplain}${
-          reference ? `\n\nHere is the full context for reference:\n\n${reference}` : ""
-        }`
-      : "";
+
+    const promptTemplate = await getPromptTemplate("ExplainStep");
+    return populateTemplate(promptTemplate, {
+      TEXT: toExplain,
+      REFERENCE: reference ? `\nHere is the full context for reference:\n${reference}\n` : "",
+    });
   }
 
   async processResponse(response: string) {

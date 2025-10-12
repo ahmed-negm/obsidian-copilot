@@ -52,7 +52,7 @@ export function getSelectedText(): string {
   }
 }
 
-function stripObsidianProperties(content: string): string {
+export function stripObsidianProperties(content: string): string {
   return content.replace(/^---\n[\s\S]*?\n---\n?/, "");
 }
 

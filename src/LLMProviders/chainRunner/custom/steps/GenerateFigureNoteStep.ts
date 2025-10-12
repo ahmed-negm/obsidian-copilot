@@ -10,12 +10,14 @@ import {
   extractJsonCodeBlock,
   populateTemplate,
   ExtractedNarratorData,
+  getAIKnowledge,
 } from "../utils";
 import {
   PATHS,
   MSG_NARRATOR_FILE_EXISTS,
   MSG_NARRATOR_FILE_CREATED,
   MSG_NARRATOR_FILE_NOT_FOUND_CREATING,
+  BOOKS,
 } from "../constants";
 
 export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowState> {
@@ -57,6 +59,7 @@ export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowSta
     return populateTemplate(promptTemplate, {
       narrator_name: narratorName,
       bio: tahdibContent,
+      KNOWLEDGE: await getAIKnowledge(BOOKS[0].name),
     });
   }
 

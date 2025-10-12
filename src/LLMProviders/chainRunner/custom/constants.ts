@@ -10,6 +10,7 @@ export const BOOKS = [
 export const PATHS = {
   PROMPTS: "_extras/Prompt",
   TEMPLATES: "_extras/Templates",
+  AI_KNOWLEDGE: "_extras/AI knowledge",
   DATA: "_extras/Data",
   TAHDHIB_INDEX: "_extras/Data/Tahdhib.json",
   BUKHARI: "Sunnah/صحيح البخاري",
@@ -40,7 +41,6 @@ export const MSG_SEARCHING_NARRATORS = "سنبدأ الآن في البحث عن
 export const MSG_SEARCHING_NEXT_NARRATOR = "لننتقل إلى الراوي التالي في السلسلة...";
 
 export const NARRATOR_IDENTIFICATION_FAILED = "لم أتمكن من تحديد راوٍ واحد بشكل قاطع للاسم";
-export const START_CHAIN_QUIZ =
-  "الآن، سنختبر معرفتك بسلسلة الرواة. اختر الشخص الذي يلي كل راوٍ في السلسلة.";
+export const START_CHAIN_QUIZ = "الآن، سنختبر معرفتك بسلسلة الرواة.";
 export const WORKFLOW_COMPLETE = "🎉 اكتمل التحقق من جميع الرواة.";
 export const WORKFLOW_STEP_FAILED = "🚫 تم إيقاف السلسلة بسبب فشل في خطوة ما.";

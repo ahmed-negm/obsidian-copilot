@@ -7,6 +7,8 @@ import {
   toArabicDigits,
   populateTemplate,
   extractJsonCodeBlock,
+  getAIKnowledge,
+  stripObsidianProperties,
 } from "../utils";
 import {
   BOOKS,
@@ -34,7 +36,10 @@ export class ExtractNarratorsFromHadithStep extends StepRunner<TraceNarratorsWor
     }
     const hadithText = await readVaultFile(this.state.filePath);
     const prompt = await getPromptTemplate("ExtractNarrators");
-    return populateTemplate(prompt, { HADITH_TEXT: hadithText });
+    return populateTemplate(prompt, {
+      HADITH_TEXT: stripObsidianProperties(hadithText),
+      KNOWLEDGE: await getAIKnowledge(BOOKS[0].name),
+    });
   }
 
   async processResponse(response: string) {
