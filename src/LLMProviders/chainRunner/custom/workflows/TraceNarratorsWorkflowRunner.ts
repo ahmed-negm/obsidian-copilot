@@ -88,6 +88,8 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
   }
 
   protected async showQuiz() {
+    this.state.resetChainIndex();
+    this.state.resetNarratorIndex();
     await ChoiceSuggestModal.open(app, START_CHAIN_QUIZ, ["ابدأ الاختبار"], "bottom", false);
 
     await this.showNarratorQuiz();
@@ -162,13 +164,39 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
   private async processNarratorsForLinking(fileContent: string) {
     let updatedContent = fileContent;
 
-    for (const hadithNarrator of this.state.currentChainNarrators) {
-      const index = hadithNarrator.indexInAllNarrators!;
-      const narrator = this.state.allNarrators[index];
-      const linkToNote = `[[${narrator.name}|${hadithNarrator.name}]]`;
+    const processedNarrators = new Set<string>();
+    this.state.resetChainIndex();
 
-      updatedContent = updatedContent.replace(hadithNarrator.name, linkToNote);
-    }
+    let hasNextChain = false;
+    do {
+      // Reset to the first narrator in the current chain
+      this.state.resetNarratorIndex();
+
+      // Process all narrators in the current chain
+      let hasNextNarrator = false;
+      do {
+        const currentNarrator = this.state.currentNarrator.name;
+
+        // Only process each narrator once
+        if (!processedNarrators.has(currentNarrator)) {
+          const linkToNote = `[[${this.state.currentNarratorInfo.name}|${currentNarrator}]]`;
+          updatedContent = updatedContent.replaceAll(currentNarrator, linkToNote);
+          processedNarrators.add(currentNarrator);
+        }
+
+        // Move to next narrator if available
+        hasNextNarrator = this.state.hasNextNarrator;
+        if (hasNextNarrator) {
+          this.state.moveToNextNarrator();
+        }
+      } while (hasNextNarrator);
+
+      // Move to next chain if available
+      hasNextChain = this.state.hasNextChain;
+      if (hasNextChain) {
+        this.state.moveToNextChain();
+      }
+    } while (hasNextChain);
 
     return updatedContent;
   }

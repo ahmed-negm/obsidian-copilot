@@ -77,6 +77,9 @@ export class TraceNarratorsWorkflowState extends BaseState {
     }
   }
 
+  resetChainIndex() {
+    this.chainIndex = 0;
+  }
   resetNarratorIndex() {
     this.currentChain.narratorIndex = 0;
   }
