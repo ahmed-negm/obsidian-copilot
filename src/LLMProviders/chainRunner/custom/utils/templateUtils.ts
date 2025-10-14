@@ -6,7 +6,7 @@ import { BookName } from "./figureUtils";
 export type PromptTemplate =
   | "ExplainStep"
   | "ExtractNarratedFromTahdib"
-  | "ExtractNarrators"
+  | "ExtractIsnadFromHadith"
   | "FindNarratorInList"
   | "SystemPrompt";
 

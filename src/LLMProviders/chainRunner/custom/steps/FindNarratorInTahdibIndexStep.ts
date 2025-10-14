@@ -37,9 +37,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
   private searchContext: NarratorSearchContext;
 
   getContextIntroMessage() {
-    return this.state.hadithNarratorIndex === 0
-      ? MSG_SEARCHING_NARRATORS
-      : MSG_SEARCHING_NEXT_NARRATOR;
+    return this.state.narratorIndex === 0 ? MSG_SEARCHING_NARRATORS : MSG_SEARCHING_NEXT_NARRATOR;
   }
 
   async getUserPrompt() {
@@ -66,23 +64,22 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
   }
 
   private buildNarratorSearchContext(): NarratorSearchContext {
-    const currentNarrator = this.state.hadithNarrators[this.state.hadithNarratorIndex];
-    const narratorToFind = currentNarrator.expectedFullName;
+    const narratorToFind = this.state.currentNarrator.expectedFullName;
     const matchingNarrators = this.findMatchingNarrators(narratorToFind);
 
     return {
       narratorToFind,
       matchingNarrators,
-      currentNarratorIndex: this.state.hadithNarratorIndex,
+      currentNarratorIndex: this.state.narratorIndex,
     };
   }
 
   private findMatchingNarrators(nameToFind: string) {
-    const { allNarrators } = this.state;
-
     for (const prefixLength of SEARCH_PREFIX_LENGTHS) {
       const prefix = nameToFind.slice(0, prefixLength);
-      const matches = allNarrators.filter((narrator) => narrator.name?.startsWith(prefix));
+      const matches = this.state.allNarrators.filter((narrator) =>
+        narrator.name?.startsWith(prefix)
+      );
 
       if (matches.length > 0) {
         return matches;
@@ -116,13 +113,13 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     });
 
     return {
-      response: `${notFoundMessage}${this.getContextInfo()}\n\nResponse:${response}`,
+      response: `${notFoundMessage}${this.getContextInfo()}\n\nResponse from AI:\n\n${response}`,
       isSuccessful: false,
     };
   }
 
   private getContextInfo() {
-    return `\n\nContext: \`\`\`json\n${JSON.stringify(this.searchContext, null, 2)}\n\`\`\``;
+    return `\n\nContext: \n\n \`\`\`json\n${JSON.stringify({ narratorToFind: this.searchContext.narratorToFind, matchingNarrators: this.searchContext.matchingNarrators.map((n) => ({ id: n.id, name: n.name })) }, null, 2)}\n\`\`\``;
   }
 
   private handleSingleMatch(narrator: NarratorInfo) {
@@ -173,7 +170,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
   }
 
   private updateStateWithNarrator(narratorIndex: number): void {
-    this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators = narratorIndex;
+    this.state.currentNarrator.indexInAllNarrators = narratorIndex;
   }
 
   private formatNarratorFoundMessage(narrator: NarratorInfo) {

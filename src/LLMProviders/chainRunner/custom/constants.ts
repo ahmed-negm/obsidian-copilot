@@ -21,7 +21,7 @@ export const PATHS = {
 export const MSG_FOUND_NARRATOR =
   "✔ تم العثور على **{{narrator}}** في تهذيب الكمال [المجلد {{part}} - الصفحة {{page}}](obsidian://open?vault=Tahdhib-al-Kamal&file=Figures/{{signed_name}})";
 export const MSG_NARRATOR_NOT_FOUND_IN_TAHDIB =
-  "لم يتم العثور على الراوي **{{narrator}}** في تهذيب الكمال. الرجاء التحقق من صحة الاسم .";
+  "لم يتم العثور على الراوي **{{narrator}}** في تهذيب الكمال.";
 
 export const MSG_NARRATOR_NOT_FOUND = "لم يتم العثور على الراوي **{{narrator}}**";
 

@@ -5,7 +5,7 @@ import { TraceNarratorsWorkflowState } from "../models/state";
 import { readVaultFile, setScore, updateVaultFile } from "../utils";
 import { ChoiceSuggestModal } from "../ui/ChoiceSuggestModal";
 import { Notice } from "obsidian";
-import { ExtractNarratorsFromHadithStep } from "../steps/ExtractNarratorsFromHadithStep";
+import { ExtractIsnadFromHadithStep } from "../steps/ExtractIsnadFromHadithStep";
 import { FindNarratorInTahdibIndexStep } from "../steps/FindNarratorInTahdibIndexStep";
 import { FindTeacherStudentStep } from "../steps/FindTeacherStudentStep";
 import { GenerateFigureNoteStep } from "../steps/GenerateFigureNoteStep";
@@ -13,13 +13,7 @@ import { PATHS, START_CHAIN_QUIZ, WORKFLOW_COMPLETE } from "../constants";
 
 export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsWorkflowState> {
   constructor(chainManager: ChainManager, args: string) {
-    super(chainManager, {
-      args,
-      hadithNarrators: [],
-      allNarrators: [],
-      hadithNarratorIndex: 0,
-      filePath: "",
-    });
+    super(chainManager, new TraceNarratorsWorkflowState(args));
     this.loadNarratorsData().catch((error) => {
       logError("Failed to load narrators data", error);
       new Notice("Failed to load narrators database");
@@ -36,7 +30,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
   }
 
   private createExtractNarratorsStep() {
-    return new ExtractNarratorsFromHadithStep(this.state);
+    return new ExtractIsnadFromHadithStep(this.state);
   }
 
   private createFindNarratorStep() {
@@ -62,25 +56,24 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
   }
 
   private handleFigureNoteCompletion() {
-    const nextNarratorIndex =
-      this.state.hadithNarrators[this.state.hadithNarratorIndex + 1]?.indexInAllNarrators;
+    const nextNarratorIndex = this.state.nextNarrator?.indexInAllNarrators;
 
-    if (
-      !nextNarratorIndex &&
-      this.state.hadithNarratorIndex < this.state.hadithNarrators.length - 1
-    ) {
-      this.state.hadithNarratorIndex++;
+    if (!nextNarratorIndex && this.state.hasNextNarrator) {
+      this.state.moveToNextNarrator();
       this.currentStepIndex -= 2;
     } else {
-      this.state.hadithNarratorIndex = 0;
+      this.state.resetNarratorIndex();
     }
   }
 
   private async handleTeacherStudentCompletion() {
-    this.state.hadithNarratorIndex++;
+    this.state.moveToNextNarrator();
 
-    if (this.state.hadithNarratorIndex < this.state.hadithNarrators.length - 1) {
+    if (this.state.hasNextNarrator) {
       this.currentStepIndex -= 1;
+    } else if (this.state.hasNextChain) {
+      this.state.moveToNextChain();
+      this.currentStepIndex = 0;
     } else {
       this.currentStepIndex = 5; // Set to an index beyond the steps to end the workflow
       await this.linkHadithToNarrators();
@@ -102,7 +95,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
   }
 
   protected async showNarratorQuiz() {
-    const narrators = this.state.hadithNarrators.slice().reverse();
+    const narrators = this.state.currentChainNarrators.slice().reverse();
 
     for (const narrator of narrators) {
       if (narrator.name.split(" ").length > 2) {
@@ -129,7 +122,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
   }
 
   protected async showChainQuiz() {
-    const hadithNarrators = this.state.hadithNarrators.slice().reverse();
+    const hadithNarrators = this.state.currentChainNarrators.slice().reverse();
 
     for (let i = 0; i < hadithNarrators.length - 1; i++) {
       const currentNarrator = hadithNarrators[i].expectedKnownName;
@@ -169,7 +162,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
   private async processNarratorsForLinking(fileContent: string) {
     let updatedContent = fileContent;
 
-    for (const hadithNarrator of this.state.hadithNarrators) {
+    for (const hadithNarrator of this.state.currentChainNarrators) {
       const index = hadithNarrator.indexInAllNarrators!;
       const narrator = this.state.allNarrators[index];
       const linkToNote = `[[${narrator.name}|${hadithNarrator.name}]]`;

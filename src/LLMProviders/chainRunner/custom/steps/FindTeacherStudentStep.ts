@@ -33,15 +33,13 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
   private searchContext: TeacherStudentContext;
 
   getContextIntroMessage() {
-    const nextNarrator = this.getNextHadithNarrator();
-    if (!nextNarrator) {
+    if (!this.state.nextNarrator) {
       return "";
     }
 
-    const currentNarrator = this.getCurrentHadithNarrator();
     return populateTemplate(MSG_STUDENT_TEACHER_LOOKUP, {
-      student: nextNarrator.expectedKnownName,
-      teacher: currentNarrator.expectedKnownName,
+      student: this.state.nextNarrator.expectedKnownName,
+      teacher: this.state.currentNarrator.expectedKnownName,
     });
   }
 
@@ -64,29 +62,20 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
     return this.handleStudentSelection(response);
   }
 
-  private getCurrentHadithNarrator() {
-    return this.state.hadithNarrators[this.state.hadithNarratorIndex];
-  }
-
-  private getNextHadithNarrator() {
-    return this.state.hadithNarrators[this.state.hadithNarratorIndex + 1];
-  }
-
   private async buildTeacherStudentContext(): Promise<TeacherStudentContext> {
-    const currentHadithNarrator = this.getCurrentHadithNarrator();
-    const nextHadithNarrator = this.getNextHadithNarrator();
-
-    if (!currentHadithNarrator?.indexInAllNarrators || !nextHadithNarrator?.indexInAllNarrators) {
+    if (
+      !this.state.currentNarrator?.indexInAllNarrators ||
+      !this.state.nextNarrator?.indexInAllNarrators
+    ) {
       throw new Error("Narrator indices not found in all narrators");
     }
 
-    const currentNarrator = this.state.allNarrators[currentHadithNarrator.indexInAllNarrators];
-    const nextNarrator = this.state.allNarrators[nextHadithNarrator.indexInAllNarrators];
-
-    const narratorBio = await readVaultFile(`${PATHS.FIGURES}/${currentNarrator.name}.md`);
+    const narratorBio = await readVaultFile(
+      `${PATHS.FIGURES}/${this.state.currentNarratorInfo.name}.md`
+    );
     const existingStudents = findStudents(narratorBio, BOOKS[0].name);
 
-    const studentsToSearch = existingStudents.includes(nextNarrator.name)
+    const studentsToSearch = existingStudents.includes(this.state.nextNarratorInfo.name)
       ? []
       : existingStudents.map((student: string, index: number) => ({
           id: index,
@@ -94,11 +83,11 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
         }));
 
     return {
-      currentNarrator,
-      nextNarrator,
-      teacherName: currentHadithNarrator.expectedKnownName,
-      studentName: nextHadithNarrator.expectedKnownName,
-      studentFullName: nextHadithNarrator.expectedFullName,
+      currentNarrator: this.state.currentNarratorInfo,
+      nextNarrator: this.state.nextNarratorInfo,
+      teacherName: this.state.currentNarrator.expectedKnownName,
+      studentName: this.state.nextNarrator.expectedKnownName,
+      studentFullName: this.state.nextNarrator.expectedFullName,
       studentsToSearch,
     };
   }

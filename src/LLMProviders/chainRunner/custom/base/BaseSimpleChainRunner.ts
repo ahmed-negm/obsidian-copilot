@@ -61,7 +61,7 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
         });
       }
 
-      logInfo("Final Request to AI:\n", messages);
+      logInfo("## AI Request:\n", userPrompt);
 
       const chatStream = await withSuppressedTokenWarnings(() =>
         this.chainManager.chatModelManager.getChatModel().stream(messages, {
@@ -84,7 +84,9 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
       }
     }
 
-    const response = await this.processResponse(userPrompt === "" ? "" : streamer.close());
+    const aiResponse = streamer.close();
+    logInfo("## AI Response:\n", aiResponse);
+    const response = await this.processResponse(userPrompt === "" ? "" : aiResponse);
 
     // Only skip saving if it's a new chat (clearing everything)
     if (abortController.signal.aborted && abortController.signal.reason === ABORT_REASON.NEW_CHAT) {

@@ -1,18 +1,12 @@
 import { WorkflowRunner } from "../base/WorkflowRunner";
 import ChainManager from "@/LLMProviders/chainManager";
 import { TraceNarratorsWorkflowState } from "../models/state";
-import { ExtractNarratorsFromHadithStep } from "../steps/ExtractNarratorsFromHadithStep";
+import { ExtractIsnadFromHadithStep } from "../steps/ExtractIsnadFromHadithStep";
 import { toArabicDigits, toEnglishDigits } from "../utils";
 
-export class ExtractNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsWorkflowState> {
+export class ExtractIsnadFromHadithWorkflowRunner extends WorkflowRunner<TraceNarratorsWorkflowState> {
   constructor(chainManager: ChainManager, args: string) {
-    super(chainManager, {
-      args,
-      hadithNarrators: [],
-      allNarrators: [],
-      hadithNarratorIndex: 0,
-      filePath: "",
-    });
+    super(chainManager, new TraceNarratorsWorkflowState());
   }
 
   protected registerSteps() {
@@ -21,12 +15,9 @@ export class ExtractNarratorsWorkflowRunner extends WorkflowRunner<TraceNarrator
       return rangeSteps;
     }
 
-    return [
-      new ExtractNarratorsFromHadithStep({
-        ...this.state,
-        args: toArabicDigits(this.state.args),
-      }),
-    ];
+    this.state.args = this.state.args ? toArabicDigits(this.state.args) : undefined;
+
+    return [new ExtractIsnadFromHadithStep(this.state)];
   }
 
   private createRangeStepsIfApplicable() {
@@ -46,14 +37,11 @@ export class ExtractNarratorsWorkflowRunner extends WorkflowRunner<TraceNarrator
       return null;
     }
 
-    const steps: ExtractNarratorsFromHadithStep[] = [];
+    const steps: ExtractIsnadFromHadithStep[] = [];
     for (let i = start; i <= end; i++) {
-      steps.push(
-        new ExtractNarratorsFromHadithStep({
-          ...this.state,
-          args: toArabicDigits(i),
-        })
-      );
+      this.state.args = toArabicDigits(i);
+
+      steps.push(new ExtractIsnadFromHadithStep(this.state));
     }
 
     return steps;

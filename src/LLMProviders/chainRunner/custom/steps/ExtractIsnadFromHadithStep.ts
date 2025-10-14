@@ -1,4 +1,4 @@
-import { StepRunner, ProcessResponseResult } from "../base/StepRunner";
+import { StepRunner } from "../base/StepRunner";
 import { HadithNarrator } from "../models/narrator";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import {
@@ -26,7 +26,7 @@ interface HadithNarratorWithPossibleMatches extends HadithNarrator {
   }[];
 }
 
-export class ExtractNarratorsFromHadithStep extends StepRunner<TraceNarratorsWorkflowState> {
+export class ExtractIsnadFromHadithStep extends StepRunner<TraceNarratorsWorkflowState> {
   private hadithLink = "";
 
   async getUserPrompt() {
@@ -35,7 +35,7 @@ export class ExtractNarratorsFromHadithStep extends StepRunner<TraceNarratorsWor
       throw new Error("No file path available");
     }
     const hadithText = await readVaultFile(this.state.filePath);
-    const prompt = await getPromptTemplate("ExtractNarrators");
+    const prompt = await getPromptTemplate("ExtractIsnadFromHadith");
     return populateTemplate(prompt, {
       HADITH_TEXT: stripObsidianProperties(hadithText),
       KNOWLEDGE: await getAIKnowledge(BOOKS[0].name),
@@ -43,29 +43,50 @@ export class ExtractNarratorsFromHadithStep extends StepRunner<TraceNarratorsWor
   }
 
   async processResponse(response: string) {
-    const narrators = extractJsonCodeBlock<HadithNarratorWithPossibleMatches[]>(response);
-    if (!narrators || !Array.isArray(narrators) || narrators.length === 0) {
-      return {
-        response: MSG_NO_NARRATORS_FOUND + `\n\n${response}`,
-        isSuccessful: false,
-      };
+    const failedResponse = {
+      response: MSG_NO_NARRATORS_FOUND + `\n\n${response}`,
+      isSuccessful: false,
+    };
+
+    const chains = extractJsonCodeBlock<HadithNarrator[][]>(response);
+    if (!this.isNonEmptyArray(chains)) {
+      return failedResponse;
     }
-    const narratorList: string[] = [];
-    for (const narrator of narrators) {
-      if (!this.isValidNarratorData(narrator)) {
-        return {
-          response: `${NARRATOR_IDENTIFICATION_FAILED} **${narrator.name}**.\n\n${response}`,
-          isSuccessful: false,
-        };
+
+    let output = "";
+    for (const chain of chains!) {
+      if (!this.isNonEmptyArray(chain)) {
+        return failedResponse;
       }
-      this.processNarratorData(narrator);
-      narratorList.push(`- **${narrator.name}**: ${narrator.expectedKnownName}`);
+
+      const narratorList: string[] = [];
+      for (const narrator of chain) {
+        if (!this.isValidNarratorData(narrator)) {
+          return {
+            response: `${NARRATOR_IDENTIFICATION_FAILED} **${narrator.name}**.\n\n${response}`,
+            isSuccessful: false,
+          };
+        }
+        this.processNarratorData(narrator);
+        narratorList.push(`- **${narrator.name}**: ${narrator.expectedKnownName}`);
+      }
+
+      this.state.addChain(chain.reverse());
+
+      output += this.formatNarratorResult(narratorList);
     }
-    this.state.hadithNarrators = narrators.reverse();
-    return this.formatNarratorResult(narratorList);
+
+    return {
+      response: output,
+      isSuccessful: true,
+    };
   }
 
-  private async retrieveHadithFilePath(): Promise<void> {
+  private isNonEmptyArray(list: unknown | null) {
+    return list && Array.isArray(list) && list.length > 0;
+  }
+
+  private async retrieveHadithFilePath() {
     const hadithNumber = this.state.args;
     if (hadithNumber) {
       this.state.filePath = `${PATHS.BUKHARI}/${BOOKS[0].name}-${toArabicDigits(hadithNumber)}.md`;
@@ -77,7 +98,7 @@ export class ExtractNarratorsFromHadithStep extends StepRunner<TraceNarratorsWor
     }
   }
 
-  private isValidNarratorData(narrator: HadithNarratorWithPossibleMatches): boolean {
+  private isValidNarratorData(narrator: HadithNarratorWithPossibleMatches) {
     return !!(
       narrator.potentialPeople &&
       narrator.potentialPeople.length === 1 &&
@@ -86,7 +107,7 @@ export class ExtractNarratorsFromHadithStep extends StepRunner<TraceNarratorsWor
     );
   }
 
-  private processNarratorData(narrator: HadithNarratorWithPossibleMatches): void {
+  private processNarratorData(narrator: HadithNarratorWithPossibleMatches) {
     if (!narrator.potentialPeople || narrator.potentialPeople.length !== 1) {
       return;
     }
@@ -96,15 +117,12 @@ export class ExtractNarratorsFromHadithStep extends StepRunner<TraceNarratorsWor
     delete narrator.potentialPeople;
   }
 
-  private formatNarratorResult(narratorList: string[]): ProcessResponseResult {
+  private formatNarratorResult(narratorList: string[]) {
     const bulletList = narratorList.join("\n");
     const result = populateTemplate(MSG_CHAIN_IS, {
       hadithLink: this.hadithLink,
       narrators: bulletList,
     });
-    return {
-      response: result,
-      isSuccessful: true,
-    };
+    return result;
   }
 }

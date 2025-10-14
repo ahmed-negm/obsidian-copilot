@@ -40,13 +40,9 @@ export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowSta
   }
 
   private getNarratorNoteStatus() {
-    const indexInAllNarrators =
-      this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators!;
-    const narrator = this.state.allNarrators[indexInAllNarrators];
-
-    const filePath = `${PATHS.FIGURES}/${narrator.name}.md`;
+    const filePath = `${PATHS.FIGURES}/${this.state.currentNarratorInfo.name}.md`;
     const noteExists = !!app.vault.getAbstractFileByPath(filePath);
-    return { noteExists, narrator };
+    return { noteExists, narrator: this.state.currentNarratorInfo };
   }
 
   private buildTahdibFilePath(narrator: any) {
@@ -91,13 +87,13 @@ export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowSta
     const teachersMarkdown = generateMarkdownTable(teachers.filter((n) => n.symbols));
     const studentsMarkdown = generateMarkdownTable(students.filter((n) => n.symbols));
 
-    const narrator =
-      this.state.allNarrators[
-        this.state.hadithNarrators[this.state.hadithNarratorIndex].indexInAllNarrators!
-      ];
-    const expectedKnownName =
-      this.state.hadithNarrators[this.state.hadithNarratorIndex].expectedKnownName;
+    const expectedKnownName = this.state.currentNarrator.expectedKnownName;
 
-    await createFigureNote(narrator, expectedKnownName, teachersMarkdown, studentsMarkdown);
+    await createFigureNote(
+      this.state.currentNarratorInfo,
+      expectedKnownName,
+      teachersMarkdown,
+      studentsMarkdown
+    );
   }
 }
