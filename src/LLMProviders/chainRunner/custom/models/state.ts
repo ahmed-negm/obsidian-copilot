@@ -21,6 +21,16 @@ export class TraceNarratorsWorkflowState extends BaseState {
     return this.chains[this.chainIndex];
   }
 
+  get narratorNames() {
+    return this.chains.map((c) =>
+      c.narrators.map((n) => ({ name: this.allNarrators[n.indexInAllNarrators!].name }))
+    );
+  }
+
+  get chainsCount() {
+    return this.chains.length;
+  }
+
   get narratorIndex() {
     return this.currentChain?.narratorIndex ?? 0;
   }

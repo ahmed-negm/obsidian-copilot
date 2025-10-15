@@ -9,7 +9,8 @@ import { ExtractIsnadFromHadithStep } from "../steps/ExtractIsnadFromHadithStep"
 import { FindNarratorInTahdibIndexStep } from "../steps/FindNarratorInTahdibIndexStep";
 import { FindTeacherStudentStep } from "../steps/FindTeacherStudentStep";
 import { GenerateFigureNoteStep } from "../steps/GenerateFigureNoteStep";
-import { PATHS, MSG_START_CHAIN_QUIZ, MSG_WORKFLOW_COMPLETE } from "../constants";
+import { PATHS, MSG_START_CHAIN_QUIZ } from "../constants";
+import { buildCanvasFromIsnads } from "../utils/canvasUtils";
 
 export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsWorkflowState> {
   constructor(chainManager: ChainManager, args: string) {
@@ -77,7 +78,12 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
     } else {
       this.currentStepIndex = 5; // Set to an index beyond the steps to end the workflow
       await this.linkHadithToNarrators();
-      new Notice(MSG_WORKFLOW_COMPLETE, 0);
+      if (this.state.chainsCount > 1) {
+        const canvas = buildCanvasFromIsnads(this.state.narratorNames);
+        const canvasFilePath = this.state.filePath.replace(/\.[^/.]+$/, "") + ".canvas";
+        await app.vault.create(canvasFilePath, JSON.stringify(canvas, null, 2));
+        new Notice(`Canvas created: ${canvasFilePath}`);
+      }
       this.showQuiz();
     }
   }
