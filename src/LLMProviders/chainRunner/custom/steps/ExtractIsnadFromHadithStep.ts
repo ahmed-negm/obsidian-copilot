@@ -13,7 +13,9 @@ import {
 import {
   BOOKS,
   MSG_CHAIN_IS,
+  MSG_MULTIPLE_CHAINS_ARE,
   MSG_NO_NARRATORS_FOUND,
+  MSG_SINGLE_CHAIN_IS,
   NARRATOR_IDENTIFICATION_FAILED,
   PATHS,
 } from "../constants";
@@ -48,13 +50,22 @@ export class ExtractIsnadFromHadithStep extends StepRunner<TraceNarratorsWorkflo
       isSuccessful: false,
     };
 
-    const chains = extractJsonCodeBlock<HadithNarrator[][]>(response);
+    const chains = extractJsonCodeBlock<HadithNarrator[][]>(response)!;
     if (!this.isNonEmptyArray(chains)) {
       return failedResponse;
     }
 
-    let output = "";
-    for (const chain of chains!) {
+    let output =
+      chains.length > 1
+        ? populateTemplate(MSG_MULTIPLE_CHAINS_ARE, {
+            hadithLink: this.hadithLink,
+            isnad_count: toArabicDigits(chains.length),
+          }) + "\n\n"
+        : "";
+
+    for (let i = 0; i < chains.length; i++) {
+      const chain = chains[i];
+
       if (!this.isNonEmptyArray(chain)) {
         return failedResponse;
       }
@@ -73,7 +84,10 @@ export class ExtractIsnadFromHadithStep extends StepRunner<TraceNarratorsWorkflo
 
       this.state.addChain(chain.reverse());
 
-      output += this.formatNarratorResult(narratorList);
+      output +=
+        chains.length === 1
+          ? this.formatSingleIsnadEntry(narratorList)
+          : this.formatMultipleIsnadEntry(narratorList, i + 1);
     }
 
     return {
@@ -117,12 +131,21 @@ export class ExtractIsnadFromHadithStep extends StepRunner<TraceNarratorsWorkflo
     delete narrator.potentialPeople;
   }
 
-  private formatNarratorResult(narratorList: string[]) {
+  private formatSingleIsnadEntry(narratorList: string[]) {
     const bulletList = narratorList.join("\n");
     const result = populateTemplate(MSG_CHAIN_IS, {
       hadithLink: this.hadithLink,
       narrators: bulletList,
     });
     return result;
+  }
+
+  private formatMultipleIsnadEntry(narratorList: string[], index: number) {
+    const bulletList = narratorList.join("\n");
+    const result = populateTemplate(MSG_SINGLE_CHAIN_IS, {
+      isnad_index: toArabicDigits(index),
+      narrators: bulletList,
+    });
+    return result + "\n\n";
   }
 }

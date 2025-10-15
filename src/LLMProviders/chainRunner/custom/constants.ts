@@ -34,6 +34,8 @@ export const MSG_NARRATOR_FILE_CREATED = "تم إنشاء ملف الراوي ب
 export const MSG_NARRATOR_FILE_NOT_FOUND_CREATING =
   "لم يتم العثور على الملف الخاص بهذا الراوي، جاري إنشاء الملف من بيانات تهذيب الكمال...";
 export const MSG_CHAIN_IS = "\nسند الحديث {{hadithLink}} هو:\n\n{{narrators}}\n";
+export const MSG_MULTIPLE_CHAINS_ARE = "عدد أسانيد الحديث {{hadithLink}} هو: {{isnad_count}}";
+export const MSG_SINGLE_CHAIN_IS = "السند رقم  {{isnad_index}}:\n\n{{narrators}}\n";
 export const MSG_NARRATOR_IDENTIFICATION_FAILED = "تعذر تحديد الراوي";
 export const MSG_NO_NARRATORS_FOUND = "لم يتم العثور على أي رواة في نص الحديث.";
 

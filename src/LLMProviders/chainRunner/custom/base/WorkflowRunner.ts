@@ -1,7 +1,6 @@
 import ChainManager from "@/LLMProviders/chainManager";
 import { BaseSimpleChainRunner } from "./BaseSimpleChainRunner";
 import { StepRunner } from "./StepRunner";
-import { WORKFLOW_COMPLETE } from "../constants";
 
 export abstract class WorkflowRunner<T> extends BaseSimpleChainRunner {
   protected steps: StepRunner<T>[];
@@ -33,7 +32,7 @@ export abstract class WorkflowRunner<T> extends BaseSimpleChainRunner {
     if (this.nextStep) {
       nextStepIntroMessage = result.isSuccessful ? this.nextStep.getContextIntroMessage() : "";
     } else {
-      nextStepIntroMessage = WORKFLOW_COMPLETE;
+      nextStepIntroMessage = "--------";
     }
 
     return result.response + (nextStepIntroMessage ? `\n\n${nextStepIntroMessage}` : "");
