@@ -6,7 +6,7 @@ import { BaseChainRunner, ChainRunner } from "../../BaseChainRunner";
 import { ThinkBlockStreamer } from "../../utils/ThinkBlockStreamer";
 import { getPromptTemplate } from "../utils";
 import { Notice } from "obsidian";
-import { WORKFLOW_STEP_FAILED } from "../constants";
+import { MSG_WORKFLOW_STEP_FAILED } from "../constants";
 
 export class BaseSimpleChainRunner extends BaseChainRunner {
   protected isRunnerSuccessful: boolean = false;
@@ -113,7 +113,7 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
           options
         );
       } else {
-        new Notice(WORKFLOW_STEP_FAILED, 0);
+        new Notice(MSG_WORKFLOW_STEP_FAILED, 0);
       }
     }
 

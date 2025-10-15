@@ -16,7 +16,7 @@ import {
   MSG_MULTIPLE_CHAINS_ARE,
   MSG_NO_NARRATORS_FOUND,
   MSG_SINGLE_CHAIN_IS,
-  NARRATOR_IDENTIFICATION_FAILED,
+  MSG_NARRATOR_IDENTIFICATION_FAILED,
   PATHS,
 } from "../constants";
 
@@ -74,7 +74,7 @@ export class ExtractIsnadFromHadithStep extends StepRunner<TraceNarratorsWorkflo
       for (const narrator of chain) {
         if (!this.isValidNarratorData(narrator)) {
           return {
-            response: `${NARRATOR_IDENTIFICATION_FAILED} **${narrator.name}**.\n\n${response}`,
+            response: `${MSG_NARRATOR_IDENTIFICATION_FAILED} **${narrator.name}**.\n\n${response}`,
             isSuccessful: false,
           };
         }

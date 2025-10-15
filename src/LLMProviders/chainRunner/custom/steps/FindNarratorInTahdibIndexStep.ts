@@ -113,13 +113,19 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     });
 
     return {
-      response: `${notFoundMessage}${this.getContextInfo()}\n\nResponse from AI:\n\n${response}`,
+      response: `${notFoundMessage}\n\n${this.getContextInfo()}\n\n${response}`,
       isSuccessful: false,
     };
   }
 
   private getContextInfo() {
-    return `\n\nContext: \n\n \`\`\`json\n${JSON.stringify({ narratorToFind: this.searchContext.narratorToFind, matchingNarrators: this.searchContext.matchingNarrators.map((n) => ({ id: n.id, name: n.name })) }, null, 2)}\n\`\`\``;
+    const narratorLinks = this.searchContext.matchingNarrators
+      .map(
+        (narrator) =>
+          ` [${narrator.name}](obsidian://open?vault=Tahdhib-al-Kamal&file=Figures/${getSignedUrl(toArabicDigits(narrator.id!) + "-" + narrator.name)})`
+      )
+      .join("\n- ");
+    return `المطابقات المحتملة للراوي:\n- ${narratorLinks}`;
   }
 
   private handleSingleMatch(narrator: NarratorInfo) {
@@ -146,8 +152,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     // Check if narrator has required ID
     if (!foundNarrator.id) {
       return {
-        response:
-          this.formatNarratorFoundMessage(foundNarrator) + NO_ID_SUFFIX + this.getContextInfo(),
+        response: `${this.formatNarratorFoundMessage(foundNarrator)} ${NO_ID_SUFFIX}\n\n${this.getContextInfo()}\n\n${response}`,
         isSuccessful: false,
       };
     }

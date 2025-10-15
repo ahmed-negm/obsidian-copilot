@@ -9,7 +9,7 @@ import { ExtractIsnadFromHadithStep } from "../steps/ExtractIsnadFromHadithStep"
 import { FindNarratorInTahdibIndexStep } from "../steps/FindNarratorInTahdibIndexStep";
 import { FindTeacherStudentStep } from "../steps/FindTeacherStudentStep";
 import { GenerateFigureNoteStep } from "../steps/GenerateFigureNoteStep";
-import { PATHS, START_CHAIN_QUIZ, WORKFLOW_COMPLETE } from "../constants";
+import { PATHS, MSG_START_CHAIN_QUIZ, MSG_WORKFLOW_COMPLETE } from "../constants";
 
 export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsWorkflowState> {
   constructor(chainManager: ChainManager, args: string) {
@@ -77,7 +77,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
     } else {
       this.currentStepIndex = 5; // Set to an index beyond the steps to end the workflow
       await this.linkHadithToNarrators();
-      new Notice(WORKFLOW_COMPLETE, 0);
+      new Notice(MSG_WORKFLOW_COMPLETE, 0);
       this.showQuiz();
     }
   }
@@ -90,7 +90,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
   protected async showQuiz() {
     this.state.resetChainIndex();
     this.state.resetNarratorIndex();
-    await ChoiceSuggestModal.open(app, START_CHAIN_QUIZ, ["ابدأ الاختبار"], "bottom", false);
+    await ChoiceSuggestModal.open(app, MSG_START_CHAIN_QUIZ, ["ابدأ الاختبار"], "bottom", false);
 
     await this.showNarratorQuiz();
     await this.showChainQuiz();

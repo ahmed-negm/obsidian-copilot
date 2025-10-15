@@ -138,7 +138,7 @@ function parseTableLines(tableLines: string[], book?: BookName): string[] {
       if (!isCheck(cell)) continue;
     }
 
-    // If the name is Obsedian link like [[Name|Display]], extract the actual name part
+    // If the name is Obsidian link like [[Name|Display]], extract the actual name part
     const linkMatch = name.match(/\[\[(.+?)(\|.+?)?\]\]/);
     if (linkMatch) {
       // Use the part before the pipe if present, else the whole inside of [[ ]]
