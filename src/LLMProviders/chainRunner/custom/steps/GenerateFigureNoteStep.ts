@@ -9,8 +9,8 @@ import {
   toArabicDigits,
   extractJsonCodeBlock,
   populateTemplate,
-  ExtractedNarratorData,
   getAIKnowledge,
+  TahdibNarrator,
 } from "../utils";
 import {
   PATHS,
@@ -19,6 +19,11 @@ import {
   MSG_NARRATOR_FILE_NOT_FOUND_CREATING,
   BOOKS,
 } from "../constants";
+
+export interface ExtractedNarratorData {
+  teachers: TahdibNarrator[];
+  students: TahdibNarrator[];
+}
 
 export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowState> {
   getContextIntroMessage() {
@@ -68,7 +73,7 @@ export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowSta
     }
 
     const extractedData = extractJsonCodeBlock<ExtractedNarratorData>(response);
-    if (extractedData) {
+    if (extractedData && extractedData.teachers && extractedData.students) {
       await this.createNarratorNote(extractedData);
       return {
         response: MSG_NARRATOR_FILE_CREATED,

@@ -13,14 +13,9 @@ const TEACHERS_TITLE = "رَوَى عن:";
 const CHECKMARKS = ["✔", "✓", "✅"];
 const HEADERS = ["الاسم", ...BOOKS.map((b) => b.name), OTHERS_COLUMN];
 
-interface TahdibNarrator {
+export interface TahdibNarrator {
   name: string;
   symbols: string;
-}
-
-export interface ExtractedNarratorData {
-  teachers: TahdibNarrator[];
-  students: TahdibNarrator[];
 }
 
 export function generateMarkdownTable(narrators: TahdibNarrator[]): string {

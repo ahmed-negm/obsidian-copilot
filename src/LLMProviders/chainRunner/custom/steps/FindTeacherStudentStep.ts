@@ -2,7 +2,7 @@ import { StepRunner } from "../base/StepRunner";
 import {
   BOOKS,
   MSG_FOUND_STUDENT,
-  MSG_NARRATOR_NOT_FOUND,
+  MSG_NOT_FOUND_STUDENT,
   MSG_STUDENT_TEACHER_LOOKUP,
   PATHS,
 } from "../constants";
@@ -115,9 +115,10 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
   private async handleStudentSelection(response: string) {
     const notFoundResponse = {
       response:
-        populateTemplate(MSG_NARRATOR_NOT_FOUND, { narrator: this.searchContext.studentName }) +
-        this.getContextInfo() +
-        `\n\nResponse:${response}`,
+        populateTemplate(MSG_NOT_FOUND_STUDENT, {
+          student: `${this.searchContext.studentName} (${this.searchContext.studentFullName})`,
+          teacher: `[[${this.searchContext.currentNarrator.name}]]`,
+        }) + `\n\n${response}`,
       isSuccessful: false,
     };
 
@@ -140,14 +141,6 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
       }),
       isSuccessful: true,
     };
-  }
-
-  private getContextInfo() {
-    const context = {
-      name_to_search: this.searchContext.studentFullName,
-      JSON: this.searchContext.studentsToSearch,
-    };
-    return `\n\nContext: \`\`\`json\n${JSON.stringify(context, null, 2)}\n\`\`\``;
   }
 
   private extractSelectedStudentFromResponse(response: string) {
