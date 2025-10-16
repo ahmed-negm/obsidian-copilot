@@ -154,3 +154,73 @@ export function buildCanvasFromIsnads(isnads: Isnads): CanvasFile {
 
   return canvas;
 }
+
+/**
+ * Extract isnād chains by traversing directed edges.
+ * The canvas must have one node per narrator and edges defining order.
+ */
+export function extractIsnadsFromCanvas(canvas: CanvasFile): Isnads {
+  const nodes = new Map<string, CanvasNode>();
+  for (const n of canvas.nodes) {
+    nodes.set(n.id, n);
+  }
+
+  // Build adjacency lists
+  const outgoing = new Map<string, string[]>(); // from -> [to]
+  const incoming = new Map<string, string[]>(); // to -> [from]
+  for (const e of canvas.edges) {
+    if (!outgoing.has(e.fromNode)) outgoing.set(e.fromNode, []);
+    if (!incoming.has(e.toNode)) incoming.set(e.toNode, []);
+    outgoing.get(e.fromNode)!.push(e.toNode);
+    incoming.get(e.toNode)!.push(e.fromNode);
+  }
+
+  // Identify "root" nodes (no incoming edges) = start of each chain
+  const rootNodes = [...nodes.values()].filter((n) => !incoming.has(n.id));
+
+  const visitedEdges = new Set<string>();
+  const isnads: Isnads = [];
+
+  // Depth-first traversal from each root node to build chains
+  for (const root of rootNodes) {
+    const paths = traverseChains(root.id, outgoing, nodes, visitedEdges);
+    for (const path of paths) {
+      isnads.push(path.map((id) => ({ name: nodes.get(id)?.text?.trim() || "?" })));
+    }
+  }
+
+  return isnads;
+}
+
+/**
+ * Traverse all paths (chains) from a given start node.
+ * Handles branching when a narrator leads to multiple students.
+ */
+function traverseChains(
+  startId: string,
+  outgoing: Map<string, string[]>,
+  nodes: Map<string, CanvasNode>,
+  visitedEdges: Set<string>
+): string[][] {
+  const results: string[][] = [];
+
+  const stack: { path: string[]; current: string }[] = [{ path: [startId], current: startId }];
+
+  while (stack.length > 0) {
+    const { path, current } = stack.pop()!;
+    const nexts = outgoing.get(current) || [];
+
+    if (nexts.length === 0) {
+      results.push(path);
+    } else {
+      for (const next of nexts) {
+        const edgeId = `${current}->${next}`;
+        if (visitedEdges.has(edgeId)) continue;
+        visitedEdges.add(edgeId);
+        stack.push({ path: [...path, next], current: next });
+      }
+    }
+  }
+
+  return results;
+}
