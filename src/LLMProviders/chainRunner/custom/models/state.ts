@@ -17,6 +17,12 @@ export class TraceNarratorsWorkflowState extends BaseState {
   private chains: Chain[] = [];
   private chainIndex: number = 0;
 
+  resetForNewHadith() {
+    this.resetChainIndex();
+    this.resetNarratorIndex();
+    this.chains = [];
+  }
+
   get currentChain() {
     return this.chains[this.chainIndex];
   }

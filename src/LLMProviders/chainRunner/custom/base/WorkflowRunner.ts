@@ -27,16 +27,22 @@ export abstract class WorkflowRunner<T> extends BaseSimpleChainRunner {
   async processResponse(response: string): Promise<string> {
     const result = await this.currentStep.run(response);
     this.isRunnerSuccessful = result.isSuccessful;
+    if (!result.isSuccessful) {
+      this.onComplete();
+    }
 
     let nextStepIntroMessage = "";
     if (this.nextStep) {
       nextStepIntroMessage = result.isSuccessful ? this.nextStep.getContextIntroMessage() : "";
     } else {
       nextStepIntroMessage = "--------";
+      this.onComplete();
     }
 
     return result.response + (nextStepIntroMessage ? `\n\n${nextStepIntroMessage}` : "");
   }
+
+  protected onComplete(): void {}
 
   nextRunner(): WorkflowRunner<T> | null {
     this.currentStepIndex++;

@@ -2,7 +2,13 @@ import { WorkflowRunner } from "../base/WorkflowRunner";
 import { logError } from "@/logger";
 import ChainManager from "@/LLMProviders/chainManager";
 import { TraceNarratorsWorkflowState } from "../models/state";
-import { readVaultFile, setScore, updateVaultFile } from "../utils";
+import {
+  readVaultFile,
+  setScore,
+  toArabicDigits,
+  toEnglishDigits,
+  updateVaultFile,
+} from "../utils";
 import { ChoiceSuggestModal } from "../ui/ChoiceSuggestModal";
 import { Notice } from "obsidian";
 import { ExtractIsnadFromHadithStep } from "../steps/ExtractIsnadFromHadithStep";
@@ -13,8 +19,16 @@ import { PATHS, MSG_START_CHAIN_QUIZ } from "../constants";
 import { buildCanvasFromIsnads } from "../utils/canvasUtils";
 
 export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsWorkflowState> {
+  private range: { start: number; end: number } | null = null;
+  private rangeIndex: number = 0;
+
   constructor(chainManager: ChainManager, args: string) {
     super(chainManager, new TraceNarratorsWorkflowState(args));
+    this.range = this.getRange();
+    if (this.range) {
+      this.rangeIndex = this.range.start;
+      this.state.args = toArabicDigits(this.rangeIndex);
+    }
     this.loadNarratorsData().catch((error) => {
       logError("Failed to load narrators data", error);
       new Notice("Failed to load narrators database");
@@ -77,23 +91,37 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
       this.currentStepIndex = 0;
     } else {
       this.currentStepIndex = 5; // Set to an index beyond the steps to end the workflow
-      await this.linkHadithToNarrators();
-      if (this.state.chainsCount > 1) {
-        const canvas = buildCanvasFromIsnads(this.state.narratorNames);
-        const canvasFilePath = this.state.filePath.replace(/\.[^/.]+$/, "") + ".canvas";
-        await app.vault.create(canvasFilePath, JSON.stringify(canvas, null, 2));
-        new Notice(`Canvas created: ${canvasFilePath}`);
+      if (!this.range) {
+        await this.linkHadithToNarrators();
+        if (this.state.chainsCount > 1) {
+          const canvas = buildCanvasFromIsnads(this.state.narratorNames);
+          const canvasFilePath = this.state.filePath.replace(/\.[^/.]+$/, "") + ".canvas";
+          await app.vault.create(canvasFilePath, JSON.stringify(canvas, null, 2));
+          new Notice(`Canvas created: ${canvasFilePath}`);
+        }
+        this.showQuiz();
       }
-      this.showQuiz();
     }
   }
 
-  protected async loadNarratorsData() {
+  protected onComplete(): void {
+    if (this.range) {
+      this.rangeIndex++;
+      if (this.rangeIndex <= this.range.end) {
+        this.state.args = toArabicDigits(this.rangeIndex);
+        this.state.resetForNewHadith();
+        this.currentStepIndex = -1;
+        this.isRunnerSuccessful = true;
+      }
+    }
+  }
+
+  private async loadNarratorsData() {
     const jsonString = await readVaultFile(PATHS.TAHDHIB_INDEX);
     this.state.allNarrators = JSON.parse(jsonString);
   }
 
-  protected async showQuiz() {
+  private async showQuiz() {
     this.state.resetChainIndex();
     this.state.resetNarratorIndex();
     await ChoiceSuggestModal.open(app, MSG_START_CHAIN_QUIZ, ["ابدأ الاختبار"], "bottom", false);
@@ -102,7 +130,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
     await this.showChainQuiz();
   }
 
-  protected async showNarratorQuiz() {
+  private async showNarratorQuiz() {
     const narrators = this.state.currentChainNarrators.slice().reverse();
 
     for (const narrator of narrators) {
@@ -129,7 +157,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
     }
   }
 
-  protected async showChainQuiz() {
+  private async showChainQuiz() {
     const hadithNarrators = this.state.currentChainNarrators.slice().reverse();
 
     for (let i = 0; i < hadithNarrators.length - 1; i++) {
@@ -159,7 +187,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
     }
   }
 
-  protected async linkHadithToNarrators() {
+  private async linkHadithToNarrators() {
     let fileContent = await readVaultFile(this.state.filePath);
 
     fileContent = await this.processNarratorsForLinking(fileContent);
@@ -205,5 +233,24 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
     } while (hasNextChain);
 
     return updatedContent;
+  }
+
+  private getRange() {
+    if (!this.state.args) {
+      return null;
+    }
+
+    const range = this.state.args.split("-");
+    if (range.length !== 2) {
+      return null;
+    }
+
+    const start = parseInt(toEnglishDigits(range[0]));
+    const end = parseInt(toEnglishDigits(range[1]));
+
+    if (isNaN(start) || isNaN(end) || start <= 0 || end < start) {
+      return null;
+    }
+    return { start, end };
   }
 }
