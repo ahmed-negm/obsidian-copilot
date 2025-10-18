@@ -23,18 +23,13 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
     }
   ): Promise<string> {
     const streamer = new ThinkBlockStreamer(() => {});
-    const SAY_HELLO_FALLBACK = "Say 'hello' in a very brief sentence.";
     let userPrompt = "";
 
     try {
       userPrompt = await this.getUserPrompt(userMessage.message);
+      if (userPrompt) {
+        const messages: { role: string; content: string }[] = [];
 
-      let messages: { role: string; content: string }[] = [];
-
-      if (userPrompt === "") {
-        // Fallback: Ensure the AI always receives a valid prompt
-        messages = [{ role: "user", content: SAY_HELLO_FALLBACK }];
-      } else {
         const systemPrompt = await this.getSystemPrompt();
         const chatModel = this.chainManager.chatModelManager.getChatModel();
 
@@ -59,22 +54,23 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
           role: "user",
           content: userPrompt,
         });
-      }
 
-      logInfo("## AI Request:\n", userPrompt);
+        const chatStream = await withSuppressedTokenWarnings(() =>
+          this.chainManager.chatModelManager.getChatModel().stream(messages, {
+            signal: abortController.signal,
+          })
+        );
 
-      const chatStream = await withSuppressedTokenWarnings(() =>
-        this.chainManager.chatModelManager.getChatModel().stream(messages, {
-          signal: abortController.signal,
-        })
-      );
-
-      for await (const chunk of chatStream) {
-        if (abortController.signal.aborted) {
-          logInfo("Stream iteration aborted", { reason: abortController.signal.reason });
-          break;
+        for await (const chunk of chatStream) {
+          if (abortController.signal.aborted) {
+            logInfo("Stream iteration aborted", { reason: abortController.signal.reason });
+            break;
+          }
+          streamer.processChunk(chunk);
         }
-        streamer.processChunk(chunk);
+      } else {
+        // Sleep for 0.1 second to simulate processing time
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     } catch (error: any) {
       if (error.name === "AbortError" || abortController.signal.aborted) {
@@ -84,9 +80,12 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
       }
     }
 
-    const aiResponse = streamer.close();
-    logInfo("## AI Response:\n", aiResponse);
-    const response = await this.processResponse(userPrompt === "" ? "" : aiResponse);
+    const aiResponse = userPrompt ? streamer.close() : "";
+    if (aiResponse) {
+      console.log("## AI Conversation:\n", { request: userPrompt, response: aiResponse });
+    }
+
+    const response = await this.processResponse(aiResponse);
 
     // Only skip saving if it's a new chat (clearing everything)
     if (abortController.signal.aborted && abortController.signal.reason === ABORT_REASON.NEW_CHAT) {

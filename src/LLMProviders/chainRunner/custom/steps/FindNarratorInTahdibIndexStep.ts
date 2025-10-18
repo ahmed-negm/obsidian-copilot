@@ -97,7 +97,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
       tahdhibName: line.split("-")[1]?.trim(),
     }));
 
-    const found = cacheEntries.find((line) => line.fullName === narratorToFind);
+    const found = cacheEntries.find((line) => narratorToFind.startsWith(line.fullName));
     return found ? found.tahdhibName : undefined;
   }
 
