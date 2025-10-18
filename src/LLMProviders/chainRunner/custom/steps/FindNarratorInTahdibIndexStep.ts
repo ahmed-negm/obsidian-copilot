@@ -17,6 +17,7 @@ import {
   getSignedUrl,
   getAIKnowledge,
   readVaultFile,
+  updateVaultFile,
 } from "../utils";
 
 const SEARCH_PREFIX_LENGTHS = [20, 10, 3] as const;
@@ -34,6 +35,8 @@ interface NarratorSearchContext {
   matchingNarrators: NarratorInfo[];
   currentNarratorIndex: number;
 }
+
+const tahdhibCachePath = PATHS.DATA + `/TahdhibCache.json`;
 
 export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWorkflowState> {
   private searchContext: NarratorSearchContext;
@@ -62,12 +65,15 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
       return this.handleSingleMatch(this.searchContext.matchingNarrators[0]);
     }
 
-    return this.handleMultipleMatches(response, this.searchContext);
+    return this.handleMultipleMatches(response);
   }
 
   private async buildNarratorSearchContext(): Promise<NarratorSearchContext> {
     const narratorToFind = this.state.currentNarrator.expectedFullName;
-    const cachedNarratorName = await this.findMatchingNarratorInCache(narratorToFind);
+    let cachedNarratorName = await this.findMatchingNarratorInManualCache(narratorToFind);
+    if (!cachedNarratorName) {
+      cachedNarratorName = await this.findMatchingNarratorInAutomaticCache(narratorToFind);
+    }
     let cachedNarrator: NarratorInfo | undefined = undefined;
     if (cachedNarratorName) {
       cachedNarrator = this.state.allNarrators.find(
@@ -90,7 +96,27 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     };
   }
 
-  async findMatchingNarratorInCache(narratorToFind: string) {
+  async findMatchingNarratorInAutomaticCache(narratorToFind: string) {
+    const json = await readVaultFile(tahdhibCachePath);
+    const cacheEntries = JSON.parse(json) as { fullName: string; tahdhibName: string }[];
+
+    const found = cacheEntries.find((line) => narratorToFind === line.fullName);
+    return found ? found.tahdhibName : undefined;
+  }
+
+  async updateAutomaticCache(narratorToFind: string, name: string) {
+    const json = await readVaultFile(tahdhibCachePath);
+    const cacheEntries = JSON.parse(json) as { fullName: string; tahdhibName: string }[];
+
+    const found = cacheEntries.find((line) => narratorToFind === line.fullName);
+    if (!found) {
+      cacheEntries.push({ fullName: narratorToFind, tahdhibName: name });
+      const updatedJson = JSON.stringify(cacheEntries, null, 2);
+      await updateVaultFile(tahdhibCachePath, updatedJson);
+    }
+  }
+
+  async findMatchingNarratorInManualCache(narratorToFind: string) {
     const cacheContent = await readVaultFile(PATHS.AI_KNOWLEDGE + `/اسماء تهذيب الكمال.md`);
     const cacheEntries = cacheContent.split("\n").map((line) => ({
       fullName: line.split("-")[0].trim(),
@@ -157,23 +183,22 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
 
   private handleSingleMatch(narrator: NarratorInfo) {
     this.updateStateWithNarrator(narrator.index);
-
     return {
       response: this.formatNarratorFoundMessage(narrator),
       isSuccessful: true,
     };
   }
 
-  private handleMultipleMatches(response: string, context: NarratorSearchContext) {
+  private async handleMultipleMatches(response: string) {
     const selectedNarrator = this.extractSelectedNarratorFromResponse(response);
 
     if (!selectedNarrator) {
-      return this.handleNarratorNotFound(response, context.narratorToFind);
+      return this.handleNarratorNotFound(response, this.searchContext.narratorToFind);
     }
 
     const foundNarrator = this.state.allNarrators[selectedNarrator.id];
     if (!foundNarrator) {
-      return this.handleNarratorNotFound(response, context.narratorToFind);
+      return this.handleNarratorNotFound(response, this.searchContext.narratorToFind);
     }
 
     // Check if narrator has required ID
@@ -185,6 +210,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     }
 
     this.updateStateWithNarrator(selectedNarrator.id);
+    await this.updateAutomaticCache(this.searchContext.narratorToFind, foundNarrator.name);
     return {
       response: this.formatNarratorFoundMessage(foundNarrator),
       isSuccessful: true,

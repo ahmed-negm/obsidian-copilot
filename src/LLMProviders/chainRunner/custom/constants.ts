@@ -12,7 +12,6 @@ export const PATHS = {
   TEMPLATES: "_extras/Templates",
   AI_KNOWLEDGE: "_extras/AI knowledge",
   DATA: "_extras/Data",
-  TAHDHIB_INDEX: "_extras/Data/Tahdhib.json",
   BUKHARI: "Sunnah/صحيح البخاري",
   FIGURES: "Figures",
   TAHDHIB_VAULT: "../Books/Tahdhib-al-Kamal/Figures/",

@@ -117,7 +117,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
   }
 
   private async loadNarratorsData() {
-    const jsonString = await readVaultFile(PATHS.TAHDHIB_INDEX);
+    const jsonString = await readVaultFile(`${PATHS.DATA}/Tahdhib.json`);
     this.state.allNarrators = JSON.parse(jsonString);
   }
 

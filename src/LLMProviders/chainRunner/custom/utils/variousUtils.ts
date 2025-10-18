@@ -1,10 +1,11 @@
 import { Notice } from "obsidian";
 import { readVaultFile, updateVaultFile } from "./fileUtils";
+import { PATHS } from "../constants";
 
 const ARABIC_DIGITS = "٠١٢٣٤٥٦٧٨٩";
 
 export async function setScore(isCorrect: boolean, correctAnswer: string): Promise<void> {
-  const scoreFile = "_extras/Data/Score.json";
+  const scoreFile = `${PATHS.DATA}/Score.json`;
   const jsonString = await readVaultFile(scoreFile);
   const { correct, total } = JSON.parse(jsonString) as { correct: number; total: number };
   await updateVaultFile(
