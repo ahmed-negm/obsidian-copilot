@@ -5,6 +5,7 @@ import {
   MSG_NARRATOR_NOT_FOUND_IN_TAHDIB,
   MSG_SEARCHING_NARRATORS,
   MSG_SEARCHING_NEXT_NARRATOR,
+  PATHS,
 } from "../constants";
 import { NarratorInfo } from "../models/narrator";
 import { TraceNarratorsWorkflowState } from "../models/state";
@@ -15,6 +16,7 @@ import {
   populateTemplate,
   getSignedUrl,
   getAIKnowledge,
+  readVaultFile,
 } from "../utils";
 
 const SEARCH_PREFIX_LENGTHS = [20, 10, 3] as const;
@@ -41,7 +43,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
   }
 
   async getUserPrompt() {
-    this.searchContext = this.buildNarratorSearchContext();
+    this.searchContext = await this.buildNarratorSearchContext();
 
     // No prompt needed if we have 0 or 1 matches (handled in processResponse)
     if (this.searchContext.matchingNarrators.length <= 1) {
@@ -63,15 +65,40 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     return this.handleMultipleMatches(response, this.searchContext);
   }
 
-  private buildNarratorSearchContext(): NarratorSearchContext {
+  private async buildNarratorSearchContext(): Promise<NarratorSearchContext> {
     const narratorToFind = this.state.currentNarrator.expectedFullName;
-    const matchingNarrators = this.findMatchingNarrators(narratorToFind);
+    const cachedNarratorName = await this.findMatchingNarratorInCache(narratorToFind);
+    let cachedNarrator: NarratorInfo | undefined = undefined;
+    if (cachedNarratorName) {
+      cachedNarrator = this.state.allNarrators.find(
+        (narrator) => narrator.name === cachedNarratorName
+      );
+
+      if (!cachedNarrator) {
+        throw new Error(`Cached narrator "${cachedNarratorName}" not found in allNarrators`);
+      }
+    }
+
+    const matchingNarrators = cachedNarrator
+      ? [cachedNarrator]
+      : this.findMatchingNarrators(narratorToFind);
 
     return {
       narratorToFind,
       matchingNarrators,
       currentNarratorIndex: this.state.narratorIndex,
     };
+  }
+
+  async findMatchingNarratorInCache(narratorToFind: string) {
+    const cacheContent = await readVaultFile(PATHS.AI_KNOWLEDGE + `/اسماء تهذيب الكمال.md`);
+    const cacheEntries = cacheContent.split("\n").map((line) => ({
+      fullName: line.split("-")[0].trim(),
+      tahdhibName: line.split("-")[1]?.trim(),
+    }));
+
+    const found = cacheEntries.find((line) => line.fullName === narratorToFind);
+    return found ? found.tahdhibName : undefined;
   }
 
   private findMatchingNarrators(nameToFind: string) {
