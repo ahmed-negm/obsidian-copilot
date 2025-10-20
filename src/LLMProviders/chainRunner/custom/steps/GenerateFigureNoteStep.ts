@@ -11,6 +11,7 @@ import {
   populateTemplate,
   getAIKnowledge,
   TahdibNarrator,
+  fileExists,
 } from "../utils";
 import {
   PATHS,
@@ -27,32 +28,44 @@ export interface ExtractedNarratorData {
 
 export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowState> {
   getContextIntroMessage() {
-    const { noteExists } = this.getNarratorNoteStatus();
-
-    return noteExists ? "" : MSG_NARRATOR_FILE_NOT_FOUND_CREATING;
+    return this.noteExists() ? "" : MSG_NARRATOR_FILE_NOT_FOUND_CREATING;
   }
 
   async getUserPrompt() {
-    const { noteExists, narrator } = this.getNarratorNoteStatus();
-    if (noteExists) {
+    if (this.noteExists()) {
       return "";
     }
 
-    const tahdibFilePath = this.buildTahdibFilePath(narrator);
+    const tahdibProcessedFilePath = this.generateTahdibProcessedFigurePath(
+      this.state.currentNarratorInfo
+    );
+    if (fileExists(tahdibProcessedFilePath)) {
+      const processedContent = await readFileFromExternalVault(tahdibProcessedFilePath);
+      await app.vault.create(
+        `${PATHS.FIGURES}/${this.state.currentNarratorInfo.name}.md`,
+        processedContent
+      );
+      return "";
+    }
+    const tahdibFilePath = this.generateTahdibFigurePath(this.state.currentNarratorInfo);
     const tahdibContent = await readFileFromExternalVault(tahdibFilePath);
 
-    return this.buildPromptFromTemplate(narrator.name, tahdibContent);
+    return this.buildPromptFromTemplate(this.state.currentNarratorInfo.name, tahdibContent);
   }
 
-  private getNarratorNoteStatus() {
+  private noteExists() {
     const filePath = `${PATHS.FIGURES}/${this.state.currentNarratorInfo.name}.md`;
-    const noteExists = !!app.vault.getAbstractFileByPath(filePath);
-    return { noteExists, narrator: this.state.currentNarratorInfo };
+    return !!app.vault.getAbstractFileByPath(filePath);
   }
 
-  private buildTahdibFilePath(narrator: any) {
+  private generateTahdibFigurePath(narrator: any) {
     const vaultPath = (app.vault.adapter as FileSystemAdapter).getBasePath();
-    return `${vaultPath}/${PATHS.TAHDHIB_VAULT}${toArabicDigits(narrator.id!)}-${narrator.name}.md`;
+    return `${vaultPath}/${PATHS.TAHDHIB_VAULT}/Figures/${toArabicDigits(narrator.id!)}-${narrator.name}.md`;
+  }
+
+  private generateTahdibProcessedFigurePath(narrator: any) {
+    const vaultPath = (app.vault.adapter as FileSystemAdapter).getBasePath();
+    return `${vaultPath}/${PATHS.TAHDHIB_VAULT}/ProcessedFigures/${narrator.name}.md`;
   }
 
   private async buildPromptFromTemplate(narratorName: string, tahdibContent: string) {

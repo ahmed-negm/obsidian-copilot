@@ -90,3 +90,14 @@ export async function readFileFromExternalVault(fullPath: string): Promise<strin
     throw new Error("Filesystem access is not available or file could not be read");
   }
 }
+
+export function fileExists(fullPath: string): boolean {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require("fs");
+    return fs.existsSync(fullPath);
+  } catch (error) {
+    logError(`Failed to check file existence: ${fullPath}`, error);
+    throw new Error(`Failed to check file existence: ${fullPath}`);
+  }
+}
