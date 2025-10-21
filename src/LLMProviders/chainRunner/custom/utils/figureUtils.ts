@@ -144,7 +144,7 @@ function parseTableLines(tableLines: string[], book?: BookName): string[] {
       // Use the part before the pipe if present, else the whole inside of [[ ]]
       const extractedName = linkMatch[1].trim();
       if (extractedName) {
-        narrators.push(extractedName.replace(/\\+/g, ""));
+        narrators.push("-- " + extractedName.replace(/\\+/g, ""));
       }
       continue;
     }
@@ -154,6 +154,7 @@ function parseTableLines(tableLines: string[], book?: BookName): string[] {
 
   return narrators;
 }
+
 export function findStudents(markdown: string, book: BookName) {
   const studentLines = extractFirstTableLines(markdown, STUDENTS_TITLE);
   return parseTableLines(studentLines, book);

@@ -75,12 +75,14 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
     );
     const existingStudents = findStudents(narratorBio, BOOKS[0].name);
 
-    const studentsToSearch = existingStudents.includes(this.state.nextNarratorInfo.name)
+    const studentsToSearch = existingStudents.includes("-- " + this.state.nextNarratorInfo.name)
       ? []
-      : existingStudents.map((student: string, index: number) => ({
-          id: index,
-          name: student,
-        }));
+      : existingStudents
+          .filter((student) => !student.startsWith("-- "))
+          .map((student: string, index: number) => ({
+            id: index,
+            name: student,
+          }));
 
     return {
       currentNarrator: this.state.currentNarratorInfo,
