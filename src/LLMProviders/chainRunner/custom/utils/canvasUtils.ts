@@ -47,7 +47,7 @@ type CanvasFile = {
 export function buildCanvasFromIsnads(isnads: Isnads): CanvasFile {
   // Layout params (tweak as needed)
   const nodeWidth = 220;
-  const nodeHeight = 80;
+  const nodeHeight = 100;
   const xSpacing = 200;
   const ySpacing = 160;
   const marginX = 40;
@@ -78,7 +78,7 @@ export function buildCanvasFromIsnads(isnads: Isnads): CanvasFile {
       y,
       width: nodeWidth,
       height: nodeHeight,
-      text: name,
+      text: `[[${name}]]`,
     };
     nodes.push(node);
     nameToNodeId.set(name, id);
