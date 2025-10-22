@@ -117,10 +117,15 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
   }
 
   async findMatchingNarratorInManualCache(narratorToFind: string) {
-    const cacheContent = await readVaultFile(PATHS.AI_KNOWLEDGE + `/اسماء تهذيب الكمال.md`);
+    const cacheContent = await readVaultFile(
+      PATHS.AI_KNOWLEDGE + `/الأسماء المختلفة في تهذيب الكمال.md`
+    );
     const cacheEntries = cacheContent.split("\n").map((line) => ({
-      fullName: line.split("-")[0].trim(),
-      tahdhibName: line.split("-")[1]?.trim(),
+      fullName: line.split("|")[1].trim(),
+      tahdhibName: line
+        .split("|")[2]
+        ?.trim()
+        ?.replace(/^\[+|\]+$/g, ""),
     }));
 
     const found = cacheEntries.find((line) => narratorToFind.startsWith(line.fullName));
