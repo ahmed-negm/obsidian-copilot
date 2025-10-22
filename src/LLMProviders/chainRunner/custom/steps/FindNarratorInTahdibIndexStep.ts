@@ -121,7 +121,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
       PATHS.AI_KNOWLEDGE + `/الأسماء المختلفة في تهذيب الكمال.md`
     );
     const cacheEntries = cacheContent.split("\n").map((line) => ({
-      fullName: line.split("|")[1].trim(),
+      fullName: line.split("|")[1]?.trim(),
       tahdhibName: line
         .split("|")[2]
         ?.trim()
