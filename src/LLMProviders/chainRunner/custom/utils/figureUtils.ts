@@ -175,6 +175,16 @@ export function findTeachers(markdown: string, book: BookName) {
   return parseTableLines(teacherLines, book);
 }
 
+export function updateTeachers(markdown: string, displayText: string, link: string) {
+  const teacherLines = extractFirstTableLines(markdown, TEACHERS_TITLE);
+  const index = teacherLines.findIndex((line) => line.includes(displayText));
+  if (index !== -1) {
+    const updatedLine = teacherLines[index].replace(displayText, `[[${link}\\|${displayText}]]`);
+    markdown = markdown.replace(teacherLines[index], updatedLine);
+  }
+  return markdown;
+}
+
 export async function createFigureNote(
   narrator: NarratorInfo,
   knownName: string,

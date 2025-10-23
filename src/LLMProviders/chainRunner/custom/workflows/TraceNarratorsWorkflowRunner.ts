@@ -14,6 +14,7 @@ import { Notice } from "obsidian";
 import { ExtractIsnadFromHadithStep } from "../steps/ExtractIsnadFromHadithStep";
 import { FindNarratorInTahdibIndexStep } from "../steps/FindNarratorInTahdibIndexStep";
 import { FindStudentStep } from "../steps/FindStudentStep";
+import { FindTeacherStep } from "../steps/FindTeacherStep";
 import { GenerateFigureNoteStep } from "../steps/GenerateFigureNoteStep";
 import { PATHS, MSG_START_CHAIN_QUIZ } from "../constants";
 import { buildCanvasFromIsnads } from "../utils/canvasUtils";
@@ -40,7 +41,8 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
       this.createExtractNarratorsStep(),
       this.createFindNarratorStep(),
       this.createGenerateFigureNoteStep(),
-      this.createTeacherStudentStep(),
+      this.createStudentStep(),
+      this.createTeacherStep(), // Execute teacher step after student step to establish bidirectional relationships
     ];
   }
 
@@ -61,10 +63,19 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
     });
   }
 
-  private createTeacherStudentStep() {
+  private createStudentStep() {
     return new FindStudentStep(this.state, {
       onComplete: async () => {
-        await this.handleTeacherStudentCompletion();
+        await this.handleStudentCompletion();
+        return Promise.resolve();
+      },
+    });
+  }
+
+  private createTeacherStep() {
+    return new FindTeacherStep(this.state, {
+      onComplete: async () => {
+        await this.handleTeacherCompletion();
         return Promise.resolve();
       },
     });
@@ -81,16 +92,22 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
     }
   }
 
-  private async handleTeacherStudentCompletion() {
+  private async handleStudentCompletion() {
+    // After finding student relationship, proceed to find teacher relationship for the same narrator pair
+    // The teacher step will handle narrator advancement and chain progression
+  }
+
+  private async handleTeacherCompletion() {
+    // After completing both student and teacher relationships, advance to next narrator
     this.state.moveToNextNarrator();
 
     if (this.state.hasNextNarrator) {
-      this.currentStepIndex -= 1;
+      this.currentStepIndex -= 2; // Go back to student step for next narrator pair
     } else if (this.state.hasNextChain) {
       this.state.moveToNextChain();
-      this.currentStepIndex = 0;
+      this.currentStepIndex = 0; // Start from beginning for new chain
     } else {
-      this.currentStepIndex = 5; // Set to an index beyond the steps to end the workflow
+      this.currentStepIndex = 6; // Set to an index beyond the steps to end the workflow
       if (!this.range) {
         await this.linkHadithToNarrators();
         if (this.state.chainsCount > 1) {
