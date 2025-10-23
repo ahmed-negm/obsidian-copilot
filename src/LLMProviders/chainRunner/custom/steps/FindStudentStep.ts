@@ -3,7 +3,7 @@ import {
   BOOKS,
   MSG_FOUND_STUDENT,
   MSG_NOT_FOUND_STUDENT,
-  MSG_STUDENT_TEACHER_LOOKUP,
+  MSG_STUDENT_LOOKUP,
   PATHS,
 } from "../constants";
 import { TraceNarratorsWorkflowState } from "../models/state";
@@ -29,7 +29,7 @@ interface TeacherStudentContext {
   studentsToSearch: Array<{ id: number; name: string }>;
 }
 
-export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowState> {
+export class FindStudentStep extends StepRunner<TraceNarratorsWorkflowState> {
   private searchContext: TeacherStudentContext;
 
   getContextIntroMessage() {
@@ -37,7 +37,7 @@ export class FindTeacherStudentStep extends StepRunner<TraceNarratorsWorkflowSta
       return "";
     }
 
-    return populateTemplate(MSG_STUDENT_TEACHER_LOOKUP, {
+    return populateTemplate(MSG_STUDENT_LOOKUP, {
       student: this.state.nextNarrator.expectedKnownName,
       teacher: this.state.currentNarrator.expectedKnownName,
     });

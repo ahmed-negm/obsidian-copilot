@@ -13,7 +13,7 @@ import { ChoiceSuggestModal } from "../ui/ChoiceSuggestModal";
 import { Notice } from "obsidian";
 import { ExtractIsnadFromHadithStep } from "../steps/ExtractIsnadFromHadithStep";
 import { FindNarratorInTahdibIndexStep } from "../steps/FindNarratorInTahdibIndexStep";
-import { FindTeacherStudentStep } from "../steps/FindTeacherStudentStep";
+import { FindStudentStep } from "../steps/FindStudentStep";
 import { GenerateFigureNoteStep } from "../steps/GenerateFigureNoteStep";
 import { PATHS, MSG_START_CHAIN_QUIZ } from "../constants";
 import { buildCanvasFromIsnads } from "../utils/canvasUtils";
@@ -62,7 +62,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
   }
 
   private createTeacherStudentStep() {
-    return new FindTeacherStudentStep(this.state, {
+    return new FindStudentStep(this.state, {
       onComplete: async () => {
         await this.handleTeacherStudentCompletion();
         return Promise.resolve();

@@ -21,12 +21,21 @@ export const MSG_FOUND_NARRATOR =
   "✔ تم العثور على **{{narrator}}** في تهذيب الكمال [المجلد {{part}} - الصفحة {{page}}](obsidian://open?vault=Tahdhib-al-Kamal&file=Figures/{{signed_name}})";
 export const MSG_NARRATOR_NOT_FOUND_IN_TAHDIB =
   "❌ لم يتم العثور على الراوي **{{narrator}}** في تهذيب الكمال.";
+
 export const MSG_FOUND_STUDENT =
   "✔ تم العثور على **{{student}}** فيمن رووا عن **{{teacher}}** في  صحيح البخاري";
 export const MSG_NOT_FOUND_STUDENT =
   "❌ لم يتم العثور على **{{student}}** فيمن رووا عن **{{teacher}}** في  صحيح البخاري";
-export const MSG_STUDENT_TEACHER_LOOKUP =
+export const MSG_STUDENT_LOOKUP =
   "جاري البحث عن **{{student}}** فيمن رووا عن **{{teacher}}** في صحيح البخاري";
+
+export const MSG_FOUND_TEACHER =
+  "✔ تم العثور على **{{teacher}}** فيمن روي عنهم **{{student}}** في  صحيح البخاري";
+export const MSG_NOT_FOUND_TEACHER =
+  "❌ لم يتم العثور على **{{teacher}}** فيمن روي عنهم **{{student}}** في  صحيح البخاري";
+export const MSG_TEACHER_LOOKUP =
+  "جاري البحث عن **{{teacher}}** فيمن روي عنهم **{{student}}** في صحيح البخاري";
+
 export const MSG_NARRATOR_FILE_EXISTS = "ملف الراوي موجود بالفعل، تخطي الإنشاء.";
 export const MSG_NARRATOR_FILE_CREATED = "تم إنشاء ملف الراوي بنجاح.";
 export const MSG_NARRATOR_FILE_NOT_FOUND_CREATING =
