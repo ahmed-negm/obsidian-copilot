@@ -81,6 +81,10 @@ export class TraceNarratorsWorkflowState extends BaseState {
     return this.narratorIndex < this.narratorsCount - 1;
   }
 
+  get isLastNarratorInChain() {
+    return this.narratorIndex === this.narratorsCount - 1;
+  }
+
   get currentChainNarrators() {
     return this.currentChain?.narrators ?? [];
   }

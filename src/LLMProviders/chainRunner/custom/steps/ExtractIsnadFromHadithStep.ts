@@ -82,7 +82,7 @@ export class ExtractIsnadFromHadithStep extends StepRunner<TraceNarratorsWorkflo
         const KNOWN_NAME = "الاسم المعرّف";
         const FULL_NAME = "الاسم الكامل";
         narratorList.push(
-          `- **${narrator.name}**:\n\t- ${KNOWN_NAME}: ${narrator.expectedKnownName}\n\t- ${FULL_NAME}: ${narrator.expectedFullName}`
+          `**${narrator.name}**:\n- ${KNOWN_NAME}: ${narrator.expectedKnownName}\n- ${FULL_NAME}: ${narrator.expectedFullName}`
         );
       }
 

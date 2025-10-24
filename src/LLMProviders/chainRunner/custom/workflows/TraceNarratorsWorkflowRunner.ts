@@ -97,17 +97,23 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
     // The teacher step will handle narrator advancement and chain progression
   }
 
+  private isLastNarratorInChain = false;
+
   private async handleTeacherCompletion() {
     // After completing both student and teacher relationships, advance to next narrator
     this.state.moveToNextNarrator();
 
     if (this.state.hasNextNarrator) {
       this.currentStepIndex -= 2; // Go back to student step for next narrator pair
+    } else if (this.state.isLastNarratorInChain && !this.isLastNarratorInChain) {
+      this.isLastNarratorInChain = true;
+      this.currentStepIndex -= 1; // Go back to teacher step for the last narrator
     } else if (this.state.hasNextChain) {
+      this.isLastNarratorInChain = false;
       this.state.moveToNextChain();
       this.currentStepIndex = 0; // Start from beginning for new chain
     } else {
-      this.currentStepIndex = 6; // Set to an index beyond the steps to end the workflow
+      this.currentStepIndex = 100; // Set to an index beyond the steps to end the workflow
       if (!this.range) {
         await this.linkHadithToNarrators();
         if (this.state.chainsCount > 1) {

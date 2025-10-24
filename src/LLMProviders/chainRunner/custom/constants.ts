@@ -30,11 +30,11 @@ export const MSG_STUDENT_LOOKUP =
   "جاري البحث عن **{{student}}** فيمن رووا عن **{{teacher}}** في صحيح البخاري";
 
 export const MSG_FOUND_TEACHER =
-  "✔ تم العثور على **{{teacher}}** فيمن روي عنهم **{{student}}** في  صحيح البخاري";
+  "✔ تم العثور على **{{teacher}}** فيمن روى عنهم **{{student}}** في  صحيح البخاري";
 export const MSG_NOT_FOUND_TEACHER =
-  "❌ لم يتم العثور على **{{teacher}}** فيمن روي عنهم **{{student}}** في  صحيح البخاري";
+  "❌ لم يتم العثور على **{{teacher}}** فيمن روى عنهم **{{student}}** في  صحيح البخاري";
 export const MSG_TEACHER_LOOKUP =
-  "جاري البحث عن **{{teacher}}** فيمن روي عنهم **{{student}}** في صحيح البخاري";
+  "جاري البحث عن **{{teacher}}** فيمن روى عنهم **{{student}}** في صحيح البخاري";
 
 export const MSG_NARRATOR_FILE_EXISTS = "ملف الراوي موجود بالفعل، تخطي الإنشاء.";
 export const MSG_NARRATOR_FILE_CREATED = "تم إنشاء ملف الراوي بنجاح.";
