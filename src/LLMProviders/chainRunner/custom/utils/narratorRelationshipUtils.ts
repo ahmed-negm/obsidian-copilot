@@ -76,9 +76,12 @@ export async function buildNarratorRelationshipContext(
 export async function generateRelationshipSearchPrompt(
   context: NarratorRelationshipContext
 ): Promise<string> {
-  const promptTemplate = await getPromptTemplate("FindNarratorInList");
+  const promptTemplate = await getPromptTemplate(
+    context.relationshipType === "student" ? "FindStudentStep" : "FindTeacherStep"
+  );
 
   return populateTemplate(promptTemplate, {
+    narrator_name: context.currentNarrator.name,
     name_to_search: context.targetFullName,
     JSON: JSON.stringify(context.relationsToSearch, null, 2),
     KNOWLEDGE: await getAIKnowledge(BOOKS[0].name),

@@ -8,7 +8,9 @@ export type PromptTemplate =
   | "ExtractNarratedFromTahdib"
   | "ExtractIsnadFromHadith"
   | "FindNarratorInList"
-  | "SystemPrompt";
+  | "SystemPrompt"
+  | "FindStudentStep"
+  | "FindTeacherStep";
 
 export async function getPromptTemplate(name: PromptTemplate): Promise<string> {
   try {
