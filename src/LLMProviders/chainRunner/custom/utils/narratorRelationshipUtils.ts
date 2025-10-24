@@ -27,17 +27,13 @@ export interface NarratorRelationshipContext {
   relationshipType: RelationshipType;
 }
 
-/**
- * Builds context for narrator relationship searches (student-teacher relationships).
- * Handles both directions: finding students of a teacher or teachers of a student.
- */
 export async function buildNarratorRelationshipContext(
   state: TraceNarratorsWorkflowState,
   relationshipType: RelationshipType
 ): Promise<NarratorRelationshipContext> {
   const isStudentSearch = relationshipType === "student";
 
-  const currentNarrator = isStudentSearch ? state.currentNarratorInfo : state.currentNarratorInfo;
+  const currentNarrator = state.currentNarratorInfo;
   const targetNarrator = isStudentSearch ? state.nextNarratorInfo : state.previousNarratorInfo;
 
   if (!currentNarrator || !targetNarrator) {
@@ -62,9 +58,7 @@ export async function buildNarratorRelationshipContext(
   return {
     currentNarrator,
     targetNarrator,
-    currentName: isStudentSearch
-      ? state.currentNarrator.expectedKnownName
-      : state.currentNarrator.expectedKnownName,
+    currentName: state.currentNarrator.expectedKnownName,
     targetName: isStudentSearch
       ? state.nextNarrator.expectedKnownName
       : state.previousNarrator.expectedKnownName,

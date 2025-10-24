@@ -19,6 +19,14 @@ export class FindTeacherStep extends StepRunner<TraceNarratorsWorkflowState> {
   private searchContext: NarratorRelationshipContext;
 
   getContextIntroMessage() {
+    console.log(
+      "$$ " +
+        populateTemplate(MSG_TEACHER_LOOKUP, {
+          teacher: this.state.previousNarrator?.expectedKnownName,
+          student: this.state.currentNarrator.expectedKnownName,
+        })
+    );
+
     if (!this.state.previousNarrator) {
       return "";
     }
@@ -37,6 +45,8 @@ export class FindTeacherStep extends StepRunner<TraceNarratorsWorkflowState> {
 
     this.searchContext = await buildNarratorRelationshipContext(this.state, "teacher");
 
+    console.log(">> Teacher getUserPrompt", { searchContext: this.searchContext });
+
     // No prompt needed if teacher already exists in student's teacher list
     if (this.searchContext.relationsToSearch.length === 0) {
       return "";
@@ -46,6 +56,7 @@ export class FindTeacherStep extends StepRunner<TraceNarratorsWorkflowState> {
   }
 
   async processResponse(response: string) {
+    console.log(">> Teacher processResponse", { response });
     // Handle case where there's no previous narrator (first narrator in chain)
     if (!this.state.hasPreviousNarrator) {
       return {
@@ -90,6 +101,12 @@ export class FindTeacherStep extends StepRunner<TraceNarratorsWorkflowState> {
     if (!teacherFromList) {
       return notFoundResponse;
     }
+
+    console.log(">> handleTeacherSelection", {
+      relationsToSearch: this.searchContext.relationsToSearch,
+      selectedTeacher,
+      teacherFromList,
+    });
 
     await updateNarratorRelationship(this.searchContext, teacherFromList.name);
 
