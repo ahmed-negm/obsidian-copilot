@@ -55,6 +55,8 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
           content: userPrompt,
         });
 
+        console.log("## AI Request:\n", { request: userPrompt });
+
         const chatStream = await withSuppressedTokenWarnings(() =>
           this.chainManager.chatModelManager.getChatModel().stream(messages, {
             signal: abortController.signal,
@@ -82,7 +84,7 @@ export class BaseSimpleChainRunner extends BaseChainRunner {
 
     const aiResponse = userPrompt ? streamer.close() : "";
     if (aiResponse) {
-      console.log("## AI Conversation:\n", { request: userPrompt, response: aiResponse });
+      console.log("## AI Response:\n", { response: aiResponse });
     }
 
     const response = await this.processResponse(aiResponse);

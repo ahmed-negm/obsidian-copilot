@@ -14,14 +14,6 @@ export class FindStudentStep extends StepRunner<TraceNarratorsWorkflowState> {
   private searchContext: NarratorRelationshipContext;
 
   getContextIntroMessage() {
-    console.log(
-      "!! " +
-        populateTemplate(MSG_STUDENT_LOOKUP, {
-          student: this.state.nextNarrator?.expectedKnownName,
-          teacher: this.state.currentNarrator.expectedKnownName,
-        })
-    );
-
     if (!this.state.nextNarrator) {
       return "";
     }

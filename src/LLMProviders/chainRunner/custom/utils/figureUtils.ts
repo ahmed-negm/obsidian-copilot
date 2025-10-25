@@ -161,7 +161,6 @@ export function findStudents(markdown: string, book: BookName) {
 }
 
 export function updateStudents(markdown: string, displayText: string, link: string) {
-  console.log(">> Updating students for:", displayText, link);
   const studentLines = extractFirstTableLines(markdown, STUDENTS_TITLE);
   const index = studentLines.findIndex((line) => line.includes(displayText));
   if (index !== -1) {
@@ -177,7 +176,6 @@ export function findTeachers(markdown: string, book: BookName) {
 }
 
 export function updateTeachers(markdown: string, displayText: string, link: string) {
-  console.log(">> Updating teachers for:", displayText, link);
   const teacherLines = extractFirstTableLines(markdown, TEACHERS_TITLE);
   const index = teacherLines.findIndex((line) => line.includes(displayText));
   if (index !== -1) {
