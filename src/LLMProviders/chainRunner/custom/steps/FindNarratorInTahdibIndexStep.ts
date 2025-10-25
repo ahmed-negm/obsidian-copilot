@@ -72,8 +72,12 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     const narratorToFind = this.state.currentNarrator.expectedFullName;
     let cachedNarratorName = await this.findMatchingNarratorInManualCache(narratorToFind);
     if (!cachedNarratorName) {
-      cachedNarratorName = await this.findMatchingNarratorInAutomaticCache(narratorToFind);
+      const cachedNarratorId = await this.findMatchingNarratorInAutomaticCache(narratorToFind);
+      cachedNarratorName = this.state.allNarrators.find(
+        (narrator) => narrator.id === cachedNarratorId
+      )?.name;
     }
+
     let cachedNarrator: NarratorInfo | undefined = undefined;
     if (cachedNarratorName) {
       cachedNarrator = this.state.allNarrators.find(
@@ -96,21 +100,22 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     };
   }
 
-  async findMatchingNarratorInAutomaticCache(narratorToFind: string) {
+  async findMatchingNarratorInAutomaticCache(fullName: string) {
     const json = await readVaultFile(tahdhibCachePath);
-    const cacheEntries = JSON.parse(json) as { fullName: string; tahdhibName: string }[];
+    const cacheEntries = JSON.parse(json) as { id: number; fullName: string }[];
 
-    const found = cacheEntries.find((line) => narratorToFind === line.fullName);
-    return found ? found.tahdhibName : undefined;
+    const found = cacheEntries.find((line) => fullName === line.fullName);
+    return found ? found.id : undefined;
   }
 
-  async updateAutomaticCache(narratorToFind: string, name: string) {
+  async updateAutomaticCache(id: number, fullName: string) {
     const json = await readVaultFile(tahdhibCachePath);
-    const cacheEntries = JSON.parse(json) as { fullName: string; tahdhibName: string }[];
+    const cacheEntries = JSON.parse(json) as { id: number; fullName: string }[];
 
-    const found = cacheEntries.find((line) => narratorToFind === line.fullName);
+    const found = cacheEntries.find((line) => fullName === line.fullName);
     if (!found) {
-      cacheEntries.push({ fullName: narratorToFind, tahdhibName: name });
+      cacheEntries.push({ id, fullName });
+      cacheEntries.sort((a, b) => a.id - b.id);
       const updatedJson = JSON.stringify(cacheEntries, null, 2);
       await updateVaultFile(tahdhibCachePath, updatedJson);
     }
@@ -215,7 +220,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     }
 
     this.updateStateWithNarrator(selectedNarrator.id);
-    await this.updateAutomaticCache(this.searchContext.narratorToFind, foundNarrator.name);
+    await this.updateAutomaticCache(foundNarrator.id, this.searchContext.narratorToFind);
     return {
       response: this.formatNarratorFoundMessage(foundNarrator),
       isSuccessful: true,
