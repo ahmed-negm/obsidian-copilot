@@ -114,14 +114,18 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
       this.currentStepIndex = 0; // Start from beginning for new chain
     } else {
       this.currentStepIndex = 100; // Set to an index beyond the steps to end the workflow
-      if (!this.range) {
-        await this.linkHadithToNarrators();
-        if (this.state.chainsCount > 1) {
-          const canvas = buildCanvasFromIsnads(this.state.narratorNames);
-          const canvasFilePath = this.state.filePath.replace(/\.[^/.]+$/, "") + ".canvas";
-          await app.vault.create(canvasFilePath, JSON.stringify(canvas, null, 2));
-          new Notice(`Canvas created: ${canvasFilePath}`);
+      await this.linkHadithToNarrators();
+      if (this.state.chainsCount > 1) {
+        const canvas = buildCanvasFromIsnads(this.state.narratorNames);
+        const canvasFilePath = this.state.filePath.replace(/\.[^/.]+$/, "") + ".canvas";
+        if (app.vault.getAbstractFileByPath(canvasFilePath)) {
+          await app.vault.delete(app.vault.getAbstractFileByPath(canvasFilePath)!);
         }
+        await app.vault.create(canvasFilePath, JSON.stringify(canvas, null, 2));
+        new Notice(`Canvas created: ${canvasFilePath}`);
+      }
+
+      if (!this.range) {
         this.showQuiz();
       }
     }
@@ -219,9 +223,8 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
   }
 
   private async processNarratorsForLinking(fileContent: string) {
-    let updatedContent = fileContent;
-
     const processedNarrators = new Set<string>();
+    const narratorLinks: { name: string; link: string }[] = [];
     this.state.resetChainIndex();
 
     let hasNextChain = false;
@@ -237,7 +240,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
         // Only process each narrator once
         if (!processedNarrators.has(currentNarrator)) {
           const linkToNote = `[[${this.state.currentNarratorInfo.name}|${currentNarrator}]]`;
-          updatedContent = updatedContent.replaceAll(currentNarrator, linkToNote);
+          narratorLinks.push({ name: currentNarrator, link: linkToNote });
           processedNarrators.add(currentNarrator);
         }
 
@@ -254,6 +257,21 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
         this.state.moveToNextChain();
       }
     } while (hasNextChain);
+
+    let updatedContent = fileContent;
+
+    // Sort narrator links by name length descending to avoid partial replacements
+    narratorLinks.sort((a, b) => b.name.length - a.name.length);
+
+    for (let i = 0; i < narratorLinks.length; i++) {
+      const narratorLink = narratorLinks[i];
+      updatedContent = updatedContent.replaceAll(narratorLink.name, `{{${i}}}`);
+    }
+
+    for (let i = 0; i < narratorLinks.length; i++) {
+      const narratorLink = narratorLinks[i];
+      updatedContent = updatedContent.replaceAll(`{{${i}}}`, narratorLink.link);
+    }
 
     return updatedContent;
   }

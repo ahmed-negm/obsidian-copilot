@@ -79,10 +79,10 @@ export class ExtractIsnadFromHadithStep extends StepRunner<TraceNarratorsWorkflo
           };
         }
         this.processNarratorData(narrator);
-        const KNOWN_NAME = "الاسم المعرّف";
-        const FULL_NAME = "الاسم الكامل";
+        const KNOWN_NAME = "المشهور";
+        const FULL_NAME = "الكامل";
         narratorList.push(
-          `**${narrator.name}**:\n- ${KNOWN_NAME}: ${narrator.expectedKnownName}\n- ${FULL_NAME}: ${narrator.expectedFullName}`
+          `**${narrator.name}**:\n- *${KNOWN_NAME}:* ${narrator.expectedKnownName}\n- *${FULL_NAME}:* ${narrator.expectedFullName}`
         );
       }
 
@@ -136,7 +136,7 @@ export class ExtractIsnadFromHadithStep extends StepRunner<TraceNarratorsWorkflo
   }
 
   private formatSingleIsnadEntry(narratorList: string[]) {
-    const bulletList = narratorList.join("\n");
+    const bulletList = narratorList.join("\n\n");
     const result = populateTemplate(MSG_CHAIN_IS, {
       hadithLink: this.hadithLink,
       narrators: bulletList,
@@ -145,7 +145,7 @@ export class ExtractIsnadFromHadithStep extends StepRunner<TraceNarratorsWorkflo
   }
 
   private formatMultipleIsnadEntry(narratorList: string[], index: number) {
-    const bulletList = narratorList.join("\n");
+    const bulletList = narratorList.join("\n\n");
     const result = populateTemplate(MSG_SINGLE_CHAIN_IS, {
       isnad_index: toArabicDigits(index),
       narrators: bulletList,
