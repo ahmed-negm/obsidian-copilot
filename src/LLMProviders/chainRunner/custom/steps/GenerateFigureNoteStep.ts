@@ -20,6 +20,7 @@ import {
   MSG_NARRATOR_FILE_NOT_FOUND_CREATING,
   BOOKS,
 } from "../constants";
+import { NarratorInfo } from "../models/narrator";
 
 export interface ExtractedNarratorData {
   teachers: TahdibNarrator[];
@@ -46,11 +47,14 @@ export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowSta
         processedContent
       );
       return "";
+    } else {
+      throw new Error("Processed Tahdib file not found.");
     }
-    const tahdibFilePath = this.generateTahdibFigurePath(this.state.currentNarratorInfo);
-    const tahdibContent = await readFileFromExternalVault(tahdibFilePath);
 
-    return this.buildPromptFromTemplate(this.state.currentNarratorInfo.name, tahdibContent);
+    /* We are now using pre-processed files instead of extracting on the fly */
+    // const tahdibFilePath = this.generateTahdibFigurePath(this.state.currentNarratorInfo);
+    // const tahdibContent = await readFileFromExternalVault(tahdibFilePath);
+    // return this.buildPromptFromTemplate(this.state.currentNarratorInfo.name, tahdibContent);
   }
 
   private noteExists() {
@@ -58,14 +62,14 @@ export class GenerateFigureNoteStep extends StepRunner<TraceNarratorsWorkflowSta
     return !!app.vault.getAbstractFileByPath(filePath);
   }
 
-  private generateTahdibFigurePath(narrator: any) {
+  generateTahdibFigurePath(narrator: NarratorInfo) {
     const vaultPath = (app.vault.adapter as FileSystemAdapter).getBasePath();
     return `${vaultPath}/${PATHS.TAHDHIB_VAULT}/Figures/${toArabicDigits(narrator.id!)}-${narrator.name}.md`;
   }
 
-  private generateTahdibProcessedFigurePath(narrator: any) {
+  private generateTahdibProcessedFigurePath(narrator: NarratorInfo) {
     const vaultPath = (app.vault.adapter as FileSystemAdapter).getBasePath();
-    return `${vaultPath}/${PATHS.TAHDHIB_VAULT}/ProcessedFigures/${narrator.name}.md`;
+    return `${vaultPath}/${PATHS.TAHDHIB_VAULT}/Processed/${narrator.id}-${narrator.name}.md`;
   }
 
   private async buildPromptFromTemplate(narratorName: string, tahdibContent: string) {
