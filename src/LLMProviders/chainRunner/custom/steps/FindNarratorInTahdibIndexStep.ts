@@ -173,6 +173,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
   private handleNarratorNotFound(response: string, narratorToFind: string) {
     const notFoundMessage = populateTemplate(MSG_NARRATOR_NOT_FOUND_IN_TAHDIB, {
       narrator: narratorToFind,
+      search_link: `https://www.google.com/search?q=${encodeURIComponent(narratorToFind + " تهذيب الكمال")}`,
     });
 
     return {

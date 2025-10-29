@@ -18,6 +18,7 @@ import {
   MSG_SINGLE_CHAIN_IS,
   MSG_NARRATOR_IDENTIFICATION_FAILED,
   PATHS,
+  MSG_HADITH_CONTAINS_INTERNAL_LINKS,
 } from "../constants";
 
 interface HadithNarratorWithPossibleMatches extends HadithNarrator {
@@ -37,6 +38,9 @@ export class ExtractIsnadFromHadithStep extends StepRunner<TraceNarratorsWorkflo
       throw new Error("No file path available");
     }
     const hadithText = await readVaultFile(this.state.filePath);
+    if (hadithText.includes("[[") && hadithText.includes("]]")) {
+      return "";
+    }
     const prompt = await getPromptTemplate("ExtractIsnadFromHadith");
     return populateTemplate(prompt, {
       HADITH_TEXT: stripObsidianProperties(hadithText),
@@ -45,6 +49,14 @@ export class ExtractIsnadFromHadithStep extends StepRunner<TraceNarratorsWorkflo
   }
 
   async processResponse(response: string) {
+    if (!response) {
+      return {
+        response: populateTemplate(MSG_HADITH_CONTAINS_INTERNAL_LINKS, {
+          hadithLink: this.hadithLink,
+        }),
+        isSuccessful: false,
+      };
+    }
     const failedResponse = {
       response: MSG_NO_NARRATORS_FOUND + `\n\n${response}`,
       isSuccessful: false,
