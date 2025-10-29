@@ -162,7 +162,15 @@ export function findStudents(markdown: string, book: BookName) {
 
 export function updateStudents(markdown: string, displayText: string, link: string) {
   const studentLines = extractFirstTableLines(markdown, STUDENTS_TITLE);
-  const index = studentLines.findIndex((line) => line.includes(displayText));
+  // Find the column index for the name column
+  const nameColIdx = HEADERS.indexOf("الاسم");
+  const index = studentLines.findIndex((line) => {
+    const cells = line.split("|").map((cell) => cell.trim());
+    // Remove leading/trailing empty slots if present
+    if (cells.length > 0 && cells[0] === "") cells.shift();
+    if (cells.length > 0 && cells[cells.length - 1] === "") cells.pop();
+    return cells[nameColIdx] === displayText;
+  });
   if (index !== -1) {
     const updatedLine = studentLines[index].replace(displayText, `[[${link}\\|${displayText}]]`);
     markdown = markdown.replace(studentLines[index], updatedLine);
@@ -177,7 +185,14 @@ export function findTeachers(markdown: string, book: BookName) {
 
 export function updateTeachers(markdown: string, displayText: string, link: string) {
   const teacherLines = extractFirstTableLines(markdown, TEACHERS_TITLE);
-  const index = teacherLines.findIndex((line) => line.includes(displayText));
+  // Find the column index for the name column
+  const nameColIdx = HEADERS.indexOf("الاسم");
+  const index = teacherLines.findIndex((line) => {
+    const cells = line.split("|").map((cell) => cell.trim());
+    if (cells.length > 0 && cells[0] === "") cells.shift();
+    if (cells.length > 0 && cells[cells.length - 1] === "") cells.pop();
+    return cells[nameColIdx] === displayText;
+  });
   if (index !== -1) {
     const updatedLine = teacherLines[index].replace(displayText, `[[${link}\\|${displayText}]]`);
     markdown = markdown.replace(teacherLines[index], updatedLine);
