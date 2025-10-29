@@ -100,15 +100,21 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     };
   }
 
+  // Avoid caching narrators with IDs between 3400 and 4000 as they are duplicate entries
   async findMatchingNarratorInAutomaticCache(fullName: string) {
     const json = await readVaultFile(tahdhibCachePath);
     const cacheEntries = JSON.parse(json) as { id: number; fullName: string }[];
 
     const found = cacheEntries.find((line) => fullName === line.fullName);
-    return found ? found.id : undefined;
+    return found && (found.id < 3400 || found.id > 4000) ? found.id : undefined;
   }
 
   async updateAutomaticCache(id: number, fullName: string) {
+    if (id >= 3400 && id <= 4000) {
+      // Skip caching for duplicate entries
+      return;
+    }
+
     const json = await readVaultFile(tahdhibCachePath);
     const cacheEntries = JSON.parse(json) as { id: number; fullName: string }[];
 
