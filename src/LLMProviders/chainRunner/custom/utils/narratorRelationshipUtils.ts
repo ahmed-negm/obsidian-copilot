@@ -46,6 +46,10 @@ export async function buildNarratorRelationshipContext(
     ? findStudents(narratorBio, BOOKS[0].name)
     : findTeachers(narratorBio, BOOKS[0].name);
 
+  if (existingRelations.length === 0) {
+    throw new Error(`لا توجد علاقات موجودة للراوي [[${currentNarrator.name}]]`);
+  }
+
   const relationsToSearch = existingRelations.includes("-- " + targetNarrator.name)
     ? []
     : existingRelations

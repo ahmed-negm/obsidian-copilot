@@ -21,25 +21,39 @@ export abstract class WorkflowRunner<T> extends BaseSimpleChainRunner {
   }
 
   async getUserPrompt(_userMessage: string): Promise<string> {
-    return this.currentStep.getUserPrompt();
+    try {
+      return await this.currentStep.getUserPrompt();
+    } catch (error) {
+      this.isRunnerSuccessful = false;
+      throw error;
+    }
   }
 
   async processResponse(response: string): Promise<string> {
-    const result = await this.currentStep.run(response);
-    this.isRunnerSuccessful = result.isSuccessful;
-    if (!result.isSuccessful) {
-      this.onComplete();
+    if (this.isRunnerSuccessful === false) {
+      return "";
     }
 
-    let nextStepIntroMessage = "";
-    if (this.nextStep) {
-      nextStepIntroMessage = result.isSuccessful ? this.nextStep.getContextIntroMessage() : "";
-    } else {
-      nextStepIntroMessage = "--------";
-      this.onComplete();
-    }
+    try {
+      const result = await this.currentStep.run(response);
+      this.isRunnerSuccessful = result.isSuccessful;
+      if (!result.isSuccessful) {
+        this.onComplete();
+      }
 
-    return result.response + (nextStepIntroMessage ? `\n\n${nextStepIntroMessage}` : "");
+      let nextStepIntroMessage = "";
+      if (this.nextStep) {
+        nextStepIntroMessage = result.isSuccessful ? this.nextStep.getContextIntroMessage() : "";
+      } else {
+        nextStepIntroMessage = "--------";
+        this.onComplete();
+      }
+
+      return result.response + (nextStepIntroMessage ? `\n\n${nextStepIntroMessage}` : "");
+    } catch (error) {
+      this.isRunnerSuccessful = false;
+      throw error;
+    }
   }
 
   protected onComplete(): void {}

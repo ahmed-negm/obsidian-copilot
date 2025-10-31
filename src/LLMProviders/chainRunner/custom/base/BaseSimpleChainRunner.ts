@@ -9,7 +9,7 @@ import { Notice } from "obsidian";
 import { MSG_WORKFLOW_STEP_FAILED } from "../constants";
 
 export class BaseSimpleChainRunner extends BaseChainRunner {
-  protected isRunnerSuccessful: boolean = false;
+  protected isRunnerSuccessful: boolean | undefined = undefined;
 
   async run(
     userMessage: ChatMessage,

@@ -138,7 +138,7 @@ export class TraceNarratorsWorkflowRunner extends WorkflowRunner<TraceNarratorsW
         this.state.args = toArabicDigits(this.rangeIndex);
         this.state.resetForNewHadith();
         this.currentStepIndex = -1;
-        this.isRunnerSuccessful = true;
+        this.isRunnerSuccessful = undefined;
       }
     }
   }
