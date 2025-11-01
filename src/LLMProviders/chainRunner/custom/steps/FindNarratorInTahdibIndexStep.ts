@@ -72,10 +72,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     const narratorToFind = this.state.currentNarrator.expectedFullName;
     let cachedNarratorName = await this.findMatchingNarratorInManualCache(narratorToFind);
     if (!cachedNarratorName) {
-      const cachedNarratorId = await this.findMatchingNarratorInAutomaticCache(narratorToFind);
-      cachedNarratorName = this.state.allNarrators.find(
-        (narrator) => narrator.id === cachedNarratorId
-      )?.name;
+      cachedNarratorName = await this.findMatchingNarratorInAutomaticCache(narratorToFind);
     }
 
     let cachedNarrator: NarratorInfo | undefined = undefined;
@@ -103,25 +100,20 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
   // Avoid caching narrators with IDs between 3400 and 4000 as they are duplicate entries
   async findMatchingNarratorInAutomaticCache(fullName: string) {
     const json = await readVaultFile(tahdhibCachePath);
-    const cacheEntries = JSON.parse(json) as { id: number; fullName: string }[];
+    const cacheEntries = JSON.parse(json) as { id: string; fullName: string }[];
 
     const found = cacheEntries.find((line) => fullName === line.fullName);
-    return found && (found.id < 3400 || found.id > 4000) ? found.id : undefined;
+    return found ? found.id : undefined;
   }
 
-  async updateAutomaticCache(id: number, fullName: string) {
-    if (id >= 3400 && id <= 4000) {
-      // Skip caching for duplicate entries
-      return;
-    }
-
+  async updateAutomaticCache(id: string, fullName: string) {
     const json = await readVaultFile(tahdhibCachePath);
-    const cacheEntries = JSON.parse(json) as { id: number; fullName: string }[];
+    const cacheEntries = JSON.parse(json) as { id: string; fullName: string }[];
 
     const found = cacheEntries.find((line) => fullName === line.fullName);
     if (!found) {
       cacheEntries.push({ id, fullName });
-      cacheEntries.sort((a, b) => a.id - b.id);
+      cacheEntries.sort((a, b) => a.id.localeCompare(b.id));
       const updatedJson = JSON.stringify(cacheEntries, null, 2);
       await updateVaultFile(tahdhibCachePath, updatedJson);
     }
@@ -227,7 +219,7 @@ export class FindNarratorInTahdibIndexStep extends StepRunner<TraceNarratorsWork
     }
 
     this.updateStateWithNarrator(selectedNarrator.id);
-    await this.updateAutomaticCache(foundNarrator.id, this.searchContext.narratorToFind);
+    await this.updateAutomaticCache(foundNarrator.name, this.searchContext.narratorToFind);
     return {
       response: this.formatNarratorFoundMessage(foundNarrator),
       isSuccessful: true,
