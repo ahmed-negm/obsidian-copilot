@@ -50,3 +50,23 @@ export function toEnglishDigits(str: string | number): string {
 export function getSignedUrl(url: string): string {
   return url.replaceAll(" ", "%20");
 }
+
+export function getRange(str?: string): { start: number; end: number } | null {
+  if (!str) {
+    return null;
+  }
+
+  const range = str.split("-");
+  if (range.length !== 2) {
+    return null;
+  }
+
+  const start = parseInt(toEnglishDigits(range[0]));
+  const end = parseInt(toEnglishDigits(range[1]));
+
+  if (isNaN(start) || isNaN(end) || start <= 0 || end < start) {
+    return null;
+  }
+
+  return { start, end };
+}

@@ -2,7 +2,7 @@ import { WorkflowRunner } from "../base/WorkflowRunner";
 import ChainManager from "@/LLMProviders/chainManager";
 import { TraceNarratorsWorkflowState } from "../models/state";
 import { ExtractIsnadFromHadithStep } from "../steps/ExtractIsnadFromHadithStep";
-import { toArabicDigits, toEnglishDigits } from "../utils";
+import { getRange, toArabicDigits } from "../utils";
 
 export class ExtractIsnadFromHadithWorkflowRunner extends WorkflowRunner<TraceNarratorsWorkflowState> {
   constructor(chainManager: ChainManager, args: string) {
@@ -21,24 +21,13 @@ export class ExtractIsnadFromHadithWorkflowRunner extends WorkflowRunner<TraceNa
   }
 
   private createRangeStepsIfApplicable() {
-    if (!this.state.args) {
-      return null;
-    }
-
-    const range = this.state.args.split("-");
-    if (range.length !== 2) {
-      return null;
-    }
-
-    const start = parseInt(toEnglishDigits(range[0]));
-    const end = parseInt(toEnglishDigits(range[1]));
-
-    if (isNaN(start) || isNaN(end) || start <= 0 || end < start) {
-      return null;
+    const range = getRange(this.state.args);
+    if (!range) {
+      return [];
     }
 
     const steps: ExtractIsnadFromHadithStep[] = [];
-    for (let i = start; i <= end; i++) {
+    for (let i = range.start; i <= range.end; i++) {
       this.state.args = toArabicDigits(i);
 
       steps.push(new ExtractIsnadFromHadithStep(this.state));
