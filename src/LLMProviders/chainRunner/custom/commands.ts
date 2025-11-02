@@ -1,5 +1,6 @@
 import { ExplainWorkflowRunner } from "./workflows/ExplainWorkflowRunner";
 import { ExtractIsnadFromHadithWorkflowRunner } from "./workflows/ExtractIsnadFromHadithWorkflowRunner";
+import { ListUnprocessedHadithsRunner } from "./workflows/ListUnprocessedHadithsRunner";
 import { TraceNarratorsWorkflowRunner } from "./workflows/TraceNarratorsWorkflowRunner";
 
 export const commands = [
@@ -14,5 +15,9 @@ export const commands = [
   {
     command: "تتبع الرواة",
     workflow: TraceNarratorsWorkflowRunner,
+  },
+  {
+    command: "قائمة الأحاديث غير المعالجة",
+    workflow: ListUnprocessedHadithsRunner,
   },
 ];
