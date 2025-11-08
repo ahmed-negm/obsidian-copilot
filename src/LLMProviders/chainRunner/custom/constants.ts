@@ -15,6 +15,7 @@ export const PATHS = {
   BUKHARI: "Sunnah/صحيح البخاري/الأحاديث",
   FIGURES: "Figures",
   TAHDHIB_VAULT: "../Books/Tahdhib-al-Kamal",
+  TEMP: "_extras/copilot-conversations",
 };
 
 export const MSG_FOUND_NARRATOR =
