@@ -11,7 +11,8 @@ export type PromptTemplate =
   | "SystemPrompt"
   | "FindStudentStep"
   | "FindTeacherStep"
-  | "MohadithDictionary";
+  | "MohadithDictionary"
+  | "ExtractQuran";
 
 export async function getPromptTemplate(name: PromptTemplate): Promise<string> {
   try {
