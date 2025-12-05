@@ -6,7 +6,7 @@ import { getRange, toArabicDigits } from "../utils";
 
 export class ExtractIsnadFromHadithWorkflowRunner extends WorkflowRunner<TraceNarratorsWorkflowState> {
   constructor(chainManager: ChainManager, args: string) {
-    super(chainManager, new TraceNarratorsWorkflowState());
+    super(chainManager, new TraceNarratorsWorkflowState(args));
   }
 
   protected registerSteps() {
@@ -28,9 +28,8 @@ export class ExtractIsnadFromHadithWorkflowRunner extends WorkflowRunner<TraceNa
 
     const steps: ExtractIsnadFromHadithStep[] = [];
     for (let i = range.start; i <= range.end; i++) {
-      this.state.args = toArabicDigits(i);
-
-      steps.push(new ExtractIsnadFromHadithStep(this.state));
+      const stepState = new TraceNarratorsWorkflowState(toArabicDigits(i));
+      steps.push(new ExtractIsnadFromHadithStep(stepState));
     }
 
     return steps;
